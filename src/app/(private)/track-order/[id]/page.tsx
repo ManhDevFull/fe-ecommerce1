@@ -150,7 +150,7 @@ export default function OrderProcess({ params }: Props) {
                         : "isUpcoming";
 
                     return (
-                      <div className="flex flex-col items-center relative z-10">
+                      <div key={index} className="flex flex-col items-center relative z-10">
                         {/* Circle */}
                         <div
                           className={`w-6 h-6 flex items-center justify-center rounded-full bg-[#0026ff] border-2 
