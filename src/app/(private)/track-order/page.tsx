@@ -9,7 +9,8 @@ import NavigationPath from "@/components/ui/NavigationPath";
 import BackNavigation from "@/components/ui/BackNavigation";
 import { useRouter } from "next/navigation";
 export default function TrackOrder() {
-    const router = useRouter()
+
+  const router = useRouter()
   const products = [
     {
       id: 1,
@@ -186,7 +187,7 @@ export default function TrackOrder() {
                 key={index}
                 className="flex mt-2 p-2 rounded-lg cursor-pointer hover:bg-[#dddddd]"
                 onClick={() =>
-                  router.push(`/track-order/${ product.id }`)
+                  router.push(`/track-order/${product.id}`)
                 }
               >
                 <div className="w-[52%] text-center">
