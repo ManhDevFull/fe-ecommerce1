@@ -1,5 +1,33 @@
+import {
+  addAuth,
+  authSelector,
+  removeAuth,
+  UserAuth,
+} from "@/redux/reducers/authReducer";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 export default function HeaderComponent() {
+  const dispatch = useDispatch();
+  const route = useRouter();
+  const auth: UserAuth = useSelector(authSelector);
+  const [userInfo, setUserInfo] = useState<UserAuth>(auth)
+  useEffect(() => {
+    getData();
+  }, []);
+  const getData = async () => {
+    const res = localStorage.getItem("token");
+    res && dispatch(addAuth(JSON.parse(res)));
+  };
+  const logUser = () => {
+    if (auth && auth.token) {
+      dispatch(removeAuth({}));
+      setUserInfo({})
+    } else {
+      route.push("/login");
+    }
+  };
   return (
     <header className="w-full h-17 md:h-24 flex md:justify-center items-center shadow-lg px-8">
       <div className="flex">
@@ -169,9 +197,9 @@ export default function HeaderComponent() {
             </Link>
           </li>
           <li>
-            <Link
-              href={"/login"}
-              className="!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap"
+            <p
+              onClick={logUser}
+              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${!auth || !auth.token && 'cursor-pointer'}`}
             >
               <svg
                 width="25"
@@ -195,12 +223,10 @@ export default function HeaderComponent() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <p
-                className="whitespace-nowrap text-[#666666] hidden sm:block pl-1"
-              >
-                Sign Up/Sign In
-              </p>
-            </Link>
+              <span className="whitespace-nowrap text-[#666666] hidden sm:block pl-1">
+                {auth && auth.token !== "" ? auth.name : "Sign Up/Sign In"}
+              </span>
+            </p>
           </li>
           <li>
             <Link href={"my-cart"} className="flex !px-6">
@@ -244,11 +270,7 @@ export default function HeaderComponent() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <p
-              className="text-[#666666] hidden sm:block pl-1"
-              >
-                Cart
-              </p>
+              <p className="text-[#666666] hidden sm:block pl-1">Cart</p>
             </Link>
           </li>
         </ul>
