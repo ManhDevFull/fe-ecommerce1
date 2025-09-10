@@ -1,12 +1,12 @@
 "use client";
 import handleAPI from "@/axios/handleAPI";
-import { addAuth, authSelector, UserAuth } from "@/redux/reducers/authReducer";
+import { addAuth } from "@/redux/reducers/authReducer";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 export default function FormAuth(props: {
   type: "login" | "sign-up";
@@ -43,6 +43,7 @@ export default function FormAuth(props: {
           route.push("/");
         }
       } catch (error) {
+        console.log(error)
         toast.error("Login fail !!!");
       } finally {
         setState((ps) => ({ ...ps, loading: false }));

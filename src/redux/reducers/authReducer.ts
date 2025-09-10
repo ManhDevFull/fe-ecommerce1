@@ -18,7 +18,7 @@ const authSlice = createSlice({
       state.data = action.payload;
       syncLocal(action.payload);
     },
-    removeAuth: (state, _action) => {
+    removeAuth: (state) => {
       state.data = userToken;
       syncLocal(userToken);
     },
@@ -34,6 +34,6 @@ const authSlice = createSlice({
 export const authReducer = authSlice.reducer;
 export const { addAuth, updateAuth, removeAuth } = authSlice.actions;
 export const authSelector = (state: any) => state.authReducer.data;
-const syncLocal = (data: any) => {
+const syncLocal = (data: UserAuth) => {
   localStorage.setItem("token", JSON.stringify(data));
 };

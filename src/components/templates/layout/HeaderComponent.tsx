@@ -12,18 +12,19 @@ export default function HeaderComponent() {
   const dispatch = useDispatch();
   const route = useRouter();
   const auth: UserAuth = useSelector(authSelector);
-  const [userInfo, setUserInfo] = useState<UserAuth>(auth)
+  const [userInfo, setUserInfo] = useState<UserAuth>(auth);
   useEffect(() => {
+    const getData = async () => {
+      console.log(userInfo)
+      const res = localStorage.getItem("token");
+      res && dispatch(addAuth(JSON.parse(res)));
+    };
     getData();
   }, []);
-  const getData = async () => {
-    const res = localStorage.getItem("token");
-    res && dispatch(addAuth(JSON.parse(res)));
-  };
   const logUser = () => {
     if (auth && auth.token) {
       dispatch(removeAuth({}));
-      setUserInfo({})
+      setUserInfo({});
     } else {
       route.push("/login");
     }
@@ -199,7 +200,9 @@ export default function HeaderComponent() {
           <li>
             <p
               onClick={logUser}
-              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${!auth || !auth.token && 'cursor-pointer'}`}
+              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
+                !auth || (!auth.token && "cursor-pointer")
+              }`}
             >
               <svg
                 width="25"
