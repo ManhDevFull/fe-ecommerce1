@@ -163,7 +163,7 @@ export default function FooterComponent() {
       <div>
         <h6 className="font-medium">TOP CATEGORY</h6>
         <ul>
-          {topCategory.map((item, _index) => (
+          {topCategory.map((item) => (
             <li
               key={item.key}
               className="relative pt-2 overflow-hidden text-[#888888] duration-500 group"
@@ -191,7 +191,7 @@ export default function FooterComponent() {
         <h6 className="font-medium">QUICK LINK</h6>
 
         <ul style={{ margin: "0 !important", padding: "0 !important" }}>
-          {quickLink.map((item, _index) => (
+          {quickLink.map((item) => (
             <li
               key={item.key}
               className="pt-2 text-[#888888] w-[70%] hover:text-[#ffffff] duration-500"
@@ -235,7 +235,7 @@ export default function FooterComponent() {
           style={{ paddingLeft: "0 !important" }}
           className="w-full flex flex-wrap "
         >
-          {listTag.map((item, _index) => (
+          {listTag.map((item) => (
             <Link
               key={item.key}
               href={item.href}
