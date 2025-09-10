@@ -1,3 +1,4 @@
+
 "use client"
 import handleAPI from "@/axios/handleAPI"
 import { addAuth, authSelector, UserAuth } from "@/redux/reducers/authReducer"
@@ -18,6 +19,5 @@ export default function Home() {
     }
     getUser()
   }, [])
-
   return <p>Trang chủ</p>
 }
