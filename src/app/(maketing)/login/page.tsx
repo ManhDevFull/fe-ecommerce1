@@ -1,8 +1,18 @@
+"use client";
 import FormAuth from "@/components/templates/AuthForm/FormAuth";
 import BackNavigation from "@/components/ui/BackNavigation";
+import { authSelector, UserAuth } from "@/redux/reducers/authReducer";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function LoginPage() {
+  const auth: UserAuth = useSelector(authSelector);
+  const route = useRouter();
+  useEffect(() => {
+    if (auth && auth.token && auth.name) route.push("/");
+  }, [auth]);
   return (
     <>
       <BackNavigation />
