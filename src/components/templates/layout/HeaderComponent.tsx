@@ -23,7 +23,7 @@ export default function HeaderComponent() {
   }, []);
   const logUser = () => {
     if (auth && auth.token) {
-      dispatch(removeAuth({}));
+      dispatch(removeAuth());
       setUserInfo({});
     } else {
       route.push("/login");
