@@ -1,29 +1,60 @@
 "use client";
+import handleAPI from "@/axios/handleAPI";
+import { addAuth, authSelector, UserAuth } from "@/redux/reducers/authReducer";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 export default function FormAuth(props: {
   type: "login" | "sign-up";
-  handle?: (val:{
-email?: string, name?: string, pass?: string
-          }) => void;
+  handle?: (val: { email?: string; name?: string; pass?: string }) => void;
 }) {
   const { type, handle } = props;
   const route = useRouter();
+  const dispatch = useDispatch();
   const [state, setState] = useState<{
     email?: string;
     password?: string;
     fullName?: string;
-  }>({});
-  const authSubmit = () => {
+    loading: boolean;
+  }>({
+    loading: false,
+  });
+  const authSubmit = async () => {
     if (state.email && state.password) {
-      route.push("/");
-      toast.success("Login successful !!!");
+      setState((ps) => ({ ...ps, loading: true }));
+      try {
+        const res = await handleAPI(
+          "Auth/login",
+          { Email: state.email, Password: state.password },
+          "post"
+        );
+        if (res.status === 200) {
+          const authData = {
+            token: res.data.token,
+            name: res.data.user.name,
+          };
+
+          dispatch(addAuth(authData));
+          toast.success("Login successful !!!");
+          route.push("/");
+        }
+      } catch (error) {
+        toast.error("Login fail !!!");
+      } finally {
+        setState((ps) => ({ ...ps, loading: false }));
+      }
     } else {
       toast.warning("Please enter complete information!");
+    }
+  };
+  const checkExist = async () => {
+    try {
+    } catch (error) {
+      console.log(error);
     }
   };
   if (type === "login")
@@ -53,8 +84,11 @@ email?: string, name?: string, pass?: string
             />
           </p>
           <button
+            disabled={state.loading}
             onClick={authSubmit}
-            className="bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg"
+            className={`bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg ${
+              state.loading && "cursor-wait opacity-70"
+            }`}
           >
             Login
           </button>
@@ -95,9 +129,9 @@ email?: string, name?: string, pass?: string
             className="outline-none text-lg px-5 py-4 rounded-xl bg-gray-100 mt-3"
             type="text"
             placeholder="Enter your full name"
-                     onChange={(e) =>
-                setState((ps) => ({ ...ps, fullName: e.target.value }))
-              }
+            onChange={(e) =>
+              setState((ps) => ({ ...ps, fullName: e.target.value }))
+            }
           />
         </p>
         <p className="flex flex-col mt-5 md:w-[100%] 2xl:w-[65%]">
@@ -106,9 +140,9 @@ email?: string, name?: string, pass?: string
             className="outline-none text-lg px-5 py-4 rounded-xl bg-gray-100 mt-3"
             type="email"
             placeholder="Enter your email address"
-                     onChange={(e) =>
-                setState((ps) => ({ ...ps, email: e.target.value }))
-              }
+            onChange={(e) =>
+              setState((ps) => ({ ...ps, email: e.target.value }))
+            }
           />
         </p>
         <p className="flex flex-col mt-5 md:w-[100%] 2xl:w-[65%]">
@@ -117,13 +151,20 @@ email?: string, name?: string, pass?: string
             className="outline-none text-lg px-5 py-4 rounded-xl bg-gray-100 mt-3"
             type="password"
             placeholder="Enter your password"
-                     onChange={(e) =>
-                setState((ps) => ({ ...ps, password: e.target.value }))
-              }
+            onChange={(e) =>
+              setState((ps) => ({ ...ps, password: e.target.value }))
+            }
           />
         </p>
         <button
-          onClick={()=>handle?.({email: state.email, name: state.fullName, pass: state.password})}
+          onClick={async () => {
+            await checkExist();
+            handle?.({
+              email: state.email,
+              name: state.fullName,
+              pass: state.password,
+            });
+          }}
           className="bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg"
         >
           Sign Up
