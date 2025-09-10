@@ -7,6 +7,7 @@ import { IoCloseCircleOutline } from "react-icons/io5";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 const products = [
   {
     id: 1,
@@ -104,7 +105,7 @@ export default function WishList() {
             {wishlistItems.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="py-4 px-4 flex items-center gap-4" onClick={()=>route.push(`product/${item.id}`)}>
-                  <img
+                  <Image
                     src={item.img}
                     alt={item.name}
                     className="w-16 h-16 object-contain"

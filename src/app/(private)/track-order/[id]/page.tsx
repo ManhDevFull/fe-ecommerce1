@@ -3,16 +3,14 @@ import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
 import { BsFillBoxSeamFill } from "react-icons/bs";
 import { CiCircleCheck } from "react-icons/ci";
-import { FaHandshake, FaMap, FaMapMarkerAlt, FaTruck } from "react-icons/fa";
+import { FaHandshake, FaTruck } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa6";
 import { FiMap } from "react-icons/fi";
 import { HiOutlineMapPin } from "react-icons/hi2";
-import { IoMdContact } from "react-icons/io";
 import {
   PiChecks,
   PiNotebook,
   PiNotepad,
-  PiNotepadBold,
   PiUser,
 } from "react-icons/pi";
 
@@ -20,6 +18,7 @@ type Props = {
   params: { id: string };
 };
 export default function OrderProcess({ params }: Props) {
+  console.log(params)
   const product = {
     id: 1,
     name: "Jacket",

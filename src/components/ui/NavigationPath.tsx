@@ -1,6 +1,5 @@
 import { IoHomeOutline } from "react-icons/io5";
 import { GrPrevious } from "react-icons/gr";
-import { useState, useEffect, use } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 export default function NavigationPath() {

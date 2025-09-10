@@ -1,10 +1,4 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PiChecks, PiNotebook, PiNotepadBold } from "react-icons/pi";
-import { FaMap, FaMapMarkerAlt, FaTruck } from "react-icons/fa";
-import { IoMdContact } from "react-icons/io";
-import { CiCircleCheck } from "react-icons/ci";
 import NavigationPath from "@/components/ui/NavigationPath";
 import BackNavigation from "@/components/ui/BackNavigation";
 import { useRouter } from "next/navigation";
@@ -48,78 +42,78 @@ export default function TrackOrder() {
       status: "Delivered",
     },
   ];
-  const activities = [
-    {
-      icon: PiChecks,
-      bg: "bg-green-200",
-      border: "border-green-400",
-      textColor: "text-green-600",
-      content:
-        "Your order has been delivered. Thank you for shopping at Colicon",
-      time: "23 Jan, 2021 at 7:32 PM",
-    },
-    {
-      icon: IoMdContact,
-      bg: "bg-blue-300 ",
-      border: "border-blue-300",
-      textColor: "text-blue-600",
-      content:
-        "Our delivery man (John Wick) Has picked-up your order for delvery",
-      time: "23 Jan, 2021 at 2:00 PM",
-    },
-    {
-      icon: FaMapMarkerAlt,
-      bg: "bg-blue-300 ",
-      border: "border-blue-300",
-      textColor: "text-blue-600",
-      content:
-        "Our delivery man (John Wick) Has picked-up your order for delvery",
-      time: "23 Jan, 2021 at 2:00 PM",
-    },
-    {
-      icon: FaMap,
-      bg: "bg-blue-300 ",
-      border: "border-blue-300",
-      textColor: "text-blue-600",
-      content:
-        "Our delivery man (John Wick) Has picked-up your order for delvery",
-      time: "23 Jan, 2021 at 2:00 PM",
-    },
-    {
-      icon: CiCircleCheck,
-      bg: "bg-green-200",
-      border: "border-green-400",
-      textColor: "text-green-600",
-      content:
-        "Your order has been delivered. Thank you for shopping at Colicon",
-      time: "23 Jan, 2021 at 7:32 PM",
-    },
-    {
-      icon: PiNotepadBold,
-      bg: "bg-blue-300 ",
-      border: "border-blue-300",
-      textColor: "text-blue-600",
-      content:
-        "Our delivery man (John Wick) Has picked-up your order for delvery",
-      time: "23 Jan, 2021 at 2:00 PM",
-    },
-  ];
+  // const activities = [
+  //   {
+  //     icon: PiChecks,
+  //     bg: "bg-green-200",
+  //     border: "border-green-400",
+  //     textColor: "text-green-600",
+  //     content:
+  //       "Your order has been delivered. Thank you for shopping at Colicon",
+  //     time: "23 Jan, 2021 at 7:32 PM",
+  //   },
+  //   {
+  //     icon: IoMdContact,
+  //     bg: "bg-blue-300 ",
+  //     border: "border-blue-300",
+  //     textColor: "text-blue-600",
+  //     content:
+  //       "Our delivery man (John Wick) Has picked-up your order for delvery",
+  //     time: "23 Jan, 2021 at 2:00 PM",
+  //   },
+  //   {
+  //     icon: FaMapMarkerAlt,
+  //     bg: "bg-blue-300 ",
+  //     border: "border-blue-300",
+  //     textColor: "text-blue-600",
+  //     content:
+  //       "Our delivery man (John Wick) Has picked-up your order for delvery",
+  //     time: "23 Jan, 2021 at 2:00 PM",
+  //   },
+  //   {
+  //     icon: FaMap,
+  //     bg: "bg-blue-300 ",
+  //     border: "border-blue-300",
+  //     textColor: "text-blue-600",
+  //     content:
+  //       "Our delivery man (John Wick) Has picked-up your order for delvery",
+  //     time: "23 Jan, 2021 at 2:00 PM",
+  //   },
+  //   {
+  //     icon: CiCircleCheck,
+  //     bg: "bg-green-200",
+  //     border: "border-green-400",
+  //     textColor: "text-green-600",
+  //     content:
+  //       "Your order has been delivered. Thank you for shopping at Colicon",
+  //     time: "23 Jan, 2021 at 7:32 PM",
+  //   },
+  //   {
+  //     icon: PiNotepadBold,
+  //     bg: "bg-blue-300 ",
+  //     border: "border-blue-300",
+  //     textColor: "text-blue-600",
+  //     content:
+  //       "Our delivery man (John Wick) Has picked-up your order for delvery",
+  //     time: "23 Jan, 2021 at 2:00 PM",
+  //   },
+  // ];
 
-  const orderData = {
-    status: "Packaging",
-  };
-  // const currentStep = steps.findIndex((s) => s.name === orderData.status);
-  const [currentStep, setCurrentStep] = useState(Number);
-  type TrackProduct = {
-    id: number;
-    status: string;
-    name: string;
-    img: string;
-    description: string;
-    price: number;
-    Qty: number;
-  };
-  const [product, setProduct] = useState<TrackProduct | null>(null);
+  // const orderData = {
+  //   status: "Packaging",
+  // };
+
+  // const [currentStep, setCurrentStep] = useState(Number);
+  // type TrackProduct = {
+  //   id: number;
+  //   status: string;
+  //   name: string;
+  //   img: string;
+  //   description: string;
+  //   price: number;
+  //   Qty: number;
+  // };
+  // const [product, setProduct] = useState<TrackProduct | null>(null);
   // const handleOnclick = (data: TrackProduct) => {
   //     setProduct({
   //         id: data.id,
@@ -171,8 +165,6 @@ export default function TrackOrder() {
               received.
             </p>
           </div>
-
-          {/* nếu w >= sm => block */}
           <div className="block bg-gray-100 w-full rounded-[8px] mt-4 px-4 pb-2 overflow-x-auto">
             <div className="flex w-full border-b-1 border-[#888888] text-[#5b5b5b]">
               <p className="w-[52%] pl-2 text-left py-2">Product Name</p>

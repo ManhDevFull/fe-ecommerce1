@@ -1,6 +1,7 @@
 "use client";
 import FormAuth from "@/components/templates/AuthForm/FormAuth";
 import FormOTP from "@/components/templates/AuthForm/FormOTP";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -66,13 +67,13 @@ export default function SignUpPage() {
           <p className="text-[#00000060] text-lg">Login in to your account</p>
         </div>
         {state.pageOTP ? (
-          <img
+          <Image
             className="w-[100%] xl:w-[90%] 2xl:w-[80%] lg:mb-5 xl:mb-10 2xl:mb-0"
             src="https://res.cloudinary.com/do0im8hgv/image/upload/v1755839130/6736e108-8132-4433-9182-33a099b345b2.png"
             alt="image-auth"
           />
         ) : (
-          <img
+          <Image
             className="w-[90%] xl:w-[80%] 2xl:w-[70%]"
             src="https://res.cloudinary.com/do0im8hgv/image/upload/v1755761340/370e0dbb-f34c-4ba7-8e5c-797f036749ee.png"
             alt="image-auth"

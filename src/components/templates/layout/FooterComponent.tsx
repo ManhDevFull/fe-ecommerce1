@@ -1,6 +1,5 @@
 import { Apple, ArrowRight, GooglePlay } from "iconsax-react";
 import Link from "next/link";
-import { LuMinus } from "react-icons/lu";
 export default function FooterComponent() {
   const topCategory = [
     {
