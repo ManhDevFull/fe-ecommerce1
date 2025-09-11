@@ -66,6 +66,8 @@ export default function LoginPage() {
           </div>
 
           <Image
+          width={500}
+          height={500}
             className="w-[90%] xl:w-[80%] 2xl:w-[70%]"
             src="https://res.cloudinary.com/do0im8hgv/image/upload/v1755761340/370e0dbb-f34c-4ba7-8e5c-797f036749ee.png"
             alt="image-auth"
