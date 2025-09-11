@@ -34,7 +34,7 @@ export default function FormAuth(props: {
         );
         if (res.status === 200) {
           const authData = {
-            token: res.data.token,
+            token: res.data.accessToken,
             name: res.data.user.name,
           };
 
