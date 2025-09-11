@@ -3,7 +3,7 @@ import store from '@/redux/store'
 import axios from 'axios'
 import queryString from 'query-string'
 
-const baseURL = 'http://localhost:5000'
+const baseURL = 'https://be-dotnet-ecommerce1.onrender.com'
 const getAccessToken = () => {
   const res = localStorage.getItem('token')
   if (res) {
@@ -100,3 +100,4 @@ axiosClient.interceptors.response.use(
 )
 
 export default axiosClient
+
