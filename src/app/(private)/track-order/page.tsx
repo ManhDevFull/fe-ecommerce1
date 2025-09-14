@@ -9,7 +9,7 @@ import NavigationPath from "@/components/ui/NavigationPath";
 import BackNavigation from "@/components/ui/BackNavigation";
 import { useRouter } from "next/navigation";
 export default function TrackOrder() {
-    const router = useRouter()
+  const router = useRouter()
   const products = [
     {
       id: 1,
@@ -120,42 +120,6 @@ export default function TrackOrder() {
     Qty: number;
   };
   const [product, setProduct] = useState<TrackProduct | null>(null);
-  // const handleOnclick = (data: TrackProduct) => {
-  //     setProduct({
-  //         id: data.id,
-  //         status: data.status,
-  //         name: data.name,
-  //         img: data.img,
-  //         description: data.description,
-  //         price: data.price,
-  //         Qty: data.Qty
-  //     })
-  //     let st = steps.findIndex((s) => s.name === data.status);
-  //     console.log(st);
-  //     setCurrentStep(st);
-  // }
-
-  // const updateComponet = () => {
-  //     const el1 = document.getElementById('list-mobile');
-  //     const el2 = document.getElementById('list-desktop')
-  //     const track = document.getElementById('track-order')
-  //     console.log(el1)
-  //     if (el1) {
-  //         el1.classList.add("!hidden");
-  //         el1.classList.remove("block");
-  //     }
-
-  //     if (el2) {
-  //         el2.classList.add("!hidden");
-  //         el2.classList.remove("block");
-  //     }
-
-  //     if (track) {
-  //         track.classList.remove("hidden");
-  //         track.classList.add("block");
-  //     }
-
-  // }
   return (
     <>
       <main className="w-full relative pt-2">
@@ -186,7 +150,7 @@ export default function TrackOrder() {
                 key={index}
                 className="flex mt-2 p-2 rounded-lg cursor-pointer hover:bg-[#dddddd]"
                 onClick={() =>
-                  router.push(`/track-order/${ product.id }`)
+                  router.push(`/track-order/${product.id}`)
                 }
               >
                 <div className="w-[52%] text-center">
