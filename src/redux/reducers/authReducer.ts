@@ -3,9 +3,11 @@ import { createSlice } from "@reduxjs/toolkit";
 export interface UserAuth {
   token?: string;
   name?: string;
+  avata?: string
 }
 const userToken: UserAuth = {
   token: "",
+  avata: '',
   name: "",
 };
 const authSlice = createSlice({
@@ -26,7 +28,8 @@ const authSlice = createSlice({
       state.data.token = action.payload.token;
       syncLocal({
         token: action.payload.token,
-        name: state.data.name
+        name: state.data.name,
+        avata: state.data.avata
       });
     },
   },
