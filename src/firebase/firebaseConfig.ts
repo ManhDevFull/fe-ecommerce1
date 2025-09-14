@@ -1,32 +1,8 @@
-
-// import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
-// import { FacebookAuthProvider, getAuth, GoogleAuthProvider } from "firebase/auth";
-// import { getStorage } from "firebase/storage";
-// const firebaseConfig = {
-//   apiKey: "AIzaSyCifYc1vGth7VAUTq-gLAwfjp68KyDUrDw",
-//   authDomain: "vertex-e65a4.firebaseapp.com",
-//   projectId: "vertex-e65a4",
-//   storageBucket: "vertex-e65a4.firebasestorage.app",
-//   messagingSenderId: "579431002621",
-//   appId: "1:579431002621:web:1e6858b32977bec2746994",
-//   measurementId: "G-34XEVG0CB8"
-// };
-// const app = initializeApp(firebaseConfig);
-// export const auth = getAuth()
-// export const storage = getStorage(app)
-// const analytics = getAnalytics ( app );
-// export const googleProvider = new GoogleAuthProvider();
-// export const facebookProvider = new FacebookAuthProvider();
-// auth.languageCode = 'vi';
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import {
-  FacebookAuthProvider,
-  getAuth,
-  GoogleAuthProvider,
-} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
@@ -38,9 +14,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// chỉ chạy auth trên client
+export const auth = typeof window !== "undefined" ? getAuth(app) : null;
 export const storage = getStorage(app);
-const analytics = getAnalytics(app);
 export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
-auth.languageCode = "vi";
+
+// analytics cũng chỉ chạy ở client
+export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
+
+if (auth) {
+  auth.languageCode = "vi";
+}
