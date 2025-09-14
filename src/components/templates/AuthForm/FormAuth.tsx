@@ -1,8 +1,8 @@
 "use client";
 import handleAPI from "@/axios/handleAPI";
 import {
-  auth,
   facebookProvider,
+  getAuthClient,
   googleProvider,
 } from "@/firebase/firebaseConfig";
 import { addAuth } from "@/redux/reducers/authReducer";
@@ -32,9 +32,10 @@ export default function FormAuth(props: {
   });
   const handleLoginWithGoogle = async () => {
     try {
+      const auth = getAuthClient();
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
-        const res = await handleAPI(
+      const res = await handleAPI(
         "Auth/social-auth",
         { IdToken: idToken },
         "post"
@@ -55,6 +56,7 @@ export default function FormAuth(props: {
   };
   const loginWithFacebook = async () => {
     try {
+      const auth = getAuthClient();
       const result = await signInWithPopup(auth, facebookProvider);
       const idToken = await result.user.getIdToken();
       const res = await handleAPI(
@@ -149,7 +151,10 @@ export default function FormAuth(props: {
           </p>
         </div>
         <div>
-          <button onClick={handleLoginWithGoogle} className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center">
+          <button
+            onClick={handleLoginWithGoogle}
+            className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center"
+          >
             <FcGoogle size={43} />{" "}
             <span className="ml-3">Login with Google</span>
           </button>
