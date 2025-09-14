@@ -1,6 +1,7 @@
+// firebaseConfig.ts
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, type Auth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -14,16 +15,26 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
-// chỉ chạy auth trên client
-export const auth = typeof window !== "undefined" ? getAuth(app) : null;
-export const storage = getStorage(app);
+let authInstance: Auth | null = null;
+let analyticsInstance: ReturnType<typeof getAnalytics> | null = null;
+
+export const getAuthClient = (): Auth => {
+  if (!authInstance) {
+    authInstance = getAuth(app);
+    authInstance.languageCode = "vi";
+  }
+  return authInstance;
+};
+
+export const getAnalyticsClient = () => {
+  if (typeof window !== "undefined" && !analyticsInstance) {
+    analyticsInstance = getAnalytics(app);
+  }
+  return analyticsInstance;
+};
+
+export { storage };
 export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
-
-// analytics cũng chỉ chạy ở client
-export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
-
-if (auth) {
-  auth.languageCode = "vi";
-}
