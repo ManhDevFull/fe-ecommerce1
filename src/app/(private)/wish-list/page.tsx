@@ -108,6 +108,8 @@ export default function WishList() {
                   <Image
                     src={item.img}
                     alt={item.name}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 object-contain"
                   />
                   <span className="font-['Public Sans'] text-[13.45px] font-medium text-gray-800 break-words whitespace-normal">
