@@ -46,7 +46,7 @@ export function Slider() {
         setCurrentIndex(preCurrent => (preCurrent - 1 + slides.length) % slides.length)
     }
     return (
-        <div className=" w-full px-4 sm:px-16">
+        <div className=" w-full py-6 px-4 sm:px-16">
             <div className="w-full border-none h-[200px] sm:h-[250px] lg:h-[350px] rounded-2xl bg-[#0C59B6] z-0 relative">
                 <div className="w-full relative h-full overflow-hidden">
                     <div className="absolute z-0 bottom-[120px] w-[180px] h-[180px] md:w-[200px] md:h-[200px] right-4 sm:bottom-[150px] lg:right-8 lg:bottom-34 flex justify-center items-center lg:w-120 lg:h-120 rounded-full border-[1px] border-white ">

@@ -4,7 +4,7 @@ import { TfiCup } from "react-icons/tfi";
 
 export function Features() {
     return (
-        <div className="w-full px-4  sm:px-16 py-10">
+        <div className="w-full px-4 sm:px-16">
             <div className="border-[1px] lg:py-4 px-4 rounded-[2px] border-[#E4E7E9] flex flex-col lg:flex lg:flex-row lg:justify-around">
                 <div className="flex items-center py-2 lg:justify-between gap-4">
                     <div className="text-center">
