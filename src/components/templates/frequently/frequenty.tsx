@@ -155,7 +155,7 @@ export default function Frequently() {
                         </div>
                         {/* Image */}
                         <div className="relative py-2">
-                            <div className="flex justify-around items-center absolute h-full w-full bg-gray-600/40 opacity-0 group-hover:opacity-100 transition-opacity duration-800 z-0">
+                            <div className="flex justify-around items-center absolute h-full w-full bg-gray-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-800 z-0">
                                <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black">
                                 <CiHeart size={20} className="text-white"/>
                                </div>
@@ -168,7 +168,7 @@ export default function Frequently() {
                         {/* Rating */}
                         <div>
                             {product.rating && (
-                                <div className="flex">
+                                <div className="flex pt-4">
                                     <div className="flex justify-around items-center gap-2">
                                         {Array.from({ length: product.rating }).map((_, i) => (
                                             <FaStar key={i} className="text-[#EBC80C]" size={20} />
@@ -177,7 +177,7 @@ export default function Frequently() {
                                     </div>
                                 </div>
                             )}
-                            <div><p className="font-medium text-[16px] line-clamp-2">{product.name}</p></div>
+                            <div className="py-4"><p className="font-medium text-[16px] line-clamp-2">{product.name}</p></div>
                             <div className="flex items-center gap-2">
                                 <span className={`font-bold flex items-center ${product.price_discounted ? 'line-through decoration-gray-500' : ''}`}>
                                     <FaRupeeSign size={14} className={`${product.price_discounted ? 'text-gray-500' : 'text-blue-500'}`} />
