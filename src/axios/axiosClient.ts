@@ -2,7 +2,10 @@ import { updateAuth } from '@/redux/reducers/authReducer'
 import store from '@/redux/store'
 import axios from 'axios'
 import queryString from 'query-string'
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://be-dotnet-ecommerce1.onrender.com'
+
+// const baseURL = 'http://localhost:5000'
+
+ const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 const getAccessToken = () => {
   const res = localStorage.getItem('token')
   if (res) {
@@ -99,4 +102,5 @@ axiosClient.interceptors.response.use(
 )
 
 export default axiosClient
+
 
