@@ -42,19 +42,19 @@ export default function ShopByCategory() {
     return (
         <div className="pt-8 px-4 sm:px-16">
             <div className=" pt-8 border-t-1 border-gray-300 flex justify-between items-center">
-                <div className="flex gap-1 sm:flex-col lg:flex-row lg:gap-4">
-                    <p className="font-bold sm:text-4xl  text-black">SHOP FROM </p>
-                    <p className="font-bold sm:text-4xl text-yellow-500">TOP CATEGORIES</p>
+                <div className="flex gap-1">
+                    <p className="font-bold sm:text-[18px] md:text-[24px]  text-black">SHOP FROM </p>
+                    <p className="font-bold sm:text-[18px] md:text-[24px] text-[#FCBD01]">TOP CATEGORIES</p>
                 </div>
-                <BtnViewAll className="sm:h-[50px] sm:w-[100px]" />
+                <BtnViewAll className="sm:px-6" />
             </div>
             <SwiperLibrary items={products} quantity={{smQuantity:4, lgQuantity: 7}} renderItem={
                 ((product, index) => (
                     <div className="flex flex-col justify-center items-center">
-                        <div className="bg-gray-200 flex justify-center items-center h-[100px] w-[100px] md:h-[130px] md:w-[130px] xl:h-[150px] xl:w-[150px] rounded-full">
+                        <div className="bg-[#F5F5F5] flex justify-center items-center h-[100px] w-[100px] md:h-[130px] md:w-[130px] xl:h-[150px] xl:w-[150px] rounded-full">
                             <img className="w-[60px] h-[60px] lg:w-[80px] lg:h-[100px] " src={product.img} alt="" />
                         </div>
-                        <p className="text-center">{product.name}</p>
+                        <p className="text-center font-bold text-[#222222]">{product.name}</p>
                     </div>
                 ))
             }

@@ -51,10 +51,10 @@ export function Brands() {
     ]
     return (
         <div className="w-full px-4 sm:px-16 py-10">
-            <h1 className="sm:text-[20px] md:text-2xl lg:text-4xl xl:text-5xl text-2xl font-bold">SHOP BY BRANDS</h1>
+            <h2 className="sm:text-[18px] md:text-[24px] font-bold">SHOP BY BRANDS</h2>
             <SwiperLibrary items={brands} quantity={{ smQuantity: 4, lgQuantity: 6 }} renderItem={
                 (brand, index) => (
-                    <div className="p-2 rounded-2xl w-[80px] h-[80px] md:w-[110px] md:h-[110px] lg:w-[120px] lg:h-[120px] xl:h-[150px] xl:w-[150px] 2xl:h-[160px] 2xl:w-[160px] bg-gray-200 flex items-center justify-center">
+                    <div className="p-2 rounded-2xl w-[80px] h-[80px] md:w-[110px] md:h-[110px] lg:w-[120px] lg:h-[120px] xl:h-[150px] xl:w-[150px] 2xl:h-[160px] 2xl:w-[160px] bg-[#F4F4F4] flex items-center justify-center">
                         {brand.isImage ? brand.img : brand.logo}
                     </div>
                 )

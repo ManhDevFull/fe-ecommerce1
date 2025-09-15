@@ -5,8 +5,8 @@ import { TfiCup } from "react-icons/tfi";
 export function Features() {
     return (
         <div className="w-full px-4  sm:px-16 py-10">
-            <div className="border-[1px] px-4 py-8 rounded-[2px] border-gray-200 flex flex-col lg:flex lg:flex-row lg:justify-around">
-                <div className="flex items-center lg:justify-between gap-4">
+            <div className="border-[1px] lg:py-4 px-4 rounded-[2px] border-[#E4E7E9] flex flex-col lg:flex lg:flex-row lg:justify-around">
+                <div className="flex items-center py-2 lg:justify-between gap-4">
                     <div className="text-center">
                         <BsBoxSeam size={30} />
                     </div>
@@ -15,8 +15,8 @@ export function Features() {
                         <p className="text-gray-500">Delivery in 24/H</p>
                     </div>
                 </div>
-                <div className="hidden sm:block h-auto w-[1px] bg-gray-400"></div>
-                <div className="flex py-4 sm:py-2 lg:justify-between items-center gap-4">
+                <div className="hidden lg:block h-auto lg:w-[1px] bg-[#E4E7E9]"></div>
+                <div className="border-t-1 py-2 border-[#E4E7E9] lg:border-none flex lg:justify-between items-center gap-4">
                     <div className="text-center">
                         <TfiCup size={30} />
                     </div>
@@ -25,8 +25,8 @@ export function Features() {
                         <p className="text-gray-500">100% money-back guarantee</p>
                     </div>
                 </div>
-                <div className="h-auto hidden sm:block w-[1px] bg-gray-400"></div>
-                <div className="flex lg:justify-between items-center gap-4">
+                <div className="hidden lg:block h-auto lg:w-[1px] bg-[#E4E7E9]"></div>
+                <div className="border-t-1 py-2 border-[#E4E7E9] lg:border-none flex lg:justify-between items-center gap-4">
                     <div className="text-center">
                         <PiCreditCardLight size={30} />
                     </div>
@@ -35,8 +35,8 @@ export function Features() {
                         <p className="text-gray-500">Your money is safe</p>
                     </div>
                 </div>
-                <div className="h-auto hidden sm:block w-[1px] bg-gray-400"></div>
-                <div className="flex py-4 sm:py-2 lg:justify-between items-center gap-4 ">
+                <div className="hidden lg:block h-auto lg:w-[1px] bg-[#E4E7E9]"></div>
+                <div className="border-t-1 border-[#E4E7E9] lg:border-none flex py-2 lg:justify-between items-center gap-4 ">
                     <div className="text-center">
                         <PiHeadphonesLight size={30} />
                     </div>

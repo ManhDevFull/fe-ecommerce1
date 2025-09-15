@@ -6,10 +6,10 @@ export default function EBrand() {
         <div className="pt-8 px-4 sm:px-16">
             <div className=" pt-8 border-t-1 border-gray-300 flex justify-between items-center">
                 <div className="flex gap-1 sm:flex-col lg:flex-row lg:gap-4">
-                    <p className="font-bold sm:text-4xl  text-black">TOP</p>
-                    <p className="font-bold sm:text-4xl text-yellow-500">ELECTRONICS BRANDS</p>
+                    <p className="font-bold sm:text-[18px] md:text-[24px] text-black">TOP</p>
+                    <p className=" font-bold sm:text-[18px] md:text-[24px]">ELECTRONICS BRANDS</p>
                 </div>
-                <BtnViewAll className="sm:h-[50px] sm:w-[100px]" />
+                <BtnViewAll className="sm:px-6" />
             </div>
             <AutoSlide />
         </div>

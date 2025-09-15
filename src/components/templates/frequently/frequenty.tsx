@@ -128,10 +128,10 @@ export default function Frequently() {
     return (
         <div className="py-8 px-4 sm:px-16">
             <div className="pt-8 border-t-1 border-gray-300 flex justify-between items-center">
-                <h2 className="text-[15px] sm:text-[20px] md:text-2xl lg:text-4xl xl:text-5xl font-bold">FRENQUENTLY BOUGHT TOGETHER</h2>
-                <BtnViewAll className="sm:h-[50px] sm:w-[100px]" />
+                <h2 className="sm:text-[20px] md:text-2xl lg:text-[26px] xl:text-[30px] font-bold">FRENQUENTLY BOUGHT TOGETHER</h2>
+                <BtnViewAll className="sm:px-6" />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid lg:grid-cols-6 divide-x divide-y divide-gray-200 pt-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid lg:grid-cols-6 divide-x divide-y divide-[#E4E7E9] pt-16">
                 {products.map((product, index) => (
                     <div
                         key={index}
@@ -141,7 +141,7 @@ export default function Frequently() {
                         <div className="flex flex-col gap-2">
                             {product.discount_percent && (
                                 <div className="">
-                                    <p className="text-black font-bold p-2 bg-yellow-300 w-[100px] rounded">
+                                    <p className="text-black text-center font-bold p-2 bg-[#EFD33D] text-[12px] w-[100px] rounded">
                                         {`${product.discount_percent}% OFF`}
                                     </p>
                                 </div>
@@ -149,7 +149,7 @@ export default function Frequently() {
                             {/* Status */}
                             {product.status && (
                                 <div>
-                                    <p className={`text-white text-center ${product.status === 'HOT' ? 'bg-red-500 w-[50px]' : 'bg-gray-400 w-[100px]'}  p-2 rounded`}>{product.status}</p>
+                                    <p className={`text-white text-[12px] text-center ${product.status === 'HOT' ? 'bg-[#EE5858] w-[50px]' : 'bg-[#929FA5] w-[100px]'}  p-2 rounded`}>{product.status}</p>
                                 </div>
                             )}
                         </div>
@@ -171,22 +171,22 @@ export default function Frequently() {
                                 <div className="flex">
                                     <div className="flex justify-around items-center gap-2">
                                         {Array.from({ length: product.rating }).map((_, i) => (
-                                            <FaStar key={i} className="text-yellow-400" size={20} />
+                                            <FaStar key={i} className="text-[#EBC80C]" size={20} />
                                         ))}
                                         <p className="text-[20px] text-gray-400">{`(${product.reviews_count})`}</p>
                                     </div>
                                 </div>
                             )}
-                            <div><p className="font-medium text-[20px] line-clamp-2">{product.name}</p></div>
+                            <div><p className="font-medium text-[16px] line-clamp-2">{product.name}</p></div>
                             <div className="flex items-center gap-2">
                                 <span className={`font-bold flex items-center ${product.price_discounted ? 'line-through decoration-gray-500' : ''}`}>
-                                    <FaRupeeSign className={`${product.price_discounted ? 'text-gray-500' : 'text-blue-500'}`} />
-                                    <p className={`text-[20px] ${product.price_discounted ? 'text-gray-500 text-center' : 'text-blue-500'}`}>{product.price_original} </p>
+                                    <FaRupeeSign size={14} className={`${product.price_discounted ? 'text-gray-500' : 'text-blue-500'}`} />
+                                    <p className={`text-[14px] ${product.price_discounted ? 'text-gray-500 text-center' : 'text-blue-500'}`}>{product.price_original} </p>
                                 </span>
-                                {product.price_discounted && <p className="flex items-center font-bold"><FaRupeeSign className="text-blue-500" /> <p className="text-[20px] text-blue-500">{product.price_discounted} </p></p>}
+                                {product.price_discounted && <p className="flex items-center font-bold"><FaRupeeSign size={14} className="text-blue-500" /> <p className="text-[14px] text-blue-500">{product.price_discounted} </p></p>}
                             </div>
                             {index == 0 && (<div>
-                                <p className="text-[20px] text-gray-500">
+                                <p className="text-[15px] text-gray-500">
                                     {product.description}
                                 </p>
                             </div>)}
@@ -194,9 +194,9 @@ export default function Frequently() {
                         {index == 0 && (
                             <div className="flex justify-around items-center pt-3">
                                 <div><CiHeart size={40} /></div>
-                                <div className="flex justify-evenly gap-2 rounded-[5px] bg-blue-500 px-2 py-2 sm:px-4 md:px-2 xl:px-4">
-                                    <FiShoppingCart size={30} className="text-white" />
-                                    <p className="text-white">ADD TO CARD</p>
+                                <div className="flex items-center justify-evenly gap-2 rounded-[5px] bg-blue-500 px-2 py-2 sm:px-4 md:px-2 xl:px-4">
+                                    <FiShoppingCart size={26} className="text-white" />
+                                    <p className="text-white text-[14px] text-center">ADD TO CARD</p>
                                 </div>
                                 <div>
                                     <IoEyeOutline size={40} />

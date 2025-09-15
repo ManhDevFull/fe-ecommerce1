@@ -41,7 +41,7 @@ export default function DealsDay() {
         <div className="w-ful px-4 sm:px-16 py-4">
             <div className="w-full flex justify-between items-center gap-2">
                 <div className="flex items-center">
-                    <h2 className="text-[15px] sm:text-[20px] md:text-2xl lg:text-4xl xl:text-5xl font-bold">TODAY'S DEALS OF THE DAY</h2>
+                    <h2 className="sm:text-[18px] md:text-[24px] font-bold">TODAY'S DEALS OF THE DAY</h2>
                 </div>
                 <div className="sm:flex sm:pt-0 sm:gap-2 sm:justify-between items-center">
                     <p className="font-medium hidden lg:block">Deals ends in</p>
@@ -60,7 +60,7 @@ export default function DealsDay() {
                         >
                             <Product img={product.img} isNew={true} />
                             <FlashDealBar endTime={product.endTime} />
-                            <h3 className="text-2xl sm:text-3xl pb-2 font-bold">{product.name}</h3>
+                            <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
                             <BtnBuyNow price={product.price} />
                         </div>
                     ))

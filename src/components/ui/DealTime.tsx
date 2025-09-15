@@ -23,7 +23,7 @@ export default function DealTime({ endTime, unit }: timeUnit) {
     const min = unit.day ?Math.floor((((timeLeft % 86400) % 3600) / 60)) : Math.floor((timeLeft % 3600) / 60);
     const sec = unit.day ?Math.floor((((timeLeft % 86400) % 3600) % 60)) :Math.floor(timeLeft % 60);
     return (
-        <div className="mt-2 sm:mt-0 sm:h-[30px] md:h-[40px] flex items-center text-center bg-yellow-400 rounded-[10px]">
+        <div className="mt-2 sm:mt-0 sm:h-[40px] flex items-center text-center bg-yellow-400 rounded-[10px]">
             <p className="font-bold sm:p-1 md:p-2 lg:p-4 p-2">
                {`${unit.day ? `${day}${unit.day} : ` : ''}${hour}${unit.hour}: ${min}${unit.min} : ${sec}${unit.sec}`}
             </p>
