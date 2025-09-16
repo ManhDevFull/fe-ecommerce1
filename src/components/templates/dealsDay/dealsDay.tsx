@@ -39,15 +39,15 @@ export default function DealsDay() {
     const router = useRouter();
     return (
         <div className="w-ful px-4 sm:px-16 py-4">
-            <div className="w-full flex justify-between items-center gap-2">
+            <div className="w-full sm:flex sm:justify-between sm:items-center gap-2">
                 <div className="flex items-center">
                     <h2 className="sm:text-[18px] md:text-[24px] font-bold">TODAY'S DEALS OF THE DAY</h2>
                 </div>
                 <div className="sm:flex sm:pt-0 sm:gap-2 sm:justify-between items-center">
                     <p className="font-medium hidden lg:block">Deals ends in</p>
-                    <div className="flex justify-between gap-1 sm:flex lg:gap-4">
+                    <div className=" flex justify-between items-center gap-1 lg:gap-4">
                         <DealTime unit={{ day: 'd', hour: 'h', min: 'm', sec: 's' }} endTime={parse("2025-11-07 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date())} />
-                        <BtnViewAll className={'py-4'} />
+                        <BtnViewAll className={'sm:px-6 !p-2'} />
                     </div>
                 </div>
             </div>

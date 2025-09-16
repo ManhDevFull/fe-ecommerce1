@@ -128,7 +128,7 @@ export default function Frequently() {
     return (
         <div className="py-8 px-4 sm:px-16">
             <div className="pt-8 border-t-1 border-gray-300 flex justify-between items-center">
-                <h2 className="sm:text-[20px] md:text-2xl lg:text-[26px] xl:text-[30px] font-bold">FRENQUENTLY BOUGHT TOGETHER</h2>
+                <h2 className="sm:text-[18px] md:text-[24px] font-bold">FRENQUENTLY BOUGHT TOGETHER</h2>
                 <BtnViewAll className="sm:px-6" />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid lg:grid-cols-6 divide-x divide-y divide-[#E4E7E9] pt-16">
