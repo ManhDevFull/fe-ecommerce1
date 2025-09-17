@@ -11,10 +11,10 @@ import Image from "next/image";
 import { CiCamera } from "react-icons/ci";
 
 const menuItems = [
-    { id: "account", label: "MY ACCOUNT", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png", bg: "#C2E6FF" },
-    { id: "orders", label: "ORDER HISTORY", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949098/image_2_h5wwjb.png", bg: "#FFEBBB" },
-    { id: "address", label: "ADDRESS", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949103/image_3_f2tien.png", bg: "#E9FFC7" },
-    { id: "logout", label: "LOGOUT", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949115/image_4_wgcv2s.png", bg: "#FFD7DC" },
+    { id: "account", label: "MY ACCOUNT", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png", bg: "bg-[#C2E6FF]" },
+    { id: "orders", label: "ORDER HISTORY", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949098/image_2_h5wwjb.png", bg: "bg-[#FFEBBB]" },
+    { id: "address", label: "ADDRESS", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949103/image_3_f2tien.png", bg: "bg-[#E9FFC7]" },
+    { id: "logout", label: "LOGOUT", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949115/image_4_wgcv2s.png", bg: "bg-[#FFD7DC]" },
 ];
 
 
@@ -53,7 +53,7 @@ export default function User() {
                                             w-[172px] h-[156px] flex flex-col items-center p-4 rounded-lg transition-all
                                             ${active === item.id
                                             ? "bg-white border border-[#1877F2]" // đang được chọn
-                                            : `bg-[${item.bg}] border border-transparent hover:bg-white hover:border-[#1877F2]`} // chưa chọn
+                                            : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`} // chưa chọn
                                             `}
                                 >
                                     <img src={item.img} className="w-[92px] h-[92px]" />
@@ -61,14 +61,14 @@ export default function User() {
                                 </button>
                             ))}
                         </div>
-
                     </div>
-
                     {/* Form */}
                     <div className="md:col-span-2 bg-white shadow rounded-xl p-6">
-                        <h2 className="text-xl font-semibold mb-4">Account Details</h2>
-
-                        <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center mb-6">
+                            <img src="https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png" alt="" className="w-[43px] h-[43px]" />
+                            <h2 className="text-xl font-semibold mb-4">Account Details</h2>
+                        </div>
+                        <form className="grid grid-cols-1 gap-4">
                             {/* First Name */}
                             <div>
                                 <label className="block text-sm font-medium mb-1">First Name</label>
@@ -109,42 +109,45 @@ export default function User() {
                                 />
                             </div>
 
-                            {/* Old Password */}
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium mb-1">Old Password</label>
-                                <input
-                                    type="password"
-                                    className="w-full border rounded-lg p-2"
-                                />
-                            </div>
-
-                            {/* New Password */}
                             <div>
-                                <label className="block text-sm font-medium mb-1">New Password</label>
-                                <input
-                                    type="password"
-                                    className="w-full border rounded-lg p-2"
-                                />
+                                <h2 className="text-xl font-semibold mb-4">Password</h2>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Old Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-lg p-2"
+                                    />
+                                </div>
+
+                                {/* New Password */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">New Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-lg p-2"
+                                    />
+                                </div>
+
+                                {/* Repeat Password */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Repeat New Password</label>
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-lg p-2"
+                                    />
+                                </div>
+
+                                {/* Save button */}
+                                <div className="md:col-span-2 mt-4">
+                                    <button
+                                        type="submit"
+                                        className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+                                    >
+                                        Save changes
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Repeat Password */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Repeat New Password</label>
-                                <input
-                                    type="password"
-                                    className="w-full border rounded-lg p-2"
-                                />
-                            </div>
-
-                            {/* Save button */}
-                            <div className="md:col-span-2 mt-4">
-                                <button
-                                    type="submit"
-                                    className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
-                                >
-                                    Save changes
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
