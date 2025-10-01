@@ -11,7 +11,7 @@ export default function ShowItems() {
     const [quantity, setQuantity] = useState(0);
     useEffect(()=>{
         const fetchQuantity = async ()=>{
-            const quanRes = await axios.get('http://localhost:5000/api/product/quantity');  
+            const quanRes = await axios.get('http://localhost:5000/product/1');  
             setQuantity(quanRes.data);       
         }
         fetchQuantity();
@@ -33,6 +33,7 @@ export default function ShowItems() {
                     </p>
                 </div>
             </div>
+            
         </div>
     )
 }
