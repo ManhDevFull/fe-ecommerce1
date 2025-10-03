@@ -46,8 +46,10 @@ export default function Filter() {
     useEffect(() => {
         console.log(selectedFilter);
         const handleSend = async ()=>{
-            const data = await axios('', selectedFilter);
+            const data = await axios.post('http://localhost:5000/variant', {filter: selectedFilter});
+            console.log('hello' + data.data);
         }
+        handleSend();
     }, [selectedFilter]);
     return (
         <div className="w-full px-4 sm:px-16 py-10 grid grid-cols-4">
