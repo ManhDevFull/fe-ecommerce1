@@ -8,6 +8,8 @@ export default function ChooseModule(props: {
   styleYes: string
 }) {
   const { onClose, text, onYes, open, styleYes } = props;
+
+    if(!open) return null;
   return (
     <Modal
       open={open}

@@ -17,11 +17,23 @@ export type CategoryTree = {
   children?: CategoryTree[];
 };
 export type IUser = {
-  id: number,
-  avatarImg?: string,
-  name: string,
-  tel: string,
-  email: string,
-  orders?: number
-  role: number
-}
+  id: number;
+  avatarImg?: string;
+  name: string;
+  tel: string;
+  email: string;
+  orders?: number;
+  role: number;
+};
+export type IAddress = {
+  accountid: number;
+  codeward: number;
+  createdate: string;
+  description: string;
+  detail: string;
+  id: number;
+  namerecipient: string;
+  tel: string;
+  title: string;
+  updatedate: string;
+};

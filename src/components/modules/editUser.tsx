@@ -7,6 +7,8 @@ export default function EditUser(props: {
   onClose: () => void;
 }) {
   const { visible, onClose, user } = props;
+
+  if (!visible) return null;
   return (
     <Modal
       open={visible}
