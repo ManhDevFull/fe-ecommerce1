@@ -46,7 +46,7 @@ export default function Filter() {
     useEffect(() => {
         console.log(selectedFilter);
         const handleSend = async ()=>{
-            const data = await axios.post('http://localhost:5000/variant', {filter: selectedFilter});
+            const data = await axios.post('http://localhost:5000/product/filter', {filter: selectedFilter});
             console.log('hello' + data.data);
         }
         handleSend();
