@@ -1,6 +1,7 @@
 "use client"
 import AccordionItem from "@/components/ui/AccordionItem";
 import axios from "axios";
+import { da } from "date-fns/locale";
 import { header } from "framer-motion/client";
 import React, { Children, useEffect, useState } from "react"
 import { json } from "stream/consumers";
@@ -22,32 +23,51 @@ export default function Filter() {
     //xử lý ô input
     const [selectedFilter, setSelectedFilter] = useState<valueFilter>({});
     useEffect(() => {
-        const fetchCategoryApi = async () => {
-            const res = await axios.get('http://localhost:5000/category/parent');
-            setCategoryApi(res.data);
-            console.log(res.data);
-        }
+        // const fetchCategoryApi = async () => {
+        //     const res = await axios.get('http://localhost:5000/category/parent');
+        //     setCategoryApi(res.data);
+        //     console.log(res.data);
+        // }
         const fetchVariantApi = async () => {
             const res = await axios.get('http://localhost:5000/variant/1');
+            console.log('get variant by id', res.data);
             setVariantApi(res.data);
-            console.log(res.data);
         }
         fetchVariantApi();
     }, []);
     const handleOnchange = (key: string, value: string) => {
         setSelectedFilter(prev => {
             const currentValues = prev[key] || [];
-            return {
+            const update = {
                 ...prev,
                 [key]: currentValues.includes(value) ? currentValues.filter(v => v != value) : [...currentValues, value]
-            }
+            };
+            console.log('selected filter: ', selectedFilter);
+            return update;
         });
     }
     useEffect(() => {
-        console.log(selectedFilter);
-        const handleSend = async ()=>{
-            const data = await axios.post('http://localhost:5000/product/filter', {filter: selectedFilter});
-            console.log('hello' + data.data);
+        const handleSend = async () => {
+             const data = await axios.post('http://localhost:5000/product/filter', {filter: selectedFilter}); //bug
+             console.log("product sau khi lọc: ", data.data);
+            try {
+                // const data = await axios.post('http://localhost:5000/variant/filter', { filter: selectedFilter })
+                // console.log('data sau khi lọc: ', data.data); done
+            }
+            catch (error: any) {
+                if (error.response) {
+                    // Server trả về lỗi
+                    console.error('Lỗi từ server:', error.response.data);
+                    console.error('Status code:', error.response.status);
+                } else if (error.request) {
+                    // Không nhận được phản hồi từ server
+                    console.error('Không nhận được phản hồi từ server:', error.request);
+                } else {
+                    // Lỗi khác
+                    console.error('Lỗi không xác định:', error.message);
+                }
+            }
+            // console.log('res data filter: ', data.data);
         }
         handleSend();
     }, [selectedFilter]);
