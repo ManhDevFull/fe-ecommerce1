@@ -26,7 +26,7 @@ export default function HeaderComponent() {
       dispatch(removeAuth());
       setUserInfo({});
     } else {
-      route.push("/login");
+      route.push("/auth/login");
     }
   };
   return (
