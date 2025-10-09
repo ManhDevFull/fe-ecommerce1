@@ -170,7 +170,7 @@ export default function HeaderComponent() {
           </li>
           <li>
             <Link
-              href={"/login"}
+              href={"auth/login"}
               className="!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap"
             >
               <svg
