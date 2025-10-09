@@ -1,3 +1,6 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+
 export default function CategoryComponent() {
   const menu = [
     {
@@ -41,17 +44,36 @@ export default function CategoryComponent() {
       children: [],
     },
   ];
+  type Category = {
+    _id: number;
+    name_category: string;
+  }
+  const [categoryParent, setcategoryParent] = useState<Category[]>([]);
+  useEffect(()=>{
+    const fetchData = async() =>{
+      try{
+        const res = await axios.get('http://localhost:5000/category/parent');
+        console.log('data respon: ', res.data);
+        setcategoryParent(res.data);
+      }
+      catch{
+        console.log("failded for call categoryParent");
+      }
+    }
+    fetchData();
+  }, []);
+      console.log('hello bạn', categoryParent );
   return (
     <>
       <ul className="hidden p-2 xl:px-10 pt-4 pb-3 xl:grid xl:grid-cols-4 2xl:flex justify-evenly w-full shadow-md">
-      {menu.map((item, index) => (
+      {categoryParent.map((item, index) => (
         <li
-          key={item.key}
+          key={item._id}
           className={`rounded-full flex max-w-[90%] 2xl:mt-0 px-3 2xl:px-6 py-2 justify-evenly items-center bg-gray-100 hover:bg-black hover:text-white duration-500 drop-shadow-sm ${
             index > 3 ? "xl:mt-2" : ""
           }`}
         >
-              <span>{item.name}</span>
+              <span>{item.name_category}</span>
               <svg
                 style={{ marginLeft: "7px" }}
                 width="19"
