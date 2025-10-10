@@ -12,23 +12,55 @@ import { CiCamera } from "react-icons/ci";
 import AccountForm from "@/components/templates/User/Account_Form";
 import AddressForm from "@/components/templates/User/Address_Form";
 import OrderHistory from "@/components/templates/User/Order_History";
+import handleAPI from "@/axios/handleAPI";
+import {
+  authSelector,
+  removeAuth,
+  UserAuth,
+} from "@/redux/reducers/authReducer";
+import { useDispatch, useSelector } from "react-redux";
 
 const menuItems = [
-  { id: "account", label: "MY ACCOUNT", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png", bg: "bg-[#C2E6FF]" },
-  { id: "orders",  label: "ORDER HISTORY", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949098/image_2_h5wwjb.png", bg: "bg-[#FFEBBB]" },
-  { id: "address", label: "ADDRESS",       img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949103/image_3_f2tien.png", bg: "bg-[#E9FFC7]" },
-  { id: "logout",  label: "LOGOUT",        img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949115/image_4_wgcv2s.png", bg: "bg-[#FFD7DC]" },
+  {
+    id: "account",
+    label: "MY ACCOUNT",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png",
+    bg: "bg-[#C2E6FF]",
+  },
+  {
+    id: "orders",
+    label: "ORDER HISTORY",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949098/image_2_h5wwjb.png",
+    bg: "bg-[#FFEBBB]",
+  },
+  {
+    id: "address",
+    label: "ADDRESS",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949103/image_3_f2tien.png",
+    bg: "bg-[#E9FFC7]",
+  },
+  {
+    id: "logout",
+    label: "LOGOUT",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949115/image_4_wgcv2s.png",
+    bg: "bg-[#FFD7DC]",
+  },
 ];
 
 export default function User() {
   const [active, setActive] = useState("account"); // <-- 1 state cho tất cả
   const router = useRouter();
+  const dispatch = useDispatch();
+  const auth: UserAuth = useSelector(authSelector);
 
-
-  const handleMenuClick = (id: SetStateAction<string>) => {// KHONG BIET VI SAO HET LOI
+  const handleMenuClick = async (id: SetStateAction<string>) => {
     if (id === "logout") {
-      toast("Logged out");
-      return;
+      const res: any = await handleAPI("Auth/logout", {}, "post");
+      if (res.status === 200) {
+        toast.success(res.message);
+      }
+      dispatch(removeAuth());
+      router.push("/")
     }
     setActive(id);
   };
@@ -63,11 +95,19 @@ export default function User() {
                     onClick={() => handleMenuClick(item.id)}
                     className={`
                       w-full h-[140px] flex flex-col items-center justify-center p-4 rounded-lg transition-all
-                      ${active === item.id ? "bg-white border border-[#1877F2]" : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`}
+                      ${
+                        active === item.id
+                          ? "bg-white border border-[#1877F2]"
+                          : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`
+                      }
                     `}
                   >
                     <img src={item.img} className="w-[70px] h-[70px]" />
-                    <span className={`mt-2 text-[14px] font-bold ${active === item.id ? "text-[#1877F2]" : "text-gray-700"}`}>
+                    <span
+                      className={`mt-2 text-[14px] font-bold ${
+                        active === item.id ? "text-[#1877F2]" : "text-gray-700"
+                      }`}
+                    >
                       {item.label}
                     </span>
                   </button>

@@ -25,12 +25,7 @@ export default function HeaderComponent() {
   }, []);
   const logUser = async () => {
     if (auth && auth.token) {
-      const res: any = await handleAPI("Auth/logout", {}, "post");
-      if (res.status === 200) {
-        toast.success(res.message);
-      }
-      dispatch(removeAuth());
-      setUserInfo({});
+     route.push("/user")
     } else {
       route.push("/auth/login");
     }
