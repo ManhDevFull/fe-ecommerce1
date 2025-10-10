@@ -5,7 +5,6 @@ import {
   removeAuth,
   UserAuth,
 } from "@/redux/reducers/authReducer";
-import { ResponData } from "@/types/type";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
