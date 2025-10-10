@@ -2,6 +2,7 @@
 import NavigationPath from "@/components/ui/NavigationPath";
 import BackNavigation from "@/components/ui/BackNavigation";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 export default function TrackOrder() {
   const router = useRouter()
   const products = [
@@ -99,9 +100,6 @@ export default function TrackOrder() {
   //   },
   // ];
 
-  // const orderData = {
-  //   status: "Packaging",
-  // };
   const orderData = {
     status: "Packaging",
   };

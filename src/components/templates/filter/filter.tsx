@@ -23,6 +23,7 @@ export default function Filter() {
     //xử lý ô input
     const [selectedFilter, setSelectedFilter] = useState<valueFilter>({});
     useEffect(() => {
+
         // const fetchCategoryApi = async () => {
         //     const res = await axios.get('http://localhost:5000/category/parent');
         //     setCategoryApi(res.data);
