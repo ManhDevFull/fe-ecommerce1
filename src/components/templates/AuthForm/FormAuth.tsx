@@ -1,27 +1,109 @@
 "use client";
+import handleAPI from "@/axios/handleAPI";
+import {
+  facebookProvider,
+  getAuthClient,
+  googleProvider,
+} from "@/firebase/firebaseConfig";
+import { addAuth } from "@/redux/reducers/authReducer";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 export default function FormAuth(props: {
   type: "login" | "sign-up";
-  handle?: (val:{
-email?: string, name?: string, pass?: string
-          }) => void;
+  handle?: (val: { email?: string; name?: string; pass?: string }) => void;
 }) {
+  // project-579431002621
   const { type, handle } = props;
   const route = useRouter();
+  const dispatch = useDispatch();
   const [state, setState] = useState<{
     email?: string;
     password?: string;
     fullName?: string;
-  }>({});
-  const authSubmit = () => {
+    loading: boolean;
+  }>({
+    loading: false,
+  });
+  const handleLoginWithGoogle = async () => {
+    try {
+      const auth = getAuthClient();
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const res = await handleAPI(
+        "Auth/social-auth",
+        { IdToken: idToken },
+        "post"
+      );
+      if (res.status === 200) {
+        const authData = {
+          token: res.data.accessToken,
+          name: res.data.user.name,
+          avata: res.data.user.avatarUrl,
+        };
+        dispatch(addAuth(authData));
+        route.push("/");
+        toast.success("Login successful !!!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const loginWithFacebook = async () => {
+    try {
+      const auth = getAuthClient();
+      const result = await signInWithPopup(auth, facebookProvider);
+      const idToken = await result.user.getIdToken();
+      const res = await handleAPI(
+        "Auth/social-auth",
+        { IdToken: idToken },
+        "post"
+      );
+      if (res.status === 200) {
+        const authData = {
+          token: res.data.accessToken,
+          name: res.data.user.name,
+          avata: res.data.user.avatarUrl,
+        };
+        dispatch(addAuth(authData));
+        route.push("/");
+        toast.success("Login successful !!!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const authSubmit = async () => {
     if (state.email && state.password) {
-      route.push("/");
-      toast.success("Login successful !!!");
+      setState((ps) => ({ ...ps, loading: true }));
+      try {
+        const res = await handleAPI(
+          "Auth/login",
+          { Email: state.email, Password: state.password },
+          "post"
+        );
+        if (res.status === 200) {
+          const authData = {
+            token: res.data.accessToken,
+            name: res.data.user.name,
+            avata: res.data.user.avatarUrl,
+          };
+
+          dispatch(addAuth(authData));
+          toast.success("Login successful");
+          route.push("/");
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Login fail !!!");
+      } finally {
+        setState((ps) => ({ ...ps, loading: false }));
+      }
     } else {
       toast.warning("Please enter complete information!");
     }
@@ -53,8 +135,11 @@ email?: string, name?: string, pass?: string
             />
           </p>
           <button
+            disabled={state.loading}
             onClick={authSubmit}
-            className="bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg"
+            className={`bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg ${
+              state.loading && "cursor-wait opacity-70"
+            }`}
           >
             Login
           </button>
@@ -66,11 +151,17 @@ email?: string, name?: string, pass?: string
           </p>
         </div>
         <div>
-          <button className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center">
+          <button
+            onClick={handleLoginWithGoogle}
+            className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center"
+          >
             <FcGoogle size={43} />{" "}
             <span className="ml-3">Login with Google</span>
           </button>
-          <button className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center">
+          <button
+            onClick={loginWithFacebook}
+            className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center"
+          >
             <FaFacebook size={43} color="white" />{" "}
             <span className="ml-3">Login with Facebook</span>
           </button>
@@ -78,7 +169,7 @@ email?: string, name?: string, pass?: string
             First time here?{" "}
             <Link
               className="!text-black underline decoration-[#000000]"
-              href={"/sign-up"}
+              href={"/auth/sign-up"}
             >
               Signup
             </Link>
@@ -95,9 +186,9 @@ email?: string, name?: string, pass?: string
             className="outline-none text-lg px-5 py-4 rounded-xl bg-gray-100 mt-3"
             type="text"
             placeholder="Enter your full name"
-                     onChange={(e) =>
-                setState((ps) => ({ ...ps, fullName: e.target.value }))
-              }
+            onChange={(e) =>
+              setState((ps) => ({ ...ps, fullName: e.target.value }))
+            }
           />
         </p>
         <p className="flex flex-col mt-5 md:w-[100%] 2xl:w-[65%]">
@@ -106,9 +197,9 @@ email?: string, name?: string, pass?: string
             className="outline-none text-lg px-5 py-4 rounded-xl bg-gray-100 mt-3"
             type="email"
             placeholder="Enter your email address"
-                     onChange={(e) =>
-                setState((ps) => ({ ...ps, email: e.target.value }))
-              }
+            onChange={(e) =>
+              setState((ps) => ({ ...ps, email: e.target.value }))
+            }
           />
         </p>
         <p className="flex flex-col mt-5 md:w-[100%] 2xl:w-[65%]">
@@ -117,13 +208,20 @@ email?: string, name?: string, pass?: string
             className="outline-none text-lg px-5 py-4 rounded-xl bg-gray-100 mt-3"
             type="password"
             placeholder="Enter your password"
-                     onChange={(e) =>
-                setState((ps) => ({ ...ps, password: e.target.value }))
-              }
+            onChange={(e) =>
+              setState((ps) => ({ ...ps, password: e.target.value }))
+            }
           />
         </p>
         <button
-          onClick={()=>handle?.({email: state.email, name: state.fullName, pass: state.password})}
+          onClick={async () => {
+            // await checkExist();
+            handle?.({
+              email: state.email,
+              name: state.fullName,
+              pass: state.password,
+            });
+          }}
           className="bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg"
         >
           Sign Up
@@ -136,11 +234,17 @@ email?: string, name?: string, pass?: string
         </p>
       </div>
       <div>
-        <button className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center">
+        <button
+          onClick={handleLoginWithGoogle}
+          className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center"
+        >
           <FcGoogle size={43} />{" "}
           <span className="ml-3">Sign Up with Google</span>
         </button>
-        <button className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center">
+        <button
+          onClick={loginWithFacebook}
+          className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center"
+        >
           <FaFacebook size={43} color="white" />{" "}
           <span className="ml-3">Sign Up with Facebook</span>
         </button>
@@ -148,7 +252,7 @@ email?: string, name?: string, pass?: string
           Already a member?{" "}
           <Link
             className="!text-black underline decoration-[#000000]"
-            href={"/login"}
+            href={"/auth/login"}
           >
             Log In
           </Link>

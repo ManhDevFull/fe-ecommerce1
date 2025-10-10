@@ -1,8 +1,18 @@
+"use client";
 import FormAuth from "@/components/templates/AuthForm/FormAuth";
 import BackNavigation from "@/components/ui/BackNavigation";
-import Link from "next/link";
+import { authSelector, UserAuth } from "@/redux/reducers/authReducer";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function LoginPage() {
+  const auth: UserAuth = useSelector(authSelector);
+  const route = useRouter();
+  useEffect(() => {
+    if (auth && auth.token && auth.name) route.push("/");
+  }, [auth, route]);
   return (
     <>
       <BackNavigation />
@@ -55,7 +65,9 @@ export default function LoginPage() {
             <p className="text-[#00000060] text-lg">Login in to your account</p>
           </div>
 
-          <img
+          <Image
+          width={500}
+          height={500}
             className="w-[90%] xl:w-[80%] 2xl:w-[70%]"
             src="https://res.cloudinary.com/do0im8hgv/image/upload/v1755761340/370e0dbb-f34c-4ba7-8e5c-797f036749ee.png"
             alt="image-auth"

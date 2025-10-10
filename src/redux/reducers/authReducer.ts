@@ -1,35 +1,42 @@
-'use client'
+"use client";
 import { createSlice } from "@reduxjs/toolkit";
-
-
-export interface AuthState {
-	token: string;
-	_id: string;
-	name: string;
+export interface UserAuth {
+  token?: string;
+  name?: string;
+  avata?: string
 }
+const userToken: UserAuth = {
+  token: "",
+  avata: '',
+  name: "",
+};
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState: {
-    data: {
-      accesstoken: '',
-      _id: '',
-      name:''
-    }
+    data: userToken,
   },
   reducers: {
     addAuth: (state, action) => {
-      state.data = action.payload
+      state.data = action.payload;
+      syncLocal(action.payload);
     },
-    removeAuth: (state, _action) => {
-      state.data = {
-        accesstoken: '',
-        _id: '',
-        name:''
-      }
-    }
-  }
-})
-export const authReducer = authSlice.reducer
-export const { addAuth, removeAuth } = authSlice.actions
-export const authSelector = (state: any) => state.authReducer.data
-
+    removeAuth: (state) => {
+      state.data = userToken;
+      syncLocal(userToken);
+    },
+    updateAuth: (state, action) => {
+      state.data.token = action.payload.token;
+      syncLocal({
+        token: action.payload.token,
+        name: state.data.name,
+        avata: state.data.avata
+      });
+    },
+  },
+});
+export const authReducer = authSlice.reducer;
+export const { addAuth, updateAuth, removeAuth } = authSlice.actions;
+export const authSelector = (state: any) => state.authReducer.data;
+const syncLocal = (data: UserAuth) => {
+  localStorage.setItem("token", JSON.stringify(data));
+};
