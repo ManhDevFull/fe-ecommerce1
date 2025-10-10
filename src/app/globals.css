@@ -2,4 +2,8 @@
 
 ::-webkit-scrollbar {
   display: none;
+.lakki-reddy-regular {
+  font-family: "Lakki Reddy", serif;
+  font-weight: 400;
+  font-style: normal;
 }

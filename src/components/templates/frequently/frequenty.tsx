@@ -183,7 +183,7 @@ export default function Frequently() {
                                     <FaRupeeSign size={14} className={`${product.price_discounted ? 'text-gray-500' : 'text-blue-500'}`} />
                                     <p className={`text-[14px] ${product.price_discounted ? 'text-gray-500 text-center' : 'text-blue-500'}`}>{product.price_original} </p>
                                 </span>
-                                {product.price_discounted && <p className="flex items-center font-bold"><FaRupeeSign size={14} className="text-blue-500" /> <p className="text-[14px] text-blue-500">{product.price_discounted} </p></p>}
+                                {product.price_discounted && <p className="flex items-center font-bold"><FaRupeeSign size={14} className="text-blue-500" /> <span className="text-[14px] text-blue-500">{product.price_discounted} </span></p>}
                             </div>
                             {index == 0 && (<div>
                                 <p className="text-[15px] text-gray-500">

@@ -1,3 +1,4 @@
+import handleAPI from "@/axios/handleAPI";
 import {
   addAuth,
   authSelector,
@@ -8,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 export default function HeaderComponent() {
   const dispatch = useDispatch();
   const route = useRouter();
@@ -15,18 +17,22 @@ export default function HeaderComponent() {
   const [userInfo, setUserInfo] = useState<UserAuth>(auth);
   useEffect(() => {
     const getData = async () => {
-      console.log(userInfo)
+      console.log(userInfo);
       const res = localStorage.getItem("token");
       res && dispatch(addAuth(JSON.parse(res)));
     };
     getData();
   }, []);
-  const logUser = () => {
+  const logUser = async () => {
     if (auth && auth.token) {
+      const res: any = await handleAPI("Auth/logout", {}, "post");
+      if (res.status === 200) {
+        toast.success(res.message);
+      }
       dispatch(removeAuth());
       setUserInfo({});
     } else {
-      route.push("auth/login");
+      route.push("/auth/login");
     }
   };
   return (
@@ -198,17 +204,11 @@ export default function HeaderComponent() {
             </Link>
           </li>
           <li>
-<<<<<<< HEAD
             <p
               onClick={logUser}
               className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
                 !auth || (!auth.token && "cursor-pointer")
               }`}
-=======
-            <Link
-              href={"auth/login"}
-              className="!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap"
->>>>>>> feature/index
             >
               <svg
                 width="25"

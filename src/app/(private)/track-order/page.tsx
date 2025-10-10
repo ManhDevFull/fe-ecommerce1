@@ -4,7 +4,6 @@ import BackNavigation from "@/components/ui/BackNavigation";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 export default function TrackOrder() {
-
   const router = useRouter()
   const products = [
     {
@@ -116,7 +115,6 @@ export default function TrackOrder() {
     Qty: number;
   };
   const [product, setProduct] = useState<TrackProduct | null>(null);
-
   return (
     <>
       <main className="w-full relative pt-2">

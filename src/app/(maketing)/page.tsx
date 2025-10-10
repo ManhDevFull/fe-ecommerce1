@@ -1,4 +1,3 @@
-
 'use client'
 
 
@@ -10,13 +9,13 @@ import Frequently from "@/components/templates/frequently/frequenty";
 import ShopByCategory from "@/components/templates/shopByCategory/ShopByCategory";
 import { Slider } from "@/components/templates/slider/slider";
 import React from "react";
+
 type RootLayoutProps = {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 };
 export default function Home({ children, params }: RootLayoutProps) {
   return (
-
     <div className="w-full p-0">
       <Slider/>
       <Features/>
