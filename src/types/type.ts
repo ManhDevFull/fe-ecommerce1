@@ -1,8 +1,8 @@
-// export type ResponData = {
-//   data: any
-//   message: string,
-//   status: number
-// }
+export type ResponData = {
+  data: any
+  message: string,
+  status: number
+}
 export interface ICategory {
   id: number;
   namecategory: string;

@@ -1,20 +1,14 @@
 'use client'
 import { GrPrevious } from "react-icons/gr";
 import { CiShare2 } from "react-icons/ci";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Back from "./Back";
 export default function BackNavigation() {
-  const router = useRouter();
   return (
     <div className="w-full flex justify-between items-center px-10 md:px-15 py-2 xl:px-40 pt-4">
-      <div className="flex items-center gap-2 " onClick={() => router.back()}>
-        <div
-          className=" flex items-center justify-center w-[50px] h-[50px]
-                 border-2 border-[#C1C1C1] rounded-3xl"
-        >
-          <GrPrevious size={20} />
-        </div>
-        <h3 className="hidden sm:block font-bold text-2xl text-black">Back</h3>
+      <div className="flex gap-2 items-center">
+        <Back />
+        <p className="text-[20px] font-bold">Back</p>
       </div>
       <div
         className="items-center"
