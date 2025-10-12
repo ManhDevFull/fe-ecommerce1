@@ -36,8 +36,8 @@ export default function RootLayout({
           <HeaderAdminComponent />
           <div className="grid grid-cols-24">
             <SiderAdminComponent className="col-span-5" />
-            <div className="col-span-19 max-h-[calc(100vh-70px)] grid grid-cols-19">
-              <div className="col-span-14 p-4">{children}</div>
+            <div className="col-span-19 h-[calc(100vh-70px)] grid grid-cols-19">
+              <div className="col-span-14 p-4 h-full">{children}</div>
               <RevenueComponent className="col-span-5" />
             </div>
           </div>
