@@ -1,8 +1,10 @@
 "use client"
 import AccordionItem from "@/components/ui/AccordionItem";
 import axios from "axios";
+import { min, previousDay } from "date-fns";
 import { da } from "date-fns/locale";
-import { div, header, input, object, pre } from "framer-motion/client";
+import { number } from "framer-motion";
+import { div, header, input, object, p, pre } from "framer-motion/client";
 import React, { Children, useEffect, useState } from "react"
 import { FiMinus } from "react-icons/fi";
 import { json } from "stream/consumers";
@@ -21,6 +23,11 @@ export default function Filter() {
     const [categoryApi, setCategoryApi] = useState<category[]>([]);
     const [sizeAPI, setSizeApi] = useState<category[]>([]);
     const [variantApi, setVariantApi] = useState<variants[]>([]);
+    const [priceError, setPriceError] = useState('')
+    const [rangePrice, setRangePrice] = useState({
+        min: ''
+        , max: ''
+    })
     //xử lý ô input
     const [selectedFilter, setSelectedFilter] = useState<valueFilter>({});
     useEffect(() => {
@@ -50,6 +57,24 @@ export default function Filter() {
                 [key]: newValues,
             };
         });
+    }
+    const handleApplyPrice = (key: string) => {
+        if (!rangePrice.min && !rangePrice.max) {
+            setPriceError("Vui lòng điền khoảng giá phù hợp !");
+            setSelectedFilter(prev => {
+                const { price, ...rest } = prev; // xóa key price khi không nhập vào ô in put
+                return rest
+            });
+        }
+        else {
+            setPriceError("");
+            setSelectedFilter(prev => (
+                {
+                    ...prev,
+                    [key]: [rangePrice.min || '0', rangePrice.max || '1000000000']
+                }
+            ));
+        }
     }
     useEffect(() => {
         const handleSend = async () => {
@@ -87,28 +112,47 @@ export default function Filter() {
                         <AccordionItem key={index} title={variant.key}>
                             {
                                 variant.key === "price" ?
-                                    (<div className="w-full">
-                                        <p className="text-start">Khoảng giá</p>
+                                    (<div className="w-full pr-4">
+                                        <p className="py-2 text-start">Khoảng giá</p>
                                         <div className="flex gap-2 w-full">
-                                            <input className=" w-full border-[1px] border-black"
-                                             type="text" name="minPrice"
-                                             placeholder=`<MdAttachMoney /> Từ`
-                                              />
-                                            <FiMinus size={30}/>
-                                            <input className="w-full border-[1px] border-black" type="text" name="maxPrice" />
+                                            <input
+                                                onChange={(e) => setRangePrice(prev => (
+                                                    {
+                                                        ...prev,
+                                                        min: e.target.value
+                                                    }
+                                                ))}
+                                                className=" px-2 w-full border-[1px] border-[##626262]"
+                                                type="text" name="minPrice"
+                                                placeholder="$ Từ" />
+                                            <FiMinus size={30} />
+                                            <input
+                                                onChange={(e) => setRangePrice(prev => (
+                                                    {
+                                                        ...prev,
+                                                        max: e.target.value
+                                                    }
+                                                ))}
+                                                className="px-2 w-full border-[1px] border-[##626262]"
+                                                type="text" name="maxPrice" placeholder="$ Đến" />
                                         </div>
+                                        {priceError && <p className="text-red-500 py-[20px]">{priceError}</p>}
+                                        <button
+                                            onClick={() => handleApplyPrice(variant.key)}
+                                            className="w-full hover:cursor-pointer px-2 bg-green-500 py-2 mt-2 rounded-[10px] text-white"
+                                            type="submit">Áp dụng</button>
                                     </div>) : (
                                         variant.values.map((value, index) => (
                                             <div key={index} className="flex items-center gap-4">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={Array.isArray(selectedFilter[variant.key])
-                                                            ? selectedFilter[variant.key].includes(value)
-                                                            : false}
-                                                        onChange={() => handleOnchange(variant.key, value)}
-                                                        className="w-[15px] h-[15px]"
-                                                    />
-                                                    <p className="text-[20px]">{value}</p>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={Array.isArray(selectedFilter[variant.key])
+                                                        ? selectedFilter[variant.key].includes(value)
+                                                        : false}
+                                                    onChange={() => handleOnchange(variant.key, value)}
+                                                    className="w-[15px] h-[15px]"
+                                                />
+                                                <p className="text-[20px]">{value}</p>
                                             </div>
                                         )))
                             }
