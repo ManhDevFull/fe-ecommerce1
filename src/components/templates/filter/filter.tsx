@@ -2,8 +2,9 @@
 import AccordionItem from "@/components/ui/AccordionItem";
 import axios from "axios";
 import { da } from "date-fns/locale";
-import { header } from "framer-motion/client";
+import { div, header, input, object, pre } from "framer-motion/client";
 import React, { Children, useEffect, useState } from "react"
+import { FiMinus } from "react-icons/fi";
 import { json } from "stream/consumers";
 type category = {
     _id: number;
@@ -38,18 +39,24 @@ export default function Filter() {
     const handleOnchange = (key: string, value: string) => {
         setSelectedFilter(prev => {
             const currentValues = prev[key] || [];
-            const update = {
+            const newValues = currentValues.includes(value) ? currentValues.filter(v => v != value) : [...currentValues, value];
+            if (newValues.length == 0) {
+                const { [key]: _, ...rest } = prev; // bỏ qua key
+                return rest;
+            }
+
+            return {
                 ...prev,
-                [key]: currentValues.includes(value) ? currentValues.filter(v => v != value) : [...currentValues, value]
+                [key]: newValues,
             };
-            console.log('selected filter: ', selectedFilter);
-            return update;
         });
     }
     useEffect(() => {
         const handleSend = async () => {
-             const data = await axios.post('http://localhost:5000/product/filter', {filter: selectedFilter}); //bug
-             console.log("product sau khi lọc: ", data.data);
+            if (Object.keys(selectedFilter).length === 0)
+                return;
+            const data = await axios.post('http://localhost:5000/product/filter', { filter: selectedFilter }); //bug
+            console.log("product sau khi lọc: ", data.data);
             try {
                 // const data = await axios.post('http://localhost:5000/variant/filter', { filter: selectedFilter })
                 // console.log('data sau khi lọc: ', data.data); done
@@ -71,6 +78,7 @@ export default function Filter() {
         }
         handleSend();
     }, [selectedFilter]);
+    console.log('selected filter: ', selectedFilter);
     return (
         <div className="w-full px-4 sm:px-16 py-10 grid grid-cols-4">
             <div className="col-span-1">
@@ -78,20 +86,31 @@ export default function Filter() {
                     variantApi.map((variant, index) => (
                         <AccordionItem key={index} title={variant.key}>
                             {
-                                variant.values.map((value, index) => (
-                                    <div key={index} className="flex items-center gap-4">
-                                        <input
-                                            type="checkbox"
-                                            checked={Array.isArray(selectedFilter[variant.key])
-                                                ? selectedFilter[variant.key].includes(value)
-                                                : false}
-                                            onChange={() => handleOnchange(variant.key, value)}
-                                            className="w-[15px] h-[15px]"
-                                        />
-
-                                        <p className="text-[20px]">{value}</p>
-                                    </div>
-                                ))
+                                variant.key === "price" ?
+                                    (<div className="w-full">
+                                        <p className="text-start">Khoảng giá</p>
+                                        <div className="flex gap-2 w-full">
+                                            <input className=" w-full border-[1px] border-black"
+                                             type="text" name="minPrice"
+                                             placeholder=`<MdAttachMoney /> Từ`
+                                              />
+                                            <FiMinus size={30}/>
+                                            <input className="w-full border-[1px] border-black" type="text" name="maxPrice" />
+                                        </div>
+                                    </div>) : (
+                                        variant.values.map((value, index) => (
+                                            <div key={index} className="flex items-center gap-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={Array.isArray(selectedFilter[variant.key])
+                                                            ? selectedFilter[variant.key].includes(value)
+                                                            : false}
+                                                        onChange={() => handleOnchange(variant.key, value)}
+                                                        className="w-[15px] h-[15px]"
+                                                    />
+                                                    <p className="text-[20px]">{value}</p>
+                                            </div>
+                                        )))
                             }
                         </AccordionItem>
                     ))
