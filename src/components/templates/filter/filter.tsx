@@ -1,5 +1,6 @@
 "use client"
 import AccordionItem from "@/components/ui/AccordionItem";
+import Product from "@/components/ui/Product";
 import axios from "axios";
 import { min, previousDay } from "date-fns";
 import { da } from "date-fns/locale";
@@ -19,6 +20,36 @@ type variants = {
 type valueFilter = {
     [key: string]: string[];
 }
+type VariantDTO = {
+    id: number;
+    valuevariant: string;
+    stock: number;
+    inputprice: number;
+    price: number;
+    createdate: Date;
+    updatedate: Date;
+}
+type Discount = {
+    id: number;
+    typediscount: number;
+    discount: number;
+    starttime: Date;
+    endtime: Date;
+    createtime: Date;
+}
+type Product = {
+    id: number;
+    name: string;
+    description: string;
+    brand: string;
+    categoryId: number;
+    categoryName: string;
+    imgUrls: string[];
+    variant: VariantDTO[];
+    discount: Discount;
+    rating: number;
+    order: number;
+}
 export default function Filter() {
     const [categoryApi, setCategoryApi] = useState<category[]>([]);
     const [sizeAPI, setSizeApi] = useState<category[]>([]);
@@ -28,6 +59,8 @@ export default function Filter() {
         min: ''
         , max: ''
     })
+    // usestate for product
+    const [product, setproduct] = useState <Product[]>([]);
     //xử lý ô input
     const [selectedFilter, setSelectedFilter] = useState<valueFilter>({});
     useEffect(() => {
@@ -41,6 +74,9 @@ export default function Filter() {
             console.log('get variant by id', res.data);
             setVariantApi(res.data);
         }
+        // const fetchProductApi = async () => {
+
+        // }
         fetchVariantApi();
     }, []);
     const handleOnchange = (key: string, value: string) => {
@@ -51,7 +87,6 @@ export default function Filter() {
                 const { [key]: _, ...rest } = prev; // bỏ qua key
                 return rest;
             }
-
             return {
                 ...prev,
                 [key]: newValues,
@@ -59,24 +94,32 @@ export default function Filter() {
         });
     }
     const handleApplyPrice = (key: string) => {
-        if (!rangePrice.min && !rangePrice.max) {
+        if ((!rangePrice.min && !rangePrice.max)) {
             setPriceError("Vui lòng điền khoảng giá phù hợp !");
             setSelectedFilter(prev => {
                 const { price, ...rest } = prev; // xóa key price khi không nhập vào ô in put
                 return rest
             });
+            return;
         }
-        else {
-            setPriceError("");
-            setSelectedFilter(prev => (
-                {
-                    ...prev,
-                    [key]: [rangePrice.min || '0', rangePrice.max || '1000000000']
-                }
-            ));
+        const minprice = parseInt(rangePrice.min, 10) || 0;
+        const maxPrice = parseInt(rangePrice.max, 10) || 0;
+        if (minprice > maxPrice) {
+            setPriceError("Vui lòng điền khoảng giá phù hợp");
+            return;
         }
+        setPriceError("");
+        setSelectedFilter(prev => (
+            {
+                ...prev,
+                [key]: [rangePrice.min || '0', rangePrice.max || '1000000000']
+            }
+        ));
     }
     useEffect(() => {
+        //const handleGetProduct()
+
+
         const handleSend = async () => {
             if (Object.keys(selectedFilter).length === 0)
                 return;
