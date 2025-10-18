@@ -1,8 +1,8 @@
 export type ResponData = {
-  data: any
-  message: string,
-  status: number
-}
+  data: any;
+  message: string;
+  status: number;
+};
 export interface ICategory {
   id: number;
   namecategory: string;
@@ -36,4 +36,30 @@ export type IAddress = {
   tel: string;
   title: string;
   updatedate: string;
+};
+export type IProductAdmin = {
+  brand: string;
+  category_id: number;
+  category_name: string;
+  createdate: string;
+  description: string;
+  imageurls: string[];
+  max_price: number;
+  min_price: number;
+  name: string;
+  product_id: number;
+  updatedate: string;
+  variant_count: number;
+  variants: IVariant[];
+};
+export type IVariant = {
+  createdate: string;
+  inputprice: number;
+  isdeleted: boolean;
+  price: number;
+  product_id: number;
+  stock: number;
+  updatedate: string;
+  valuevariant: any;
+  variant_id: number;
 };

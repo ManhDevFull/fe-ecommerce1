@@ -2,7 +2,6 @@ import handleAPI from "@/axios/handleAPI";
 import {
   addAuth,
   authSelector,
-  removeAuth,
   UserAuth,
 } from "@/redux/reducers/authReducer";
 import Link from "next/link";
