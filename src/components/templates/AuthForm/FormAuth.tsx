@@ -1,6 +1,12 @@
 "use client";
 import handleAPI from "@/axios/handleAPI";
+import {
+  facebookProvider,
+  getAuthClient,
+  googleProvider,
+} from "@/firebase/firebaseConfig";
 import { addAuth } from "@/redux/reducers/authReducer";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,6 +18,7 @@ export default function FormAuth(props: {
   type: "login" | "sign-up";
   handle?: (val: { email?: string; name?: string; pass?: string }) => void;
 }) {
+  // project-579431002621
   const { type, handle } = props;
   const route = useRouter();
   const dispatch = useDispatch();
@@ -23,6 +30,54 @@ export default function FormAuth(props: {
   }>({
     loading: false,
   });
+  const handleLoginWithGoogle = async () => {
+    try {
+      const auth = getAuthClient();
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const res = await handleAPI(
+        "Auth/social-auth",
+        { IdToken: idToken },
+        "post"
+      );
+      if (res.status === 200) {
+        const authData = {
+          token: res.data.accessToken,
+          name: res.data.user.name,
+          avata: res.data.user.avatarUrl,
+        };
+        dispatch(addAuth(authData));
+        route.push("/");
+        toast.success("Login successful !!!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const loginWithFacebook = async () => {
+    try {
+      const auth = getAuthClient();
+      const result = await signInWithPopup(auth, facebookProvider);
+      const idToken = await result.user.getIdToken();
+      const res = await handleAPI(
+        "Auth/social-auth",
+        { IdToken: idToken },
+        "post"
+      );
+      if (res.status === 200) {
+        const authData = {
+          token: res.data.accessToken,
+          name: res.data.user.name,
+          avata: res.data.user.avatarUrl,
+        };
+        dispatch(addAuth(authData));
+        route.push("/");
+        toast.success("Login successful !!!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const authSubmit = async () => {
     if (state.email && state.password) {
       setState((ps) => ({ ...ps, loading: true }));
@@ -36,26 +91,21 @@ export default function FormAuth(props: {
           const authData = {
             token: res.data.accessToken,
             name: res.data.user.name,
+            avata: res.data.user.avatarUrl,
           };
 
           dispatch(addAuth(authData));
-          toast.success("Login successful !!!");
+          toast.success("Login successful");
           route.push("/");
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
         toast.error("Login fail !!!");
       } finally {
         setState((ps) => ({ ...ps, loading: false }));
       }
     } else {
       toast.warning("Please enter complete information!");
-    }
-  };
-  const checkExist = async () => {
-    try {
-    } catch (error) {
-      console.log(error);
     }
   };
   if (type === "login")
@@ -101,11 +151,17 @@ export default function FormAuth(props: {
           </p>
         </div>
         <div>
-          <button className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center">
+          <button
+            onClick={handleLoginWithGoogle}
+            className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center"
+          >
             <FcGoogle size={43} />{" "}
             <span className="ml-3">Login with Google</span>
           </button>
-          <button className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center">
+          <button
+            onClick={loginWithFacebook}
+            className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center"
+          >
             <FaFacebook size={43} color="white" />{" "}
             <span className="ml-3">Login with Facebook</span>
           </button>
@@ -113,7 +169,7 @@ export default function FormAuth(props: {
             First time here?{" "}
             <Link
               className="!text-black underline decoration-[#000000]"
-              href={"/sign-up"}
+              href={"/auth/sign-up"}
             >
               Signup
             </Link>
@@ -159,7 +215,7 @@ export default function FormAuth(props: {
         </p>
         <button
           onClick={async () => {
-            await checkExist();
+            // await checkExist();
             handle?.({
               email: state.email,
               name: state.fullName,
@@ -178,11 +234,17 @@ export default function FormAuth(props: {
         </p>
       </div>
       <div>
-        <button className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center">
+        <button
+          onClick={handleLoginWithGoogle}
+          className="border border-[#88888888] text-black rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] py-3 text-lg items-center"
+        >
           <FcGoogle size={43} />{" "}
           <span className="ml-3">Sign Up with Google</span>
         </button>
-        <button className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center">
+        <button
+          onClick={loginWithFacebook}
+          className="bg-[#1877F2] text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-3 text-lg items-center"
+        >
           <FaFacebook size={43} color="white" />{" "}
           <span className="ml-3">Sign Up with Facebook</span>
         </button>
@@ -190,7 +252,7 @@ export default function FormAuth(props: {
           Already a member?{" "}
           <Link
             className="!text-black underline decoration-[#000000]"
-            href={"/login"}
+            href={"/auth/login"}
           >
             Log In
           </Link>
