@@ -109,7 +109,7 @@ export default function WishList() {
                     src={item.img}
                     alt={item.name}
                     width={64}
-                    height={64}// update width and height to match w-16 h-16
+                    height={64}
                     className="w-16 h-16 object-contain"
                   />
                   <span className="font-['Public Sans'] text-[13.45px] font-medium text-gray-800 break-words whitespace-normal">

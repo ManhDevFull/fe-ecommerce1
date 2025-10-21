@@ -35,9 +35,8 @@ export default function RootLayout({
               </Link>
             </p>
           </div>
-
           <HeaderComponent />
-          {children}
+          {children} 
           <FooterComponent />
         </Provider>
       </body>
