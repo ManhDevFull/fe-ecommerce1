@@ -1,37 +1,91 @@
 "use client";
 import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
-import { MdOutlineShoppingCart } from "react-icons/md";
-import { IoCloseCircleOutline } from "react-icons/io5";
+// Hai import này không được sử dụng nên tôi đã xóa
+// import { MdOutlineShoppingCart } from "react-icons/md";
+// import { IoCloseCircleOutline } from "react-icons/io5";
 import { SetStateAction, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+// Import "Image" không được sử dụng (bạn đang dùng <img>) nên tôi đã xóa
+// import Image from "next/image";
 import { CiCamera } from "react-icons/ci";
 
 import AccountForm from "@/components/templates/User/Account_Form";
 import AddressForm from "@/components/templates/User/Address_Form";
 import OrderHistory from "@/components/templates/User/Order_History";
+import OrderDetail from "@/components/templates/User/Order_Detail"; // <-- Bị thiếu
+
+// --- CÁC IMPORT BỊ THIẾU ---
+import handleAPI from "@/axios/handleAPI";
+import {
+  authSelector,
+  removeAuth,
+  UserAuth,
+} from "@/redux/reducers/authReducer";
+import { useDispatch, useSelector } from "react-redux";
+// --------------------------
 
 const menuItems = [
-  { id: "account", label: "MY ACCOUNT", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png", bg: "bg-[#C2E6FF]" },
-  { id: "orders",  label: "ORDER HISTORY", img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949098/image_2_h5wwjb.png", bg: "bg-[#FFEBBB]" },
-  { id: "address", label: "ADDRESS",       img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949103/image_3_f2tien.png", bg: "bg-[#E9FFC7]" },
-  { id: "logout",  label: "LOGOUT",        img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949115/image_4_wgcv2s.png", bg: "bg-[#FFD7DC]" },
+  {
+    id: "account",
+    label: "MY ACCOUNT",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949078/image_1_gmpnkd.png",
+    bg: "bg-[#C2E6FF]",
+  },
+  {
+    id: "orders",
+    label: "ORDER HISTORY",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949098/image_2_h5wwjb.png",
+    bg: "bg-[#FFEBBB]",
+  },
+  {
+    id: "address",
+    label: "ADDRESS",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949103/image_3_f2tien.png",
+    bg: "bg-[#E9FFC7]",
+  },
+  {
+    id: "logout",
+    label: "LOGOUT",
+    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949115/image_4_wgcv2s.png",
+    bg: "bg-[#FFD7DC]",
+  },
 ];
 
 export default function User() {
-  const [active, setActive] = useState("account"); // <-- 1 state cho tất cả
+  const [active, setActive] = useState("account");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const router = useRouter();
 
+  // --- BỊ THIẾU ---
+  const dispatch = useDispatch();
+  const auth: UserAuth = useSelector(authSelector);
+  // --------------
 
-  const handleMenuClick = (id: SetStateAction<string>) => {// KHONG BIET VI SAO HET LOI
+  // --- KHÔI PHỤC LẠI LOGIC LOGOUT ---
+  const handleMenuClick = async (id: SetStateAction<string>) => {
     if (id === "logout") {
-      toast("Logged out");
-      return;
+      try {
+        const res: any = await handleAPI("Auth/logout", {}, "post");
+        if (res.status === 200) {
+          toast.success(res.message);
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Logout failed. Please try again.");
+      } finally {
+        dispatch(removeAuth());
+        router.push("/");
+      }
+      return; // Dừng hàm sau khi logout
     }
+    
+    // Khi chuyển tab, reset lại chi tiết đơn hàng (nếu đang xem)
+    setSelectedOrderId(null); 
     setActive(id);
   };
+  // ---------------------------------
 
   return (
     <main className="pt-2">
@@ -44,7 +98,10 @@ export default function User() {
           <div className="w-[390px] h-[580px] bg-white shadow rounded-xl p-6 flex flex-col items-center border border-gray-300">
             <div className="relative">
               <img
-                src="https://res.cloudinary.com/do0im8hgv/image/upload/v1757949054/image_zbt0bw.png"
+                src={
+                  auth.avata ||
+                  "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949054/image_zbt0bw.png"
+                }
                 alt="profile"
                 className="w-32 h-32 rounded-full object-cover"
               />
@@ -52,7 +109,7 @@ export default function User() {
                 <CiCamera size={20} />
               </button>
             </div>
-            <h2 className="mt-4 font-semibold text-lg">Suprava Saha</h2>
+            <h2 className="mt-4 font-semibold text-lg">{auth.name || "User"}</h2>
 
             {/* Menu Wrapper */}
             <div className="mt-6 w-full rounded-lg p-4">
@@ -63,11 +120,19 @@ export default function User() {
                     onClick={() => handleMenuClick(item.id)}
                     className={`
                       w-full h-[140px] flex flex-col items-center justify-center p-4 rounded-lg transition-all
-                      ${active === item.id ? "bg-white border border-[#1877F2]" : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`}
+                      ${
+                        active === item.id
+                          ? "bg-white border border-[#1877F2]"
+                          : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`
+                      }
                     `}
                   >
                     <img src={item.img} className="w-[70px] h-[70px]" />
-                    <span className={`mt-2 text-[14px] font-bold ${active === item.id ? "text-[#1877F2]" : "text-gray-700"}`}>
+                    <span
+                      className={`mt-2 text-[14px] font-bold ${
+                        active === item.id ? "text-[#1877F2]" : "text-gray-700"
+                      }`}
+                    >
                       {item.label}
                     </span>
                   </button>
@@ -80,7 +145,15 @@ export default function User() {
           <div className="flex-1">
             {active === "account" && <AccountForm />}
             {active === "address" && <AddressForm />}
-            {active === "orders" && <OrderHistory />}
+            {active === "orders" && !selectedOrderId && (
+              <OrderHistory onSelectOrder={(id) => setSelectedOrderId(id)} />
+            )}
+            {active === "orders" && selectedOrderId && (
+              <OrderDetail
+                orderId={selectedOrderId}
+                onBack={() => setSelectedOrderId(null)}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -1,41 +1,17 @@
 "use client";
 
-import { useRouter } from "next/dist/client/components/navigation";
+interface OrderHistoryProps {
+  onSelectOrder: (id: string) => void; // 👈 thêm prop callback
+}
 
-export default function OrderHistory() {
-  const router = useRouter();
-
+export default function OrderHistory({ onSelectOrder }: OrderHistoryProps) {
   const orders = [
-    {
-      id: "#3456_768",
-      date: "October 17, 2023",
-      status: "Delivered",
-      price: "$1234.00",
-    },
-    {
-      id: "#3456_9B0",
-      date: "October 11, 2023",
-      status: "Delivered",
-      price: "$345.00",
-    },
-    {
-      id: "#3456_120",
-      date: "August 24, 2023",
-      status: "Delivered",
-      price: "$2345.00",
-    },
-    {
-      id: "#3456_030",
-      date: "August 12, 2023",
-      status: "Delivered",
-      price: "$845.00",
-    },
+    { id: "#3456_768", date: "October 17, 2023", status: "Delivered", price: "$1234.00" },
+    { id: "#3456_9B0", date: "October 11, 2023", status: "Delivered", price: "$345.00" },
+    { id: "#3456_120", date: "August 24, 2023", status: "Delivered", price: "$2345.00" },
+    { id: "#3456_030", date: "August 12, 2023", status: "Delivered", price: "$845.00" },
   ];
 
-  const handleRowClick = (orderId: string) => {
-    const cleanId = orderId.replace("#", "");
-    router.push(`/user/${cleanId}`);
-  };
   return (
     <div className="p-6">
       {/* Header */}
@@ -63,7 +39,7 @@ export default function OrderHistory() {
             {orders.map((order, index) => (
               <tr
                 key={index}
-                onClick={() => handleRowClick(order.id)}
+                onClick={() => onSelectOrder(order.id)} // 👈 gọi callback
                 className="border-b border-[#E8ECEF] cursor-pointer hover:bg-gray-50 transition-colors duration-300 text-gray-700 font-normal"
               >
                 <td className="py-3 px-4">{order.id}</td>

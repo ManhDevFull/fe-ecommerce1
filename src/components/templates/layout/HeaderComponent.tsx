@@ -15,7 +15,7 @@ export default function HeaderComponent() {
   const [userInfo, setUserInfo] = useState<UserAuth>(auth);
   useEffect(() => {
     const getData = async () => {
-      console.log(userInfo)
+      console.log(userInfo);
       const res = localStorage.getItem("token");
       res && dispatch(addAuth(JSON.parse(res)));
     };
@@ -198,17 +198,11 @@ export default function HeaderComponent() {
             </Link>
           </li>
           <li>
-<<<<<<< HEAD
             <p
               onClick={logUser}
               className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
                 !auth || (!auth.token && "cursor-pointer")
               }`}
-=======
-            <Link
-              href={"auth/login"}
-              className="!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap"
->>>>>>> feature/index
             >
               <svg
                 width="25"
