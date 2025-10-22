@@ -9,76 +9,36 @@ import { div, header, input, object, p, pre } from "framer-motion/client";
 import React, { Children, useEffect, useState } from "react"
 import { FiMinus } from "react-icons/fi";
 import { json } from "stream/consumers";
-type category = {
-    _id: number;
-    name_category: string;
-}
-type variants = {
-    key: string;
-    values: string[];
-}
-type valueFilter = {
-    [key: string]: string[];
-}
-type VariantDTO = {
-    id: number;
-    valuevariant: string;
-    stock: number;
-    inputprice: number;
-    price: number;
-    createdate: Date;
-    updatedate: Date;
-}
-type Discount = {
-    id: number;
-    typediscount: number;
-    discount: number;
-    starttime: Date;
-    endtime: Date;
-    createtime: Date;
-}
-type Product = {
-    id: number;
-    name: string;
-    description: string;
-    brand: string;
-    categoryId: number;
-    categoryName: string;
-    imgUrls: string[];
-    variant: VariantDTO[];
-    discount: Discount;
-    rating: number;
-    order: number;
-}
+import {page, category, variants, VariantDTO, Discount, ProductUi, valueFilter, PagedResultDTO} from "../../../types/type";
+import { types } from "util";
+
 export default function Filter() {
-    const [categoryApi, setCategoryApi] = useState<category[]>([]);
-    const [sizeAPI, setSizeApi] = useState<category[]>([]);
+    const [page, setPage] = useState<page>({
+        pageNumber: 1,
+        pageSize: 10
+    });
     const [variantApi, setVariantApi] = useState<variants[]>([]);
     const [priceError, setPriceError] = useState('')
     const [rangePrice, setRangePrice] = useState({
         min: ''
         , max: ''
     })
-    // usestate for product
-    const [product, setproduct] = useState <Product[]>([]);
+    // usestate cho product sau khi lọc
+    const [productUi, setProductUi] = useState<PagedResultDTO<ProductUi> | null>(null);
+
     //xử lý ô input
     const [selectedFilter, setSelectedFilter] = useState<valueFilter>({});
+
+    // lấy các variant để lọc khi bắt đầu truy cập trang
     useEffect(() => {
-        // const fetchCategoryApi = async () => {
-        //     const res = await axios.get('http://localhost:5000/category/parent');
-        //     setCategoryApi(res.data);
-        //     console.log(res.data);
-        // }
         const fetchVariantApi = async () => {
-            const res = await axios.get('http://localhost:5000/variant/1');
+            const res = await axios.get('http://localhost:5000/variant');
             console.log('get variant by id', res.data);
             setVariantApi(res.data);
         }
-        // const fetchProductApi = async () => {
-
-        // }
         fetchVariantApi();
     }, []);
+    // khi các value lọc bị thay đổi
     const handleOnchange = (key: string, value: string) => {
         setSelectedFilter(prev => {
             const currentValues = prev[key] || [];
@@ -93,6 +53,7 @@ export default function Filter() {
             };
         });
     }
+    // giá thay đổi
     const handleApplyPrice = (key: string) => {
         if ((!rangePrice.min && !rangePrice.max)) {
             setPriceError("Vui lòng điền khoảng giá phù hợp !");
@@ -116,18 +77,20 @@ export default function Filter() {
             }
         ));
     }
+    // gọi api khi bộ lọc thay đổi
     useEffect(() => {
-        //const handleGetProduct()
-
-
         const handleSend = async () => {
-            if (Object.keys(selectedFilter).length === 0)
-                return;
-            const data = await axios.post('http://localhost:5000/product/filter', { filter: selectedFilter }); //bug
-            console.log("product sau khi lọc: ", data.data);
             try {
-                // const data = await axios.post('http://localhost:5000/variant/filter', { filter: selectedFilter })
-                // console.log('data sau khi lọc: ', data.data); done
+                if (Object.keys(selectedFilter).length === 0)
+                    return;
+                const data = await axios.post('http://localhost:5000/product/filter',
+                    {
+                        filter: selectedFilter,
+                        pageNumber: page.pageNumber,
+                        pageSize: page.pageSize
+                    });
+                    setProductUi(data.data);
+                console.log("product sau khi lọc: ", data.data);
             }
             catch (error: any) {
                 if (error.response) {
@@ -142,7 +105,6 @@ export default function Filter() {
                     console.error('Lỗi không xác định:', error.message);
                 }
             }
-            // console.log('res data filter: ', data.data);
         }
         handleSend();
     }, [selectedFilter]);
@@ -203,8 +165,19 @@ export default function Filter() {
                     ))
                 }
             </div>
-            <div className="col-span-3">
-                danh sách sản phẩm trả về khi lọc
+            <div className="col-span-3 grid grid-cols-3">
+                {
+                    productUi?.Items.map((p, index)=>(
+                        
+                    ))
+                }
+            </div>
+            <div>
+                <ul className="flex gap-3">
+                    <li>1</li>
+                    <li>2</li>
+                    <li>3</li>
+                </ul>
             </div>
         </div>
     )
