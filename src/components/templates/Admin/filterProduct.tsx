@@ -1,8 +1,22 @@
 "use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { CategoryTree } from "@/types/type";
 
-// Debounce đơn giản
+export type BrandItem = {
+  id: string | number;
+  name: string;
+};
+
+export type FilterParams = {
+  q: string;
+  categoryId: string; // '' = All
+  brandId: string;    // '' = All
+  inStockOnly: boolean;
+  sort: "newest" | "priceAsc" | "priceDesc";
+};
+
+/* -------------------- utils -------------------- */
 function useDebounced<T>(value: T, delay = 300) {
   const [v, setV] = React.useState(value);
   React.useEffect(() => {
@@ -12,57 +26,107 @@ function useDebounced<T>(value: T, delay = 300) {
   return v;
 }
 
-export type FilterParams = {
-  q: string;
-  categoryId: string;
-  brand: string;
-  inStockOnly: boolean;
-  sort: "newest" | "priceAsc" | "priceDesc";
-};
+type Option = { value: string; label: string; disabled?: boolean };
 
+/** Flatten cây category thành options, thụt đầu dòng theo level */
+function flattenCategories(tree: CategoryTree[], level = 0, out: Option[] = [], disableParent = false) {
+  const pad = "- ".repeat(level);
+  for (const n of tree) {
+    const hasChildren = !!n.children?.length;
+    out.push({
+      value: String(n.id),
+      label: `${pad}${n.namecategory}`,
+      disabled: disableParent && hasChildren, // nếu muốn không cho chọn node cha
+    });
+    if (hasChildren) flattenCategories(n.children!, level + 1, out, disableParent);
+  }
+  return out;
+}
+
+/* -------------------- component -------------------- */
 export default function FilterBar({
-  categories = [],
-  brands = [],
+  categories = [],          // dạng cây
+  brands = [],              // [{id, name}]
   defaultValues,
   onChange,
+  disableParentCategory = false, // tuỳ chọn: không cho chọn node cha
 }: {
-  categories: { id: string; name: string }[];
-  brands: string[];
+  categories: CategoryTree[];
+  brands: BrandItem[];
   defaultValues?: Partial<FilterParams>;
   onChange: (f: FilterParams) => void;
+  disableParentCategory?: boolean;
 }) {
   const [q, setQ] = React.useState(defaultValues?.q ?? "");
   const [categoryId, setCategoryId] = React.useState(defaultValues?.categoryId ?? "");
-  const [brand, setBrand] = React.useState(defaultValues?.brand ?? "");
+  const [brandId, setBrandId] = React.useState(defaultValues?.brandId ?? "");
   const [inStockOnly, setInStockOnly] = React.useState(defaultValues?.inStockOnly ?? false);
   const [sort, setSort] = React.useState<FilterParams["sort"]>(defaultValues?.sort ?? "newest");
 
-  // Nếu defaultValues có thể thay đổi từ parent: sync lại UI (tuỳ nhu cầu)
+  // Nếu defaultValues có thể thay đổi từ parent → sync lại
   React.useEffect(() => {
     if (!defaultValues) return;
     setQ(defaultValues.q ?? "");
     setCategoryId(defaultValues.categoryId ?? "");
-    setBrand(defaultValues.brand ?? "");
+    setBrandId(defaultValues.brandId ?? "");
     setInStockOnly(defaultValues.inStockOnly ?? false);
     setSort((defaultValues.sort as FilterParams["sort"]) ?? "newest");
-  }, [defaultValues?.q, defaultValues?.categoryId, defaultValues?.brand, defaultValues?.inStockOnly, defaultValues?.sort]);
+  }, [
+    defaultValues?.q,
+    defaultValues?.categoryId,
+    defaultValues?.brandId,
+    defaultValues?.inStockOnly,
+    defaultValues?.sort,
+  ]);
 
-  // Debounce khi gõ
+  // Debounce trường tìm kiếm
   const dq = useDebounced(q, 400);
 
-  // Gửi filter lên parent (onChange đã memo ở parent để tránh loop)
+  const hasInitialBrands = React.useRef(false);
   React.useEffect(() => {
-    onChange({ q: dq, categoryId, brand, inStockOnly, sort });
-  }, [dq, categoryId, brand, inStockOnly, sort, onChange]);
+    if (hasInitialBrands.current) {
+      setBrandId("");
+      return;
+    }
+    hasInitialBrands.current = true;
+  }, [brands]);
+
+  React.useEffect(() => {
+    if (!brandId) return;
+    const exists = brands.some((b) => String(b.id) === brandId);
+    if (!exists) setBrandId("");
+  }, [brands, brandId]);
+
+  // Bắn filter lên parent
+  React.useEffect(() => {
+    onChange({ q: dq, categoryId, brandId, inStockOnly, sort });
+  }, [dq, categoryId, brandId, inStockOnly, sort, onChange]);
 
   const clearAll = () => {
-    setQ("");
-    setCategoryId("");
-    setBrand("");
-    setInStockOnly(false);
-    setSort("newest");
-    onChange({ q: "", categoryId: "", brand: "", inStockOnly: false, sort: "newest" });
+    const cleared: FilterParams = {
+      q: "",
+      categoryId: "",
+      brandId: "",
+      inStockOnly: false,
+      sort: "newest",
+    };
+    setQ(cleared.q);
+    setCategoryId(cleared.categoryId);
+    setBrandId(cleared.brandId);
+    setInStockOnly(cleared.inStockOnly);
+    setSort(cleared.sort);
+    onChange(cleared);
   };
+
+  const cateOptions = React.useMemo(
+    () => [{ value: "", label: "--- All ---" }, ...flattenCategories(categories, 0, [], disableParentCategory)],
+    [categories, disableParentCategory]
+  );
+
+  const brandOptions = React.useMemo(
+    () => [{ value: "", label: "--- All ---" }, ...brands.map(b => ({ value: String(b.id), label: b.name }))],
+    [brands]
+  );
 
   return (
     <div id="filter" className="flex flex-col gap-2 md:flex-row md:items-end pb-2">
@@ -86,10 +150,9 @@ export default function FilterBar({
           onChange={(e) => setCategoryId(e.target.value)}
           className="w-full h-8 rounded-md shadow px-2 bg-white outline-none"
         >
-          <option value="">All</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
+          {cateOptions.map(o => (
+            <option key={o.value || "all"} value={o.value} disabled={o.disabled}>
+              {o.label}
             </option>
           ))}
         </select>
@@ -99,14 +162,13 @@ export default function FilterBar({
       <div className="min-w-40">
         <label className="block text-xs text-gray-500 mb-1">Brand</label>
         <select
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
+          value={brandId}
+          onChange={(e) => setBrandId(e.target.value)}
           className="w-full h-8 rounded-md shadow px-2 bg-white outline-none"
         >
-          <option value="">All</option>
-          {brands.map((b) => (
-            <option key={b} value={b}>
-              {b}
+          {brandOptions.map(o => (
+            <option key={o.value || "all"} value={o.value}>
+              {o.label}
             </option>
           ))}
         </select>
@@ -132,9 +194,9 @@ export default function FilterBar({
           onChange={(e) => setSort(e.target.value as FilterParams["sort"])}
           className="w-full h-8 rounded-md shadow px-2 bg-white outline-none"
         >
-        <option value="newest">Newest</option>
-        <option value="priceAsc">Price ↑</option>
-        <option value="priceDesc">Price ↓</option>
+          <option value="newest">Newest</option>
+          <option value="priceAsc">Price ↑</option>
+          <option value="priceDesc">Price ↓</option>
         </select>
       </div>
 

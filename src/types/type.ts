@@ -59,6 +59,7 @@ export type IVariant = {
   price: number;
   product_id: number;
   stock: number;
+  sold?: number;
   updatedate: string;
   valuevariant: any;
   variant_id: number;

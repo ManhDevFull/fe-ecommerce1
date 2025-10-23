@@ -3,12 +3,14 @@ import { useState, useEffect, useRef } from "react";
 import { CiMenuKebab } from "react-icons/ci";
 import { FaTrashAlt } from "react-icons/fa";
 import { IoAdd } from "react-icons/io5";
+import { FiEdit3 } from "react-icons/fi";
 
 interface ProductActionProps {
-  onCreate?: () => void;
+  onAddVariant?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
-export default function ProductAction({ onCreate, onDelete }: ProductActionProps) {
+export default function ProductAction({ onAddVariant, onEdit, onDelete }: ProductActionProps) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<"bottom" | "top">("bottom");
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -53,13 +55,19 @@ export default function ProductAction({ onCreate, onDelete }: ProductActionProps
           className={`absolute ${position === "bottom" ? "top-full mt-2" : "bottom-full mb-2"} right-0 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50`}
         >
           <button
-            onClick={() => { onCreate?.(); setOpen(false) }}
+            onClick={() => { onEdit?.(); setOpen(false); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-100"
           >
-            <IoAdd /> Create new
+            <FiEdit3 /> Edit product
           </button>
           <button
-            onClick={() => { onDelete?.(); setOpen(false) }}
+            onClick={() => { onAddVariant?.(); setOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-100"
+          >
+            <IoAdd /> Add variant
+          </button>
+          <button
+            onClick={() => { onDelete?.(); setOpen(false); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-left text-red-400 hover:bg-red-100"
           >
             <FaTrashAlt /> Delete
@@ -69,4 +77,3 @@ export default function ProductAction({ onCreate, onDelete }: ProductActionProps
     </div>
   );
 }
-
