@@ -5,7 +5,7 @@ import queryString from 'query-string'
 
 // const baseURL = 'http://localhost:5000'
 
- const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 const getAccessToken = () => {
   const res = localStorage.getItem('token')
   if (res) {
