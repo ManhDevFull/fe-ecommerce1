@@ -81,7 +81,7 @@ export default function User() {
       return; // Dừng hàm sau khi logout
     }
     
-    // Khi chuyển tab, reset lại chi tiết đơn hàng (nếu đang xem)
+
     setSelectedOrderId(null); 
     setActive(id);
   };

@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import handleAPI from "@/axios/handleAPI";
-import { useSelector } from "react-redux";
-import { authSelector, UserAuth } from "@/redux/reducers/authReducer";
+import { useDispatch, useSelector } from "react-redux";
+import { authSelector, updateAuthName, UserAuth } from "@/redux/reducers/authReducer";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -14,9 +14,9 @@ interface UserProfile {
 }
 
 export default function AccountForm() {
-  // State gốc từ API
+  const dispatch = useDispatch();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  // State cho form profile
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -65,9 +65,8 @@ export default function AccountForm() {
           setFormData({
             firstName: profileData.firstName || "",
             lastName: profileData.lastName || "",
-            displayName: `${profileData.firstName || ""} ${
-              profileData.lastName || ""
-            }`.trim(),
+            displayName: `${profileData.firstName || ""} ${profileData.lastName || ""
+              }`.trim(),
             email: profileData.email || "",
           });
 
@@ -80,8 +79,8 @@ export default function AccountForm() {
         console.error("Lỗi fetch profile:", err);
         setError(
           err.response?.data?.message ||
-            err.message ||
-            "Lỗi không xác định khi tải thông tin."
+          err.message ||
+          "Lỗi không xác định khi tải thông tin."
         );
         toast.error("Không thể tải thông tin tài khoản.");
       } finally {
@@ -111,8 +110,6 @@ export default function AccountForm() {
       setSelectedFile(file);
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
-      // Có thể gọi luôn hàm upload ở đây nếu muốn
-      // handleAvatarUpload(file);
     }
   };
 
@@ -126,10 +123,6 @@ export default function AccountForm() {
       toast.loading("Đang tải ảnh lên...");
       // Giả sử API trả về { avatarUrl: "new_url" }
       const response = await handleAPI("/User/avatar", uploadData, "post");
-      // const newAvatarUrl = response.avatarUrl;
-      // Cập nhật state profile gốc và preview
-      // setProfile((prev) => (prev ? { ...prev, avatarUrl: newAvatarUrl } : null));
-      // setPreview(newAvatarUrl);
       setSelectedFile(null); // Reset file đã chọn
       toast.dismiss();
       toast.success("Cập nhật ảnh đại diện thành công!");
@@ -148,14 +141,14 @@ export default function AccountForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-        // Id và Email có thể không cần gửi nếu BE lấy từ token
       };
       await handleAPI("/User/profile", updateDto, "put");
       toast.dismiss();
       toast.success("Cập nhật thông tin thành công!");
-      setIsEditingProfile(false); // Quay lại chế độ chỉ đọc
-      // Cập nhật state profile gốc để UI hiển thị đúng sau khi lưu
-      setProfile(prev => prev ? {...prev, firstName: formData.firstName, lastName: formData.lastName} : null);
+      setIsEditingProfile(false); 
+      setProfile(prev => prev ? { ...prev, firstName: formData.firstName, lastName: formData.lastName } : null);
+      const newDisplayName = `${formData.firstName} ${formData.lastName}`.trim();
+      dispatch(updateAuthName({ name: newDisplayName }));
     } catch (error: any) {
       toast.dismiss();
       console.error("Lỗi cập nhật profile:", error);
@@ -166,7 +159,6 @@ export default function AccountForm() {
       } else {
         toast.error(error.response?.data?.message || "Cập nhật thông tin thất bại.");
       }
-      // Không tắt edit mode nếu lỗi
     }
   };
 
@@ -177,31 +169,30 @@ export default function AccountForm() {
       return;
     }
     if (!passwordData.oldPassword || !passwordData.newPassword) {
-        toast.error("Please fill in all password fields.");
-        return;
+      toast.error("Please fill in all password fields.");
+      return;
     }
 
     try {
       toast.loading("Changing password...");
-      await handleAPI("/User/change-password", { // Endpoint đổi mật khẩu
+      await handleAPI("/User/change-password", { 
         oldPassword: passwordData.oldPassword,
         newPassword: passwordData.newPassword,
       }, "put");
 
       toast.dismiss();
       toast.success("Password changed successfully!");
-      setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" }); // Xóa input
-      setShowPasswordFields(false); // Ẩn field sau khi thành công
+      setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setShowPasswordFields(false); 
 
     } catch (error: any) {
       toast.dismiss();
       console.error("Error changing password:", error);
       toast.error(error.response?.data?.message || "Failed to change password.");
-      // Không ẩn field nếu lỗi
+
     }
   };
 
-  // Handler hủy sửa profile
   const handleCancelProfileEdit = () => {
     if (profile) {
       setFormData({ // Reset về giá trị gốc
@@ -214,14 +205,12 @@ export default function AccountForm() {
     setIsEditingProfile(false); // Tắt chế độ edit
   };
 
-  // Handler hủy sửa password
   const handleCancelPasswordChange = () => {
     setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" }); // Xóa input
     setShowPasswordFields(false); // Ẩn field
   };
 
 
-  // --- Render Loading/Error/No Profile ---
   if (isLoading) {
     return (
       <div className="p-6 text-center">Đang tải thông tin tài khoản...</div>
@@ -288,12 +277,12 @@ export default function AccountForm() {
           </label>
           <input
             type="text"
-             className={`w-full border border-[#CBCBCB] rounded-md p-2 ${!isEditingProfile ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`w-full border border-[#CBCBCB] rounded-md p-2 ${!isEditingProfile ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             placeholder="Sofia"
             name="displayName"
             value={formData.displayName}
             onChange={handleInputChange}
-             readOnly={!isEditingProfile}
+            readOnly={!isEditingProfile}
           />
           <p className="text-xs text-gray-500 mt-1">
             This will be how your name will be displayed in the account section
@@ -349,9 +338,10 @@ export default function AccountForm() {
 
         {/* Password Section */}
         <div className="w-full border-t pt-4 mt-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4"> {/* Giữ mb-4 để có khoảng cách */}
             <h2 className="text-xl font-semibold text-[25px]">Password</h2>
             <div className="flex items-center gap-4">
+              {/* Nút điều khiển Password */}
               <button
                 type="button"
                 onClick={() => {
@@ -369,63 +359,69 @@ export default function AccountForm() {
                 </span>
               </button>
 
+              {/* Nút Cancel Password */}
               {showPasswordFields && (
-                  <button
-                    type="button"
-                    onClick={handleCancelPasswordChange}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
+                <button
+                  type="button"
+                  onClick={handleCancelPasswordChange}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block font-medium mb-1 text-[#6C7275]">
-                Old Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="oldPassword"
-                className={`w-full border border-[#CBCBCB] rounded-md p-2 ${!showPasswordFields ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                placeholder="Enter old password"
-                value={passwordData.oldPassword}
-                onChange={handlePasswordInputChange}
-                disabled={!showPasswordFields}
-              />
+          {/* === BỌC KHỐI INPUT BẰNG ĐIỀU KIỆN NÀY === */}
+          {showPasswordFields && (
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block font-medium mb-1 text-[#6C7275]">
+                  Old Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="oldPassword"
+                  // Bỏ class điều kiện disabled vì div cha đã ẩn/hiện
+                  className="w-full border border-[#CBCBCB] rounded-md p-2"
+                  placeholder="Enter old password"
+                  value={passwordData.oldPassword}
+                  onChange={handlePasswordInputChange}
+                // Bỏ disabled vì div cha đã ẩn/hiện
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1 text-[#6C7275]">
+                  New Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  className="w-full border border-[#CBCBCB] rounded-md p-2"
+                  placeholder="Enter new password"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordInputChange}
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1 text-[#6C7275]">
+                  Repeat New Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  className="w-full border border-[#CBCBCB] rounded-md p-2"
+                  placeholder="Repeat new password"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordInputChange}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block font-medium mb-1 text-[#6C7275]">
-                New Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="newPassword"
-                className={`w-full border border-[#CBCBCB] rounded-md p-2 ${!showPasswordFields ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                placeholder="Enter new password"
-                value={passwordData.newPassword}
-                onChange={handlePasswordInputChange}
-                disabled={!showPasswordFields}
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1 text-[#6C7275]">
-                Repeat New Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                className={`w-full border border-[#CBCBCB] rounded-md p-2 ${!showPasswordFields ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                placeholder="Repeat new password"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordInputChange}
-                disabled={!showPasswordFields}
-              />
-            </div>
-          </div>
+          )}
+          {/* === KẾT THÚC BỌC ĐIỀU KIỆN === */}
+
         </div>
+        {/* === KẾT THÚC PHẦN PASSWORD === */}
 
       </form>
     </div>

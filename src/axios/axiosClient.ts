@@ -14,7 +14,6 @@ const getAccessToken = () => {
   }
   return ''
 }
-
 const axiosClient = axios.create({
   baseURL,
   withCredentials: true,
