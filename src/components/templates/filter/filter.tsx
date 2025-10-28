@@ -9,7 +9,7 @@ import { div, header, input, object, p, pre } from "framer-motion/client";
 import React, { Children, useEffect, useState } from "react"
 import { FiMinus } from "react-icons/fi";
 import { json } from "stream/consumers";
-import {page, category, variants, VariantDTO, Discount, ProductUi, valueFilter, PagedResultDTO} from "../../../types/type";
+import { page, category, variants, VariantDTO, Discount, ProductUi, valueFilter, PagedResultDTO } from "../../../types/type";
 import { types } from "util";
 
 export default function Filter() {
@@ -26,8 +26,10 @@ export default function Filter() {
     // usestate cho product sau khi lọc
     const [productUi, setProductUi] = useState<PagedResultDTO<ProductUi> | null>(null);
 
-    //xử lý ô input
-    const [selectedFilter, setSelectedFilter] = useState<valueFilter>({});
+    // ustate cho tiêu chí lọc
+    const [selectedFilter, setSelectedFilter] = useState<valueFilter>({
+        'brand': ['Anker']
+    });
 
     // lấy các variant để lọc khi bắt đầu truy cập trang
     useEffect(() => {
@@ -81,15 +83,15 @@ export default function Filter() {
     useEffect(() => {
         const handleSend = async () => {
             try {
-                if (Object.keys(selectedFilter).length === 0)
-                    return;
+                //if (Object.keys(selectedFilter).length === 0)
+                    //return;
                 const data = await axios.post('http://localhost:5000/product/filter',
                     {
                         filter: selectedFilter,
                         pageNumber: page.pageNumber,
                         pageSize: page.pageSize
                     });
-                    setProductUi(data.data);
+                setProductUi(data.data);
                 console.log("product sau khi lọc: ", data.data);
             }
             catch (error: any) {
@@ -166,11 +168,13 @@ export default function Filter() {
                 }
             </div>
             <div className="col-span-3 grid grid-cols-3">
-                {
-                    productUi?.Items.map((p, index)=>(
-                        
+                {/* {
+                    productUi?.Items.map((p, index) => (
+                        <div>
+                            
+                        </div>
                     ))
-                }
+                } */}
             </div>
             <div>
                 <ul className="flex gap-3">

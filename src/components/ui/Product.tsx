@@ -1,7 +1,6 @@
 import NewLabel from "./NewLabel";
 import { ProductUi } from "@/types/type";
 type productProps = {
-
     img: string;
     isNew: boolean;
 }
