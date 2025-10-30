@@ -1,6 +1,6 @@
 import BtnBuyNow from "@/components/ui/BtnBuyNow";
 import FlashDealBar from "@/components/ui/FlashDealBar";
-import Product from "@/components/ui/Product";
+import Product from "@/components/ui/ImgProduct";
 import { link } from "fs";
 import { Flash } from "iconsax-react";
 import Link from "next/link";

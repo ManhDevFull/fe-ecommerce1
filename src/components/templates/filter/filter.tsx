@@ -5,17 +5,19 @@ import axios from "axios";
 import { min, previousDay } from "date-fns";
 import { da } from "date-fns/locale";
 import { number } from "framer-motion";
-import { div, header, input, object, p, pre } from "framer-motion/client";
+import { div, header, input, object, p, param, pre } from "framer-motion/client";
 import React, { Children, useEffect, useState } from "react"
 import { FiMinus } from "react-icons/fi";
 import { json } from "stream/consumers";
-import { page, category, variants, VariantDTO, Discount, ProductUi, valueFilter, PagedResultDTO } from "../../../types/type";
+import { page, category, variants, VariantDTO, ProductUi, valueFilter, PagedResultDTO } from "../../../types/type";
 import { types } from "util";
+import { title } from "process";
+import { VscLaw } from "react-icons/vsc";
 
 export default function Filter() {
     const [page, setPage] = useState<page>({
         pageNumber: 1,
-        pageSize: 10
+        pageSize: 9
     });
     const [variantApi, setVariantApi] = useState<variants[]>([]);
     const [priceError, setPriceError] = useState('')
@@ -28,20 +30,34 @@ export default function Filter() {
 
     // ustate cho tiêu chí lọc
     const [selectedFilter, setSelectedFilter] = useState<valueFilter>({
-        'brand': ['Anker']
     });
-
+    // usestae cho catgory
+    const [category, setCategory] = useState<string>();
     // lấy các variant để lọc khi bắt đầu truy cập trang
     useEffect(() => {
         const fetchVariantApi = async () => {
-            const res = await axios.get('http://localhost:5000/variant');
+            const res = await axios.get('http://localhost:5000/variant', {
+                params: { category }
+              });
+            // đưa category lên đầu
+            const data = res.data as variants[]
+            const sortedVariants = [
+                ...data.filter(v=>v.key?.toLowerCase() === "category"),
+                {key: "price", values: []},
+                ...data.filter(v=>v.key?.toLowerCase() != "category")
+            ];
             console.log('get variant by id', res.data);
-            setVariantApi(res.data);
+            setVariantApi(sortedVariants);
         }
         fetchVariantApi();
-    }, []);
+    }, [category]);
     // khi các value lọc bị thay đổi
     const handleOnchange = (key: string, value: string) => {
+        if(key === "category"){
+            setCategory(prev=>
+                value
+            );
+        }
         setSelectedFilter(prev => {
             const currentValues = prev[key] || [];
             const newValues = currentValues.includes(value) ? currentValues.filter(v => v != value) : [...currentValues, value];
@@ -79,12 +95,12 @@ export default function Filter() {
             }
         ));
     }
-    // gọi api khi bộ lọc thay đổi
+    // gọi api khi bộ lọc hoặc trang thay đổi
     useEffect(() => {
         const handleSend = async () => {
             try {
                 //if (Object.keys(selectedFilter).length === 0)
-                    //return;
+                //return;
                 const data = await axios.post('http://localhost:5000/product/filter',
                     {
                         filter: selectedFilter,
@@ -92,7 +108,7 @@ export default function Filter() {
                         pageSize: page.pageSize
                     });
                 setProductUi(data.data);
-                console.log("product sau khi lọc: ", data.data);
+                console.log("product sau khi lọc (raw): ", data.data);
             }
             catch (error: any) {
                 if (error.response) {
@@ -109,47 +125,57 @@ export default function Filter() {
             }
         }
         handleSend();
-    }, [selectedFilter]);
+    }, [selectedFilter, page]);
+
+    // log khi productUi thay đổi (setState là async)
+    useEffect(() => {
+        if (productUi) {
+            console.log("sản phẩm sau khi map vào usestate (đã cập nhật): ", productUi);
+        }
+    }, [productUi]);
     console.log('selected filter: ', selectedFilter);
     return (
         <div className="w-full px-4 sm:px-16 py-10 grid grid-cols-4">
             <div className="col-span-1">
                 {
                     variantApi.map((variant, index) => (
-                        <AccordionItem key={index} title={variant.key}>
-                            {
-                                variant.key === "price" ?
-                                    (<div className="w-full pr-4">
-                                        <p className="py-2 text-start">Khoảng giá</p>
-                                        <div className="flex gap-2 w-full">
-                                            <input
-                                                onChange={(e) => setRangePrice(prev => (
-                                                    {
-                                                        ...prev,
-                                                        min: e.target.value
-                                                    }
-                                                ))}
-                                                className=" px-2 w-full border-[1px] border-[##626262]"
-                                                type="text" name="minPrice"
-                                                placeholder="$ Từ" />
-                                            <FiMinus size={30} />
-                                            <input
-                                                onChange={(e) => setRangePrice(prev => (
-                                                    {
-                                                        ...prev,
-                                                        max: e.target.value
-                                                    }
-                                                ))}
-                                                className="px-2 w-full border-[1px] border-[##626262]"
-                                                type="text" name="maxPrice" placeholder="$ Đến" />
-                                        </div>
-                                        {priceError && <p className="text-red-500 py-[20px]">{priceError}</p>}
-                                        <button
-                                            onClick={() => handleApplyPrice(variant.key)}
-                                            className="w-full hover:cursor-pointer px-2 bg-green-500 py-2 mt-2 rounded-[10px] text-white"
-                                            type="submit">Áp dụng</button>
-                                    </div>) : (
+                        variant.key?.toLowerCase() === "price" ?
+                        //index == 1 ? // dành cho ô input
+                            (<div key={index} className="w-full pr-4">
+                                <p className="py-2 text-start">Khoảng giá</p>
+                                <div className="flex gap-2 w-full">
+                                    <input
+                                        onChange={(e) => setRangePrice(prev => (
+                                            {
+                                                ...prev,
+                                                min: e.target.value
+                                            }
+                                        ))}
+                                        className=" px-2 w-full border-[1px] border-[#626262]"
+                                        type="text" name="minPrice"
+                                        placeholder="$ Từ" />
+                                    <FiMinus size={30} />
+                                    <input
+                                        onChange={(e) => setRangePrice(prev => (
+                                            {
+                                                ...prev,
+                                                max: e.target.value
+                                            }
+                                        ))}
+                                        className="px-2 w-full border-[1px] border-[#626262]"
+                                        type="text" name="maxPrice" placeholder="$ Đến" />
+                                </div>
+                                {priceError && <p className="text-red-500 py-[20px]">{priceError}</p>}
+                                <button
+                                    onClick={() => handleApplyPrice("price")}
+                                    className="w-full hover:cursor-pointer px-2 bg-green-500 py-2 mt-2 rounded-[10px] text-white"
+                                    type="submit">Áp dụng</button>
+                            </div>) :
+                            (
+                                <AccordionItem key={index} title={variant.key} >
+                                    {
                                         variant.values.map((value, index) => (
+
                                             <div key={index} className="flex items-center gap-4">
                                                 <input
                                                     type="checkbox"
@@ -161,20 +187,19 @@ export default function Filter() {
                                                 />
                                                 <p className="text-[20px]">{value}</p>
                                             </div>
-                                        )))
-                            }
-                        </AccordionItem>
+                                        ))
+                                    }
+                                </AccordionItem>
+                            )
                     ))
                 }
             </div>
-            <div className="col-span-3 grid grid-cols-3">
-                {/* {
-                    productUi?.Items.map((p, index) => (
-                        <div>
-                            
-                        </div>
+            <div className="col-span-3 gap-10 grid grid-cols-3">
+                {
+                    productUi?.items?.map((p, index) => (
+                        <Product key={index} product={p} selectedFilter={selectedFilter}></Product>
                     ))
-                } */}
+                }
             </div>
             <div>
                 <ul className="flex gap-3">

@@ -9,20 +9,18 @@ export type variants = {
 
 export type VariantDTO = {
     id: number;
-    valuevariant: string;
+    valuevariant:  { [key: string]: string };
     stock: number;
     inputprice: number;
+    discounts: DiscountDTO[]
     price: number;
-    createdate: Date;
-    updatedate: Date;
 }
-export type Discount = {
+export type DiscountDTO = {
     id: number;
     typediscount: number;
     discount: number;
     starttime: Date;
     endtime: Date;
-    createtime: Date;
 }
 export type ProductUi = {
     id: number;
@@ -33,7 +31,6 @@ export type ProductUi = {
     categoryName: string;
     imgUrls: string[];
     variant: VariantDTO[];
-    discount: Discount;
     rating: number;
     order: number;
 }
@@ -45,9 +42,24 @@ export type page = {
     pageSize: number;
 }
 export type PagedResultDTO<T> = {
-    Items: T[];
-    PageNumber: number;
-    PageSize: number;
-    TotalCount: number;
-    TotalPage: number;
+    items: T[];
+    pageNumber: number;
+    pageSize: number;
+    totalCount: number;
+    totalPage: number;
+}
+// time unit
+export type timeUnit = {
+    endtime: Date;
+    unit: {
+        day?: string,
+        hour: string,
+        min: string,
+        sec: string
+    }
+}
+// img product
+export type imgproductProps = {
+    img: string;
+    isNew: boolean;
 }
