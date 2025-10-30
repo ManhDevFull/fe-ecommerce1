@@ -44,10 +44,20 @@ const authSlice = createSlice({
         });
       }
     },
+    updateAuthAvatar: (state, action) => {
+      if (state.data) {
+        state.data.avata = action.payload.avata; 
+        syncLocal({
+          token: state.data.token,
+          name: state.data.name,
+          avata: action.payload.avata // Dùng avatar mới
+        });
+      }
+    },
   },
 });
 export const authReducer = authSlice.reducer;
-export const { addAuth, updateAuth, removeAuth, updateAuthName } = authSlice.actions;
+export const { addAuth, updateAuth, removeAuth, updateAuthName, updateAuthAvatar } = authSlice.actions;
 export const authSelector = (state: any) => state.authReducer.data;
 const syncLocal = (data: UserAuth) => {
   localStorage.setItem("token", JSON.stringify(data));

@@ -1,30 +1,24 @@
 "use client";
 import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
-// Hai import này không được sử dụng nên tôi đã xóa
-// import { MdOutlineShoppingCart } from "react-icons/md";
-// import { IoCloseCircleOutline } from "react-icons/io5";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, useState, useRef } from "react"; // <-- Thêm useRef
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-// Import "Image" không được sử dụng (bạn đang dùng <img>) nên tôi đã xóa
-// import Image from "next/image";
 import { CiCamera } from "react-icons/ci";
 
 import AccountForm from "@/components/templates/User/Account_Form";
 import AddressForm from "@/components/templates/User/Address_Form";
 import OrderHistory from "@/components/templates/User/Order_History";
-import OrderDetail from "@/components/templates/User/Order_Detail"; // <-- Bị thiếu
+import OrderDetail from "@/components/templates/User/Order_Detail";
 
-// --- CÁC IMPORT BỊ THIẾU ---
 import handleAPI from "@/axios/handleAPI";
 import {
   authSelector,
   removeAuth,
   UserAuth,
+  updateAuthAvatar, // <-- 1. Import action mới (sẽ tạo ở bước sau)
 } from "@/redux/reducers/authReducer";
 import { useDispatch, useSelector } from "react-redux";
-// --------------------------
 
 const menuItems = [
   {
@@ -57,13 +51,13 @@ export default function User() {
   const [active, setActive] = useState("account");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const router = useRouter();
-
-  // --- BỊ THIẾU ---
   const dispatch = useDispatch();
   const auth: UserAuth = useSelector(authSelector);
-  // --------------
 
-  // --- KHÔI PHỤC LẠI LOGIC LOGOUT ---
+  // 2. Thêm Ref để trỏ tới input file ẩn
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Logic logout (giữ nguyên)
   const handleMenuClick = async (id: SetStateAction<string>) => {
     if (id === "logout") {
       try {
@@ -80,12 +74,49 @@ export default function User() {
       }
       return; // Dừng hàm sau khi logout
     }
-    
 
-    setSelectedOrderId(null); 
+    setSelectedOrderId(null);
     setActive(id);
   };
-  // ---------------------------------
+
+  // 3. Thêm hàm xử lý khi chọn file
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Gọi luôn hàm upload khi có file
+      await handleAvatarUpload(file);
+    }
+  };
+
+  // 4. Thêm hàm xử lý upload
+  const handleAvatarUpload = async (fileToUpload: File) => {
+    if (!fileToUpload) return;
+
+    // Tạo FormData để gửi file
+    const uploadData = new FormData();
+    uploadData.append("file", fileToUpload); // "file" phải khớp với [HttpPost("avatar")] IFormFile file
+
+    try {
+      toast.loading("Đang cập nhật avatar...");
+
+      // Gọi API (POST /User/avatar)
+      const response: any = await handleAPI("/User/avatar", uploadData, "post");
+
+      // BE trả về { message: "...", avatarUrl: "new_url" }
+      const newAvatarUrl = response.avatarUrl;
+
+      // Cập nhật avatar mới vào Redux
+      dispatch(updateAuthAvatar({ avata: newAvatarUrl }));
+
+      toast.dismiss();
+      toast.success(response.message || "Cập nhật avatar thành công!");
+
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Lỗi upload avatar:", error);
+      toast.error(error.response?.data?.message || "Tải ảnh lên thất bại.");
+    }
+  };
 
   return (
     <main className="pt-2">
@@ -99,19 +130,33 @@ export default function User() {
             <div className="relative">
               <img
                 src={
-                  auth.avata ||
+                  auth.avata || // Ảnh lấy từ Redux (sẽ tự cập nhật khi dispatch)
                   "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949054/image_zbt0bw.png"
                 }
                 alt="profile"
                 className="w-32 h-32 rounded-full object-cover"
               />
-              <button className="absolute bottom-2 right-2 bg-black text-white text-xs p-2 rounded-full">
+              {/* 5. Sửa nút camera */}
+              <button
+                className="absolute bottom-2 right-2 bg-black text-white text-xs p-2 rounded-full"
+                onClick={() => fileInputRef.current?.click()} // Kích hoạt input file
+              >
                 <CiCamera size={20} />
               </button>
             </div>
+
+            {/* 6. Thêm input file ẩn */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              hidden
+              accept="image/png, image/jpeg, image/gif" // Chỉ chấp nhận ảnh
+            />
+
             <h2 className="mt-4 font-semibold text-lg">{auth.name || "User"}</h2>
 
-            {/* Menu Wrapper */}
+            {/* Menu Wrapper (giữ nguyên) */}
             <div className="mt-6 w-full rounded-lg p-4">
               <div className="grid grid-cols-2 gap-x-4 gap-y-6">
                 {menuItems.map((item) => (
@@ -141,7 +186,7 @@ export default function User() {
             </div>
           </div>
 
-          {/* Content (switch theo state) */}
+          {/* Content (giữ nguyên) */}
           <div className="flex-1">
             {active === "account" && <AccountForm />}
             {active === "address" && <AddressForm />}
