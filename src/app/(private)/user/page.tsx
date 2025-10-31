@@ -94,8 +94,7 @@ export default function User() {
 
     // Tạo FormData để gửi file
     const uploadData = new FormData();
-    uploadData.append("file", fileToUpload); // "file" phải khớp với [HttpPost("avatar")] IFormFile file
-
+    uploadData.append("file", fileToUpload);
     try {
       toast.loading("Đang cập nhật avatar...");
 
