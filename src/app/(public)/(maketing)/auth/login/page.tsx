@@ -2,6 +2,7 @@
 import FormAuth from "@/components/templates/AuthForm/FormAuth";
 import BackNavigation from "@/components/ui/BackNavigation";
 import { authSelector, UserAuth } from "@/redux/reducers/authReducer";
+import { getPostLoginRoute } from "@/utils/auth";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -11,8 +12,9 @@ export default function LoginPage() {
   const auth: UserAuth = useSelector(authSelector);
   const route = useRouter();
   useEffect(() => {
-    if (auth && auth.token && auth.name) route.push("/");
-  }, [auth, route]);
+    if (!auth?.token) return;
+    route.replace(getPostLoginRoute(auth.role));
+  }, [auth?.role, auth?.token, route]);
   return (
     <>
       <BackNavigation />

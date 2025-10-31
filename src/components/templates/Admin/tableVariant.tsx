@@ -1,3 +1,4 @@
+import { formatCurrency } from "@/utils/currency";
 import { IVariant } from "@/types/type";
 import { AiTwotoneDelete } from "react-icons/ai";
 import { FiEdit3 } from "react-icons/fi";
@@ -78,10 +79,10 @@ export default function renderVariant(
           </div>
         </div>
         <div className="col-span-2 flex items-center justify-center py-2">
-          {vr.price}
+          {formatCurrency(vr.price)}
         </div>
         <div className="col-span-3 flex items-center justify-center py-2">
-          {vr.inputprice}
+          {formatCurrency(vr.inputprice)}
         </div>
         <div className="col-span-2 flex items-center justify-center py-2">
           {vr.stock}

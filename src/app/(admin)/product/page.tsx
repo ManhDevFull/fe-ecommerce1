@@ -9,17 +9,10 @@ import ProductUpsertModal, {
 import VariantUpsertModal, {
   VariantFormSubmit,
 } from "@/components/modules/product/VariantUpsertModal";
-import FilterBar, {
-  FilterParams,
-  BrandItem,
-} from "@/components/templates/Admin/filterProduct";
-import Image from "next/image";
-import ProductAction from "@/components/templates/Admin/ProductAction";
-import renderVariant from "@/components/templates/Admin/tableVariant";
-import { Button } from "@/components/ui/button";
+import ProductToolbar from "@/components/templates/Admin/Product/Toolbar";
+import ProductTable from "@/components/templates/Admin/Product/Table";
+import type { FilterParams, BrandItem } from "@/components/templates/Admin/filterProduct";
 import Pagination from "@/components/ui/pageNavigation";
-import PlusMinusIcon from "@/components/ui/PlusMinusIcon";
-import Expando from "@/components/ui/ResizeObserver";
 import { CategoryTree, IProductAdmin, IVariant } from "@/types/type";
 import { useCallback, useEffect, useState } from "react";
 
@@ -39,6 +32,28 @@ const DEFAULT_FILTER: FilterState = {
   isStock: false,
 };
 
+const extractErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+  if (error && typeof error === "object") {
+    const maybeMessage = (error as { message?: unknown }).message;
+    const dataMessage = (error as { data?: { message?: unknown } }).data?.message;
+    const responseMessage = (
+      error as { response?: { data?: { message?: unknown } } }
+    ).response?.data?.message;
+
+    const resolved = [maybeMessage, dataMessage, responseMessage].find(
+      (msg): msg is string => typeof msg === "string" && msg.length > 0
+    );
+
+    if (resolved) {
+      return resolved;
+    }
+  }
+  return fallback;
+};
+
 export default function ProductPage() {
 
   const [openIds, setOpenIds] = useState<number[]>([]);
@@ -49,6 +64,7 @@ export default function ProductPage() {
   const [listCate, setListCate] = useState<CategoryTree[]>([]);
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [reloadFlag, setReloadFlag] = useState(0);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Product modal state
   const [productModalOpen, setProductModalOpen] = useState(false);
@@ -99,7 +115,10 @@ export default function ProductPage() {
 
   // Fetch product list on filter/page changes
   useEffect(() => {
+    let cancelled = false;
     const fetchProducts = async () => {
+      if (!cancelled) setLoadingProducts(true);
+
       const params = new URLSearchParams();
       params.set("page", String(isPage));
       params.set("size", "20");
@@ -112,16 +131,31 @@ export default function ProductPage() {
 
       try {
         const res = await handleAPI(`admin/Product?${params.toString()}`);
-        if (res.status === 200) {
-          setProducts(res.data.items ?? []);
-          setTotalItem(res.data.total ?? 0);
+        console.log(res)
+        if (!cancelled) {
+          if (res.status === 200) {
+            setProducts(res.data.items ?? []);
+            setTotalItem(res.data.total ?? 0);
+          } else {
+            setProducts([]);
+            setTotalItem(0);
+          }
         }
       } catch (error) {
-        console.error("Failed to load products", error);
+        if (!cancelled) {
+          console.error("Failed to load products", error);
+          setProducts([]);
+          setTotalItem(0);
+        }
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
       }
     };
 
     fetchProducts();
+    return () => {
+      cancelled = true;
+    };
   }, [isPage, filter, reloadFlag]);
 
   // Fetch brands whenever category filter changes
@@ -135,7 +169,6 @@ export default function ProductPage() {
         if (res?.status === 200) {
           const items = Array.isArray(res.data) ? res.data : [];
           setBrands(items);
-          // Reset brand filter if current brand no longer valid
           if (filter.brand && !items.some((b) => b.name === filter.brand)) {
             setFilter((prev) => ({ ...prev, brand: "" }));
           }
@@ -153,7 +186,7 @@ export default function ProductPage() {
     return () => {
       cancelled = true;
     };
-  }, [filter.cate]);
+  }, [filter.brand, filter.cate]);
 
   const refreshProducts = () => setReloadFlag((flag) => flag + 1);
 
@@ -174,11 +207,6 @@ export default function ProductPage() {
     },
     [brands]
   );
-
-  const getBgForLevel = (level: number) => {
-    const lightness = Math.max(98 - level * 6, 86);
-    return `hsl(0 0% ${lightness}%)`;
-  };
 
   const toggleOpen = (id: number) =>
     setOpenIds((prev) =>
@@ -217,7 +245,7 @@ export default function ProductPage() {
         method = "put";
       }
 
-      const res = await handleAPI(endpoint, payload, method);
+      const res: any = await handleAPI(endpoint, payload, method);
       if (res.status === 200 || res.status === 201) {
         setProductModalOpen(false);
         setEditingProduct(null);
@@ -228,13 +256,8 @@ export default function ProductPage() {
       } else {
         setProductModalError(res?.message ?? "Operation failed");
       }
-    } catch (error: any) {
-      const message =
-        error?.message ??
-        error?.data?.message ??
-        error?.response?.data?.message ??
-        "Operation failed";
-      setProductModalError(message);
+    } catch (error) {
+      setProductModalError(extractErrorMessage(error, "Operation failed"));
     } finally {
       setProductModalSubmitting(false);
     }
@@ -256,6 +279,11 @@ export default function ProductPage() {
     setVariantModalOpen(true);
   };
 
+  const handleVariantDeletePrompt = (product: IProductAdmin, variant: IVariant) => {
+    ensureRowExpanded(product.product_id);
+    setVariantToDelete({ product, variant });
+  };
+
   const handleVariantSubmit = async (payload: VariantFormSubmit) => {
     if (!variantContext) return;
     setVariantModalSubmitting(true);
@@ -270,7 +298,7 @@ export default function ProductPage() {
         method = "put";
       }
 
-      const res = await handleAPI(endpoint, payload, method);
+      const res: any = await handleAPI(endpoint, payload, method);
       if (res.status === 200) {
         setVariantModalOpen(false);
         setVariantContext(null);
@@ -278,13 +306,8 @@ export default function ProductPage() {
       } else {
         setVariantModalError(res?.message ?? "Operation failed");
       }
-    } catch (error: any) {
-      const message =
-        error?.message ??
-        error?.data?.message ??
-        error?.response?.data?.message ??
-        "Operation failed";
-      setVariantModalError(message);
+    } catch (error) {
+      setVariantModalError(extractErrorMessage(error, "Operation failed"));
     } finally {
       setVariantModalSubmitting(false);
     }
@@ -326,203 +349,40 @@ export default function ProductPage() {
     }
   };
 
-  const renderImages = (urls: string[] | undefined) => {
-    if (!urls || urls.length === 0) {
-      return <span className="text-xs text-gray-500 md:text-sm">No images</span>;
-    }
-    return (
-    <div className="flex flex-wrap gap-1">
-      {urls.map((url, idx) => (
-        <div
-          key={`${url}-${idx}`}
-          className="rounded-md border border-gray-200 bg-white shadow-sm"
-          title={url}
-        >
-          <img
-            src={url}
-            alt={`Image ${idx + 1}`}
-            width={30}
-            height={30}
-            className="rounded-md object-cover"
-          />
-        </div>
-      ))}
-    </div>
-    );
-  };
-
   return (
     <div className="flex h-full w-full flex-col rounded-lg bg-[#D9D9D940] p-2 shadow-[0px_2px_4px_rgba(0,0,0,0.25)]">
-      <div className="mb-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-[26px] font-medium text-[#2f2f2f]">Products</h1>
-        <FilterBar
-          categories={listCate}
-          brands={brands}
-          defaultValues={{
-            q: DEFAULT_FILTER.name,
-            categoryId: DEFAULT_FILTER.cate ? String(DEFAULT_FILTER.cate) : "",
-            brandId: "",
-            inStockOnly: DEFAULT_FILTER.isStock,
-            sort: "newest",
-          }}
-          onChange={handleFilterChange}
-        />
-      </div>
+      <ProductToolbar
+        categories={listCate}
+        brands={brands}
+        defaultValues={{
+          q: DEFAULT_FILTER.name,
+          categoryId: DEFAULT_FILTER.cate ? String(DEFAULT_FILTER.cate) : "",
+          brandId: "",
+          inStockOnly: DEFAULT_FILTER.isStock,
+          sort: "newest",
+        }}
+        onFilterChange={handleFilterChange}
+      />
 
-      <div className="grid grid-cols-24 overflow-hidden rounded-b-md border-t border-gray-200 shadow">
-        <div className="col-span-1 bg-[#00000007] py-2 text-center text-[#474747]">#</div>
-        <div className="col-span-7 bg-[#00000007] py-2 pl-1 text-[#474747]">Product name</div>
-        <div className="col-span-2 bg-[#00000007] py-2 text-center text-[#474747]">Brand</div>
-        <div className="col-span-3 bg-[#00000007] py-2 text-center text-[#474747]">Category</div>
-        <div className="col-span-2 bg-[#00000007] py-2 text-center text-[#474747]">Stock</div>
-        <div className="col-span-7 bg-[#00000007] py-2 text-[#474747]">Images</div>
-        <div className="col-span-2 bg-[#00000007] py-2 pr-1 text-center text-[#474747]">
-          <div className="flex items-center justify-center gap-2">
-            <span>Action</span>
-            <button
-              type="button"
-              onClick={openCreateProductModal}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-base text-blue-600 transition hover:border-blue-300 hover:bg-blue-100"
-              title="Create product"
-            >
-              <span aria-hidden="true">+</span>
-              <span className="sr-only">Create product</span>
-            </button>
-          </div>
-        </div>
-
-        <div
-          className="col-span-24 flex-grow overflow-y-auto bg-[#ffffff80] scrollbar-hidden"
-          style={{ maxHeight: "calc(100vh - 280px)" }}
-        >
-          {products.length === 0 ? (
-            <div className="bg-[#ffffff70] py-3 text-center text-[#474747]">
-              There are no products.
-            </div>
-          ) : (
-            products.map((prd, index) => {
-              const level = 0;
-              const indexStr = String(index + 1);
-              const isOpen = openIds.includes(prd.product_id);
-              const totalStock =
-                prd.variants?.reduce((acc, v) => acc + (v.stock ?? 0), 0) ?? 0;
-
-              return (
-                <div key={`product-${prd.product_id}`} className="w-full">
-                  <div
-                    className="grid grid-cols-24 items-center border-t border-[#00000008] py-3 text-[#474747]"
-                    style={{ backgroundColor: getBgForLevel(level) }}
-                  >
-                    <div className="col-span-1 flex items-center justify-center py-2">
-                      {indexStr}
-                    </div>
-                    <div className="col-span-7 flex items-center gap-2 py-2 pl-1">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openCreateProductModal();
-                        }}
-                        className="flex h-7 w-7 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-base text-blue-600 transition hover:border-blue-300 hover:bg-blue-100 md:hidden"
-                        aria-label="Create product"
-                      >
-                        +
-                      </button>
-                      <div
-                        className="flex flex-1 cursor-pointer select-none items-center gap-2"
-                        onClick={() => {
-                          if (prd.variants && prd.variants.length > 0) {
-                            toggleOpen(prd.product_id);
-                          }
-                        }}
-                      >
-                        {prd.variants && prd.variants.length > 0 && (
-                          <PlusMinusIcon isOpen={isOpen} />
-                        )}
-                        <span className="truncate">{prd.name}</span>
-                      </div>
-                    </div>
-                    <div className="col-span-2 flex items-center justify-center py-2">
-                      {prd.brand || "-"}
-                    </div>
-                    <div className="col-span-3 flex items-center justify-center py-2">
-                      {prd.category_name || "-"}
-                    </div>
-                    <div className="col-span-2 flex items-center justify-center py-2">
-                      {totalStock}
-                    </div>
-                    <div className="col-span-7 flex items-center overflow-hidden py-2">
-                      {renderImages(prd.imageurls)}
-                    </div>
-                    <div className="col-span-2 flex items-center justify-center py-2">
-                      <ProductAction
-                        onEdit={() => openEditProductModal(prd)}
-                        onAddVariant={() => openCreateVariantModal(prd)}
-                        onDelete={() => setProductToDelete(prd)}
-                      />
-                    </div>
-                  </div>
-
-                  {prd.variants && prd.variants.length > 0 && (
-                    <Expando open={isOpen} duration={260}>
-                      <div className="border-t border-gray-200 bg-[#fafafa] pl-2">
-                        <div
-                          className="grid grid-cols-22 items-center border-t border-[#00000008] text-[#474747]"
-                          style={{ backgroundColor: getBgForLevel(1) }}
-                        >
-                          <div className="col-span-1 flex items-center justify-center py-2">
-                            #
-                          </div>
-                          <div className="col-span-9 flex items-center py-2 pl-1">
-                            Variant Details
-                          </div>
-                          <div className="col-span-2 flex items-center justify-center py-2">
-                            Price
-                          </div>
-                          <div className="col-span-3 flex items-center justify-center py-2">
-                            Input Price
-                          </div>
-                          <div className="col-span-2 flex items-center justify-center py-2">
-                            Stock
-                          </div>
-                          <div className="col-span-2 flex items-center justify-center py-2">
-                            Sold
-                          </div>
-                          <div className="col-span-3 flex items-center justify-center py-2">
-                            Action
-                          </div>
-                        </div>
-                        {prd.variants.map((variant, j) => (
-                          <div key={variant.variant_id} className="block">
-                            {renderVariant(variant, j + 1, level + 1, indexStr, {
-                              onEdit: (selected) =>
-                                openEditVariantModal(prd, selected),
-                              onDelete: (selected) => {
-                                ensureRowExpanded(prd.product_id);
-                                setVariantToDelete({
-                                  product: prd,
-                                  variant: selected,
-                                });
-                              },
-                            })}
-                          </div>
-                        ))}
-                      </div>
-                    </Expando>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+      <ProductTable
+        products={products}
+        openIds={openIds}
+        loading={loadingProducts}
+        onToggle={toggleOpen}
+        onCreateProduct={openCreateProductModal}
+        onEditProduct={openEditProductModal}
+        onDeleteProduct={(product) => setProductToDelete(product)}
+        onAddVariant={openCreateVariantModal}
+        onEditVariant={openEditVariantModal}
+        onDeleteVariant={handleVariantDeletePrompt}
+      />
 
       <div className="mb-1 flex h-10 items-center justify-center">
         <Pagination
           totalPage={Math.max(1, Math.ceil(totalItem / 30))}
           page={isPage}
           totalProduct={totalItem}
-          onChangePage={(val) => setIsPage(val)}
+          onChangePage={setIsPage}
         />
       </div>
 

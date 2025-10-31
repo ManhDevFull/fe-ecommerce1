@@ -5,7 +5,7 @@ import {
   getAuthClient,
   googleProvider,
 } from "@/firebase/firebaseConfig";
-import { addAuth } from "@/redux/reducers/authReducer";
+import { addAuth, type UserAuth } from "@/redux/reducers/authReducer";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { getPostLoginRoute } from "@/utils/auth";
 export default function FormAuth(props: {
   type: "login" | "sign-up";
   handle?: (val: { email?: string; name?: string; pass?: string }) => void;
@@ -30,6 +31,35 @@ export default function FormAuth(props: {
   }>({
     loading: false,
   });
+  const extractAuthData = (res: any): UserAuth => {
+    const payload = res?.data ?? {};
+    const user = payload?.user ?? {};
+
+    return {
+      token: payload?.accessToken,
+      name: user?.name,
+      avata: user?.avatarUrl,
+      email: user?.email,
+      id: user?.id,
+      role: user?.rule ?? user?.role,
+    };
+  };
+
+  const applyAuthResult = (res: any, successMessage: string) => {
+    if (!res || res.status !== 200) return false;
+
+    const authData = extractAuthData(res);
+    if (!authData?.token) {
+      toast.error("Missing authentication token from server response.");
+      return false;
+    }
+
+    dispatch(addAuth(authData));
+    route.replace(getPostLoginRoute(authData.role));
+    toast.success(successMessage);
+    return true;
+  };
+
   const handleLoginWithGoogle = async () => {
     try {
       const auth = getAuthClient();
@@ -40,18 +70,10 @@ export default function FormAuth(props: {
         { IdToken: idToken },
         "post"
       );
-      if (res.status === 200) {
-        const authData = {
-          token: res.data.accessToken,
-          name: res.data.user.name,
-          avata: res.data.user.avatarUrl,
-        };
-        dispatch(addAuth(authData));
-        route.push("/");
-        toast.success("Login successful !!!");
-      }
+      applyAuthResult(res, "Login successful!");
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      toast.error("Failed to login with Google. Please try again.");
     }
   };
   const loginWithFacebook = async () => {
@@ -64,18 +86,10 @@ export default function FormAuth(props: {
         { IdToken: idToken },
         "post"
       );
-      if (res.status === 200) {
-        const authData = {
-          token: res.data.accessToken,
-          name: res.data.user.name,
-          avata: res.data.user.avatarUrl,
-        };
-        dispatch(addAuth(authData));
-        route.push("/");
-        toast.success("Login successful !!!");
-      }
+      applyAuthResult(res, "Login successful!");
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      toast.error("Failed to login with Facebook. Please try again.");
     }
   };
   const authSubmit = async () => {
@@ -87,19 +101,9 @@ export default function FormAuth(props: {
           { Email: state.email, Password: state.password },
           "post"
         );
-        if (res.status === 200) {
-          const authData = {
-            token: res.data.accessToken,
-            name: res.data.user.name,
-            avata: res.data.user.avatarUrl,
-          };
-
-          dispatch(addAuth(authData));
-          toast.success("Login successful");
-          route.push("/");
-        }
+        applyAuthResult(res, "Login successful!");
       } catch (error) {
-        console.log(error);
+        console.error(error);
         toast.error("Login fail !!!");
       } finally {
         setState((ps) => ({ ...ps, loading: false }));
@@ -214,15 +218,26 @@ export default function FormAuth(props: {
           />
         </p>
         <button
+          disabled={state.loading}
           onClick={async () => {
-            // await checkExist();
-            handle?.({
-              email: state.email,
-              name: state.fullName,
-              pass: state.password,
-            });
+            if (!state.fullName || !state.email || !state.password) {
+              toast.warning("Please enter complete information!");
+              return;
+            }
+            setState((ps) => ({ ...ps, loading: true }));
+            try {
+              await handle?.({
+                email: state.email,
+                name: state.fullName,
+                pass: state.password,
+              });
+            } finally {
+              setState((ps) => ({ ...ps, loading: false }));
+            }
           }}
-          className="bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg"
+          className={`bg-black text-white rounded-xl flex justify-center w-full md:w-[100%] 2xl:w-[65%] mt-6 py-4 text-lg ${
+            state.loading && "cursor-wait opacity-70"
+          }`}
         >
           Sign Up
         </button>

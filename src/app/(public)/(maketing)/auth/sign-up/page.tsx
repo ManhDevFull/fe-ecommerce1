@@ -1,22 +1,37 @@
 "use client";
+import handleAPI from "@/axios/handleAPI";
 import FormAuth from "@/components/templates/AuthForm/FormAuth";
 import FormOTP from "@/components/templates/AuthForm/FormOTP";
-import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function SignUpPage() {
   const [state, setState] = useState<{
-    loading: boolean;
-    fullName?: string;
-    email?: string;
-    password?: string;
     pageOTP: boolean;
+    fullName: string;
+    email: string;
+    password: string;
   }>({
-    loading: false,
     pageOTP: false,
-    // email: "thanhmanhdangfa@gmail.com",
+    fullName: "",
+    email: "",
+    password: "",
   });
+
+  const getErrorMessage = (error: unknown): string => {
+    if (!error) return "Failed to send verification code. Please try again.";
+    const err = error as {
+      message?: string;
+      data?: { message?: string };
+      response?: { data?: { message?: string } };
+    };
+    return (
+      err?.message ??
+      err?.data?.message ??
+      err?.response?.data?.message ??
+      "Failed to send verification code. Please try again."
+    );
+  };
   return (
     <main className="relative px-10 sm:px-10 md:px-8 pt-7 w-full flex overflow-hidden">
       <svg
@@ -67,13 +82,13 @@ export default function SignUpPage() {
           <p className="text-[#00000060] text-lg">Login in to your account</p>
         </div>
         {state.pageOTP ? (
-          <Image
+          <img
             className="w-[100%] xl:w-[90%] 2xl:w-[80%] lg:mb-5 xl:mb-10 2xl:mb-0"
             src="https://res.cloudinary.com/do0im8hgv/image/upload/v1755839130/6736e108-8132-4433-9182-33a099b345b2.png"
             alt="image-auth"
           />
         ) : (
-          <Image
+          <img
             className="w-[90%] xl:w-[80%] 2xl:w-[70%]"
             src="https://res.cloudinary.com/do0im8hgv/image/upload/v1755761340/370e0dbb-f34c-4ba7-8e5c-797f036749ee.png"
             alt="image-auth"
@@ -81,15 +96,39 @@ export default function SignUpPage() {
         )}
       </div>
       {state.pageOTP && state.email ? (
-        <FormOTP />
+        <FormOTP
+          email={state.email}
+          fullName={state.fullName}
+          password={state.password}
+          onBack={() => setState((ps) => ({ ...ps, pageOTP: false }))}
+        />
       ) : (
         <FormAuth
           type="sign-up"
-          handle={(val: { email?: string; name?: string; pass?: string }) => {
-            if (val.email) {
-              setState((ps) => ({ ...ps, pageOTP: true, email: val.email, fullName: val.name, password: val.pass }));
-            } else {
+          handle={async (val: { email?: string; name?: string; pass?: string }) => {
+            const email = (val.email ?? "").trim().toLowerCase();
+            const fullName = (val.name ?? "").trim();
+            const password = val.pass ?? "";
+            if (!email || !fullName || !password) {
               toast.warning("Please enter complete information!");
+              return;
+            }
+            try {
+              await handleAPI(
+                "Auth/request-verification",
+                { Email: email, Password: password, FullName: fullName },
+                "post",
+              );
+              toast.success("Verification code has been sent to your email.");
+              setState((ps) => ({
+                ...ps,
+                pageOTP: true,
+                email,
+                fullName,
+                password,
+              }));
+            } catch (error: unknown) {
+              toast.error(getErrorMessage(error));
             }
           }}
         />

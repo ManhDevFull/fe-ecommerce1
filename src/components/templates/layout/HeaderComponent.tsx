@@ -24,11 +24,15 @@ export default function HeaderComponent() {
   }, []);
   const logUser = async () => {
     if (auth && auth.token) {
-     route.push("/user")
+      route.push("/user")
     } else {
       route.push("/auth/login");
     }
   };
+  const isLoggedIn = Boolean(auth?.token);
+  const accountLabel = isLoggedIn
+    ? auth?.name || "My Account"
+    : "Login / Sign Up";
   return (
     <header className="w-full h-17 md:h-24 flex md:justify-center items-center shadow-lg px-8">
       <div className="flex">
@@ -227,7 +231,7 @@ export default function HeaderComponent() {
                 />
               </svg>
               <span className="whitespace-nowrap text-[#666666] hidden sm:block pl-1">
-                {auth && auth.token !== "" ? auth.name : "Sign Up/Sign In"}
+                {accountLabel}
               </span>
             </p>
           </li>

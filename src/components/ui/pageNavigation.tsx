@@ -10,6 +10,7 @@ type Props = {
   totalProduct: number;
   onChangePage: (newPage: number) => void; // 1-based
   siblingCount?: number; // số trang hiển thị hai bên trang hiện tại (mặc định 1)
+  label?: string;
 };
 
 const DOTS = "…";
@@ -55,6 +56,7 @@ export default function Pagination({
   totalProduct,
   onChangePage,
   siblingCount = 1,
+  label = "products",
 }: Props) {
   const limitedTotalPage =
     type === "news" || type === "best-seller"
@@ -81,7 +83,7 @@ export default function Pagination({
       <div className="flex justify-between">
         <div className="text-center text-xs text-gray-500 mt-3">
           Page {currentPage} / {limitedTotalPage} — Displaying{" "}
-          {limitedTotalProducts} products
+          {limitedTotalProducts} {label}
         </div>
       </div>
     );
@@ -91,7 +93,7 @@ export default function Pagination({
     <div className="flex justify-between w-full px-3 items-center gap-3">
       <div className="text-center text-xs text-gray-500 mt-3">
         Page {currentPage} / {limitedTotalPage} — Displaying{" "}
-        {limitedTotalProducts} products
+        {limitedTotalProducts} {label}
       </div>
 
       <nav
