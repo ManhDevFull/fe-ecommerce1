@@ -2,10 +2,6 @@ export type category = {
     _id: number;
     name_category: string;
 }
-export type variants = {
-    key: string;
-    values: string[];
-}
 
 export type VariantDTO = {
     id: number;
@@ -34,6 +30,19 @@ export type ProductUi = {
     rating: number;
     order: number;
 }
+// lấy ra tất cả variant khi bắt đầu load trang
+export type allvariant = {
+    key: string;
+    values: string[];
+}
+// lưu khi cetgory thay đổi, lấy brand, variant theo category
+export type variants = {
+    id: number;
+    namecategory: string;
+    brand: string[];
+    variant: valueFilter;
+}
+
 export type valueFilter = {
     [key: string]: string[];
 }

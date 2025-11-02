@@ -46,7 +46,7 @@ export default function DealsDay() {
                 <div className="sm:flex sm:pt-0 sm:gap-2 sm:justify-between items-center">
                     <p className="font-medium hidden lg:block">Deals ends in</p>
                     <div className=" flex justify-between items-center gap-1 lg:gap-4">
-                        <DealTime unit={{ day: 'd', hour: 'h', min: 'm', sec: 's' }} endTime={parse("2025-11-07 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date())} />
+                        <DealTime unit={{ day: 'd', hour: 'h', min: 'm', sec: 's' }} endtime={parse("2025-11-07 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date())} />
                         <BtnViewAll className={'sm:px-6 !p-2'} />
                     </div>
                 </div>
