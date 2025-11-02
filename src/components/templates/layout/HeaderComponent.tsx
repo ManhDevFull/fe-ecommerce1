@@ -24,7 +24,7 @@ export default function HeaderComponent() {
   }, []);
   const logUser = async () => {
     if (auth && auth.token) {
-      route.push("/user")
+      route.push("/user");
     } else {
       route.push("/auth/login");
     }
