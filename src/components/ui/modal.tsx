@@ -273,7 +273,7 @@ export function ModalFooter({
 } & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div 
-      className={`p-4 border-t border-gray-200 flex justify-center ${sticky ? "sticky bottom-0 bg-white" : ""} ${className}`}
+      className={`p-4 py-3 border-t border-gray-200 flex justify-center ${sticky ? "sticky bottom-0 bg-white" : ""} ${className}`}
       {...props}
     >
       {children}

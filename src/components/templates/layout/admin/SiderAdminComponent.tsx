@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AiOutlineProduct, AiTwotoneCopyrightCircle } from "react-icons/ai";
 import { HiOutlineUserGroup } from "react-icons/hi2";
@@ -16,9 +17,22 @@ interface Props {
   className?: string;
 }
 
+type NavChild = {
+  key: string;
+  name: string;
+  href: string;
+};
+
+type NavItem = {
+  key: string;
+  name: string;
+  icon: ReactNode;
+  href?: string;
+  children?: NavChild[];
+};
+
 export default function SiderAdminComponent({ className }: Props) {
   const pathname = usePathname();
-  const lastSegment = pathname.split("/").pop();
   const route = useRouter();
 
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
@@ -29,41 +43,53 @@ export default function SiderAdminComponent({ className }: Props) {
     );
   };
 
-  const categories = [
-    { key: "dashboard", name: "Dashboard", icon: <RxDashboard /> },
-    {
-      key: "categoryAndProduct",
-      name: "Product Management",
-      icon: <AiOutlineProduct />,
-      children: [
-        { key: "product", name: "Product" },
-        { key: "category", name: "Category" },
-      ],
-    },
-    { key: "order", name: "Order Management", icon: <PiPackageDuotone /> },
-    {
-      key: "customer",
-      name: "Customer Management",
-      icon: <HiOutlineUserGroup />,
-    },
-    { key: "review", name: "Review & Ratings", icon: <MdOutlineRateReview /> },
-    {
-      key: "analytics",
-      name: "Analytics & Reports",
-      icon: <TbMessageReport />,
-    },
-    {
-      key: "marketing",
-      name: "Marketing & Promotion",
-      icon: <IoTicketOutline />,
-    },
-    {
-      key: "inventory",
-      name: "Inventory & Warehouse",
-      icon: <MdOutlineInventory />,
-    },
-    { key: "payment", name: "Payment & Transactions", icon: <LiaPaypal /> },
-  ];
+  const categories: NavItem[] = useMemo(
+    () => [
+      { key: "dashboard", name: "Dashboard", icon: <RxDashboard />, href: "/dashboard" },
+      {
+        key: "categoryAndProduct",
+        name: "Product Management",
+        icon: <AiOutlineProduct />,
+        children: [
+          { key: "product", name: "Product", href: "/product" },
+          { key: "category", name: "Category", href: "/category" },
+        ],
+      },
+      { key: "order", name: "Order Management", icon: <PiPackageDuotone />, href: "/order" },
+      {
+        key: "customer",
+        name: "Customer Management",
+        icon: <HiOutlineUserGroup />,
+        href: "/customer",
+      },
+      { key: "review", name: "Review & Ratings", icon: <MdOutlineRateReview />, href: "/review" },
+      {
+        key: "analytics",
+        name: "Analytics & Reports",
+        icon: <TbMessageReport />,
+        children: [
+          { key: "analyst", name: "Analytics", href: "/analyst" },
+          { key: "report", name: "Reports", href: "/report" },
+        ],
+      },
+      {
+        key: "marketing",
+        name: "Marketing & Promotion",
+        icon: <IoTicketOutline />,
+        href: "/promotion",
+      },
+      {
+        key: "inventory",
+        name: "Inventory & Warehouse",
+        icon: <MdOutlineInventory />,
+        href: "/inventory",
+      },
+      { key: "payment", name: "Payment & Transactions", icon: <LiaPaypal />, href: "/payment" },
+    ],
+    []
+  );
+
+  const lastSegment = pathname.split("/").pop();
 
   return (
     <div
@@ -71,18 +97,23 @@ export default function SiderAdminComponent({ className }: Props) {
     >
       <div className="bg-white rounded-lg h-[calc(100%-40px)] p-4 overflow-y-auto">
         {categories.map((cate) => {
-          const isActiveParent = lastSegment === cate.key;
-          const isExpanded = expandedKeys.includes(cate.key);
+          const hasChildren = Array.isArray(cate.children) && cate.children.length > 0;
+          const isActiveChild = hasChildren
+            ? cate.children.some((child) => pathname === child.href)
+            : false;
+          const isActiveParent =
+            pathname === cate.href || lastSegment === cate.key || isActiveChild;
+          const isExpanded = expandedKeys.includes(cate.key) || isActiveChild;
 
           return (
             <div key={cate.key} className="mb-2">
               {/* Parent item */}
               <div
                 onClick={() => {
-                  if (cate.children) {
+                  if (hasChildren) {
                     toggleExpand(cate.key);
-                  } else {
-                    route.push("/" + cate.key);
+                  } else if (cate.href) {
+                    route.push(cate.href);
                   }
                 }}
                 className={`cursor-pointer flex justify-between items-center h-12 px-3 rounded-lg transition-all
@@ -96,7 +127,7 @@ export default function SiderAdminComponent({ className }: Props) {
                   <span className="text-[22px] text-gray-900">{cate.icon}</span>
                   <p className="ml-2">{cate.name}</p>
                 </div>
-                {cate.children && (
+                {hasChildren && (
                   <IoIosArrowDown
                     size={20}
                     className={`transform transition-transform duration-300 ${
@@ -114,23 +145,20 @@ export default function SiderAdminComponent({ className }: Props) {
                       : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
                   }`}
               >
-                {cate.children && (
+                {hasChildren && (
                   <div className="px-2 py-2 rounded-lg overflow-hidden bg-[#F8F8F878] shadow-[0px_4px_4px_rgba(0,0,0,0.2)] space-y-1">
-                    {cate.children.map((child, index) => {
-                      const isActiveChild = lastSegment === child.key;
+                    {cate.children!.map((child, index) => {
+                      const childActive = pathname === child.href || lastSegment === child.key;
                       return (
                         <div key={child.key} className="relative">
                           {index !== 0 && (
                             <hr className="absolute w-full h-[0.5px] text-gray-200 -top-0.5 left-0 -translate-y-1/2" />
                           )}
                           <div
-                            onClick={() => route.push("/" + child.key)}
+                            onClick={() => route.push(child.href)}
                             className={`cursor-pointer rounded-md px-2 py-1 transition-all
-                            ${
-                              isActiveChild
-                                ? "bg-[#00000025]"
-                                : "hover:bg-[#00000010]"
-                            } overflow-hidden`}
+                            ${childActive ? "bg-[#00000025]" : "hover:bg-[#00000010]"}
+                            overflow-hidden`}
                           >
                             {child.name}
                           </div>
