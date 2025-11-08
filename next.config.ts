@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: process.env.NODE_ENV === "production",
   },
   images: {
+     domains: [
+      'imgs.search.brave.com', // ✅ domain cần thêm
+    ],
     remotePatterns: [
       {
         protocol: 'https',

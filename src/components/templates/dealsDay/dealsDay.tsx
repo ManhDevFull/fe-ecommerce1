@@ -6,7 +6,8 @@ import { Flash } from "iconsax-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parse } from "date-fns";
-import DealTime from "@/components/ui/DealTime";
+// import DealTime from "@/components/ui/DealTime";
+import DealTime from "@/components/ui/ClientDealTime";
 import { BtnViewAll } from "@/components/ui/BtnViewAll";
 export default function DealsDay() {
     const products = [
