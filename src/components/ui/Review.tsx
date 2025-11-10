@@ -12,9 +12,9 @@ export function Review({ ratingReviews, totalReviews }: ReviewProps) {
     // Làm tròn đến 1 chữ số thập phân
     const roundedAverage = parseFloat(averageRating.toFixed(1));
     return (
-        <div>
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+        <div className="">
+            <div className="flex flex-nowrap items-center gap-2">
+                <div className="flex items-center gap-1">
                     {Array.from({ length: Math.round(averageRating) }).map((_, i) => (
                         <FaStar key={i} className="text-[#EBC80C]" size={20} />
                     ))}

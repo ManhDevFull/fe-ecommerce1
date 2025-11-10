@@ -1,5 +1,17 @@
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 export default function HeaderComponent() {
+  const [query, setQuery] =useState('');
+  const router = useRouter();
+  // sự kiện tìm kiếm khi bấm enter
+  const handleOnEnter = (e: React.KeyboardEvent<HTMLInputElement>)=>{
+    if(e.key === 'Enter'){
+      router.push(`/all-products?query=${encodeURIComponent(query)}`);
+      console.log(query);
+    }
+  }
+
   return (
     <header className="w-full h-17 md:h-24 flex md:justify-center items-center shadow-lg px-8">
       <div className="flex">
@@ -96,7 +108,10 @@ export default function HeaderComponent() {
           </svg>
         </Link>
       </div>
+
+       {/* tìm kiếm */}
       <div className="w-11 xl:w-96 ml-3 h-11 flex bg-gray-100 rounded-md">
+         {/* nút look */}
         <button className="h-11 w-11 flex justify-center items-center">
           <svg
             width="19"
@@ -121,8 +136,12 @@ export default function HeaderComponent() {
             />
           </svg>
         </button>
+        {/* // ô Search */}
         <input
           type="text"
+          value={query}
+          onChange={(e)=>setQuery(e.target.value)}
+          onKeyDown={handleOnEnter}
           className="bg-gray-100 w-[calc(100%-44px)] h-full focus:outline-none hidden lg:block"
           placeholder="Search essentials, groceries and mode..."
         />

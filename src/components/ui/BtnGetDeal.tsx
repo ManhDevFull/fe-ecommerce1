@@ -1,3 +1,4 @@
+import { number } from "framer-motion"
 import { FaRupeeSign } from "react-icons/fa"
 type discountprops ={
     discount: number
@@ -13,7 +14,7 @@ export default function BtnGetDeal({discount} : discountprops) {
     </defs>
 </svg>
     return (
-        <div className="hover:cursor-pointer w-full rounded-xl py-3 flex justify-center gap-2 items-center bg-[#232321]">
+        <div className={`hover:cursor-pointer ${discount <= 0 ? 'blur-[5px]' : ''} w-full rounded-xl py-3 flex justify-center gap-2 items-center bg-[#232321]`}>
             <div className="w-20px h-20px rounded-full bg-[#FA842E]">
                 {icondeal}
             </div>

@@ -46,7 +46,7 @@ export type variants = {
 export type valueFilter = {
     [key: string]: string[];
 }
-export type page = {
+export type PaginationInfo  = {
     pageNumber: number;
     pageSize: number;
 }
@@ -70,5 +70,6 @@ export type timeUnit = {
 // img product
 export type imgproductProps = {
     img: string;
+    type: boolean;
     isNew: boolean;
 }
