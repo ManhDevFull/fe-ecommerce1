@@ -1,5 +1,12 @@
+import handleAPI from "@/axios/handleAPI";
+import {
+  addAuth,
+  authSelector,
+  UserAuth,
+} from "@/redux/reducers/authReducer";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+<<<<<<< HEAD
 import { useState } from "react";
 export default function HeaderComponent() {
   const [query, setQuery] =useState('');
@@ -12,6 +19,35 @@ export default function HeaderComponent() {
     }
   }
 
+=======
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
+export default function HeaderComponent() {
+  const dispatch = useDispatch();
+  const route = useRouter();
+  const auth: UserAuth = useSelector(authSelector);
+  const [userInfo, setUserInfo] = useState<UserAuth>(auth);
+  useEffect(() => {
+    const getData = async () => {
+      console.log(userInfo);
+      const res = localStorage.getItem("token");
+      res && dispatch(addAuth(JSON.parse(res)));
+    };
+    getData();
+  }, []);
+  const logUser = async () => {
+    if (auth && auth.token) {
+      route.push("/user");
+    } else {
+      route.push("/auth/login");
+    }
+  };
+  const isLoggedIn = Boolean(auth?.token);
+  const accountLabel = isLoggedIn
+    ? auth?.name || "My Account"
+    : "Login / Sign Up";
+>>>>>>> develop
   return (
     <header className="w-full h-17 md:h-24 flex md:justify-center items-center shadow-lg px-8">
       <div className="flex">
@@ -188,9 +224,11 @@ export default function HeaderComponent() {
             </Link>
           </li>
           <li>
-            <Link
-              href={"auth/login"}
-              className="!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap"
+            <p
+              onClick={logUser}
+              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
+                !auth || (!auth.token && "cursor-pointer")
+              }`}
             >
               <svg
                 width="25"
@@ -214,12 +252,10 @@ export default function HeaderComponent() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <p
-                className="whitespace-nowrap text-[#666666] hidden sm:block pl-1"
-              >
-                Sign Up/Sign In
-              </p>
-            </Link>
+              <span className="whitespace-nowrap text-[#666666] hidden sm:block pl-1">
+                {accountLabel}
+              </span>
+            </p>
           </li>
           <li>
             <Link href={"my-cart"} className="flex !px-6">
@@ -263,11 +299,7 @@ export default function HeaderComponent() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <p
-              className="text-[#666666] hidden sm:block pl-1"
-              >
-                Cart
-              </p>
+              <p className="text-[#666666] hidden sm:block pl-1">Cart</p>
             </Link>
           </li>
         </ul>

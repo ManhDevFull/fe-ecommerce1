@@ -18,7 +18,6 @@ import { UserSearch } from "iconsax-react";
 import Loading from "@/components/ui/loading";
 import { LoadingProduct } from "@/components/ui/LoadingProduct";
 import { Pagination } from "antd";
-import Page from "@/app/(maketing)/page";
 import { PageFilter } from "@/components/ui/Pagination";
 import { useSearchParams } from "next/navigation";
 export default function Filter(props: {
