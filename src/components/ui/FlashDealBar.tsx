@@ -16,18 +16,20 @@ export default function FlashDealBar({ endTime }: EndTimeProps) {
     const progress = ((timeLeft) / toltalTime) * 100;
     const h = Math.floor(timeLeft / 3600);
     return (
-        <div className="w-full py-2">
-            <div className="flex gap-1 items-center">
-                <span className={`${progress > 40 ? "text-blue-500" : "text-red-500"} text-sm`}>{`Flash Deal Ends in ${h} Hours `}</span>
-                <span className={`${progress > 40 ? "text-blue-500" : "text-red-500"} font-bold hidden md:block`}>!</span>
-            </div>
-            <div className={`${progress > 40 ? "bg-blue-300" : "bg-red-300"} rounded-2xl w-full h-2`}>
-                <div className={`${progress > 40 ? "bg-blue-500" : "bg-red-500"}  rounded-2xl h-full`}
-                    style={{ width: `${progress}%` }}
-                >
+        timeLeft > 0 ?
+            (<div className="w-full py-2">
+                <div className="flex gap-1 items-center">
+                    <span className={`${progress > 40 ? "text-blue-500" : "text-red-500"} text-sm`}>{`Flash Deal Ends in ${h} Hours `}</span>
+                    <span className={`${progress > 40 ? "text-blue-500" : "text-red-500"} font-bold hidden md:block`}>!</span>
                 </div>
-            </div>
-        </div>
+                <div className={`${progress > 40 ? "bg-blue-300" : "bg-red-300"} rounded-2xl w-full h-2`}>
+                    <div className={`${progress > 40 ? "bg-blue-500" : "bg-red-500"}  rounded-2xl h-full`}
+                        style={{ width: `${progress}%` }}
+                    >
+                    </div>
+                </div>
+            </div>) :
+             <div></div>
     )
 }
 
