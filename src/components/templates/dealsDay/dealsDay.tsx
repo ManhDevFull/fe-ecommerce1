@@ -58,7 +58,7 @@ export default function DealsDay() {
                             className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
                             onClick={() => router.push('')}
                         >
-                            <Product img={product.img} isNew={true} />
+                            <Product img={product.img} isNew={true} type={true} />
                             <FlashDealBar endTime={product.endTime} />
                             <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
                             <BtnBuyNow price={product.price} />

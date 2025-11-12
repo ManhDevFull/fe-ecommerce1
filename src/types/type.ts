@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 export type category = {
     _id: number;
     name_category: string;
@@ -74,7 +73,6 @@ export type imgproductProps = {
     type: boolean;
     isNew: boolean;
 }
-=======
 export type ResponData<T = unknown> = {
   data: T;
   message: string;
@@ -196,4 +194,3 @@ export type IReviewSummary = {
   updated: number;
   averageRating: number;
 };
->>>>>>> develop
