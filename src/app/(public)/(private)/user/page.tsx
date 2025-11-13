@@ -1,21 +1,20 @@
 "use client";
 import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
-import { MdOutlineShoppingCart } from "react-icons/md";
-import { IoCloseCircleOutline } from "react-icons/io5";
-import { SetStateAction, useState } from "react";
+import { ChangeEvent, SetStateAction, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { CiCamera } from "react-icons/ci";
 
 import AccountForm from "@/components/templates/User/Account_Form";
 import AddressForm from "@/components/templates/User/Address_Form";
 import OrderHistory from "@/components/templates/User/Order_History";
+import OrderDetail from "@/components/templates/User/Order_Detail";
 import handleAPI from "@/axios/handleAPI";
 import {
   authSelector,
   removeAuth,
+  updateAuthAvatar,
   UserAuth,
 } from "@/redux/reducers/authReducer";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,21 +47,70 @@ const menuItems = [
 ];
 
 export default function User() {
-  const [active, setActive] = useState("account"); // <-- 1 state cho tất cả
+  const [active, setActive] = useState("account");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const router = useRouter();
   const dispatch = useDispatch();
   const auth: UserAuth = useSelector(authSelector);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleMenuClick = async (id: SetStateAction<string>) => {
     if (id === "logout") {
-      const res: any = await handleAPI("Auth/logout", {}, "post");
-      if (res.status === 200) {
-        toast.success(res.message);
+      try {
+        const res: any = await handleAPI("Auth/logout", {}, "post");
+        if (res.status === 200) {
+          toast.success(res.message);
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Logout failed. Please try again.");
+      } finally {
+        dispatch(removeAuth());
+        router.push("/");
       }
-      dispatch(removeAuth());
-      router.push("/")
+      return;
     }
+
+    setSelectedOrderId(null);
     setActive(id);
+  };
+
+  // Xử lý khi người dùng chọn file ảnh mới
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      await handleAvatarUpload(file);
+    }
+  };
+
+  // Upload avatar mới và cập nhật Redux
+  const handleAvatarUpload = async (fileToUpload: File) => {
+    if (!fileToUpload) return;
+
+    // Tạo FormData để gửi file
+    const uploadData = new FormData();
+    uploadData.append("file", fileToUpload);
+    try {
+      toast.loading("Đang cập nhật avatar...");
+
+      // Gọi API (POST /User/avatar)
+      const response: any = await handleAPI("/User/avatar", uploadData, "post");
+
+      // BE trả về { message: "...", avatarUrl: "new_url" }
+      const newAvatarUrl = response.avatarUrl;
+
+      // Cập nhật avatar mới vào Redux
+      dispatch(updateAuthAvatar({ avata: newAvatarUrl }));
+
+      toast.dismiss();
+      toast.success(response.message || "Cập nhật avatar thành công!");
+
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Lỗi upload avatar:", error);
+      toast.error(error.response?.data?.message || "Tải ảnh lên thất bại.");
+    }
   };
 
   return (
@@ -76,17 +124,34 @@ export default function User() {
           <div className="w-[390px] h-[580px] bg-white shadow rounded-xl p-6 flex flex-col items-center border border-gray-300">
             <div className="relative">
               <img
-                src="https://res.cloudinary.com/do0im8hgv/image/upload/v1757949054/image_zbt0bw.png"
+                src={
+                  auth.avata || // Ảnh lấy từ Redux (sẽ tự cập nhật khi dispatch)
+                  "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949054/image_zbt0bw.png"
+                }
                 alt="profile"
                 className="w-32 h-32 rounded-full object-cover"
               />
-              <button className="absolute bottom-2 right-2 bg-black text-white text-xs p-2 rounded-full">
+              {/* 5. Sửa nút camera */}
+              <button
+                className="absolute bottom-2 right-2 bg-black text-white text-xs p-2 rounded-full"
+                onClick={() => fileInputRef.current?.click()} // Kích hoạt input file
+              >
                 <CiCamera size={20} />
               </button>
             </div>
-            <h2 className="mt-4 font-semibold text-lg">Suprava Saha</h2>
 
-            {/* Menu Wrapper */}
+            {/* 6. Thêm input file ẩn */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              hidden
+              accept="image/png, image/jpeg, image/gif" // Chỉ chấp nhận ảnh
+            />
+
+            <h2 className="mt-4 font-semibold text-lg">{auth.name || "User"}</h2>
+
+            {/* Menu Wrapper (giữ nguyên) */}
             <div className="mt-6 w-full rounded-lg p-4">
               <div className="grid grid-cols-2 gap-x-4 gap-y-6">
                 {menuItems.map((item) => (
@@ -116,11 +181,19 @@ export default function User() {
             </div>
           </div>
 
-          {/* Content (switch theo state) */}
+          {/* Content (giữ nguyên) */}
           <div className="flex-1">
             {active === "account" && <AccountForm />}
             {active === "address" && <AddressForm />}
-            {active === "orders" && <OrderHistory />}
+            {active === "orders" && !selectedOrderId && (
+              <OrderHistory onSelectOrder={(id) => setSelectedOrderId(id)} />
+            )}
+            {active === "orders" && selectedOrderId && (
+              <OrderDetail
+                orderId={selectedOrderId}
+                onBack={() => setSelectedOrderId(null)}
+              />
+            )}
           </div>
         </div>
       </div>
