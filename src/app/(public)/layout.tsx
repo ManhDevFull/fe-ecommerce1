@@ -7,6 +7,7 @@ import HeaderComponent from "@/components/templates/layout/HeaderComponent";
 import FooterComponent from "@/components/templates/layout/FooterComponent";
 import { Toaster } from "sonner";
 import type { ReactNode } from "react";
+import { ChatClient } from "@/components/templates/Chat/ChatClient";
 
 export default function PublicRootLayout({
   children,
@@ -40,6 +41,10 @@ export default function PublicRootLayout({
           </div>
           <HeaderComponent />
           {children}
+                <div className="fixed bottom-20 right-18 z-[9999]">
+            {/* <ChatIcon /> */}
+            <ChatClient />
+          </div>
           <FooterComponent />
         </Provider>
       </body>
