@@ -1,6 +1,6 @@
 import BtnBuyNow from "@/components/ui/BtnBuyNow";
 import FlashDealBar from "@/components/ui/FlashDealBar";
-import Product from "@/components/ui/Product";
+import Product from "@/components/ui/ImgProduct";
 import { link } from "fs";
 import { Flash } from "iconsax-react";
 import Link from "next/link";
@@ -47,7 +47,7 @@ export default function DealsDay() {
                 <div className="sm:flex sm:pt-0 sm:gap-2 sm:justify-between items-center">
                     <p className="font-medium hidden lg:block">Deals ends in</p>
                     <div className=" flex justify-between items-center gap-1 lg:gap-4">
-                        <DealTime unit={{ day: 'd', hour: 'h', min: 'm', sec: 's' }} endTime={parse("2025-11-07 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date())} />
+                        <DealTime unit={{ day: 'd', hour: 'h', min: 'm', sec: 's' }} endtime={parse("2025-11-07 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date())} />
                         <BtnViewAll className={'sm:px-6 !p-2'} />
                     </div>
                 </div>
@@ -59,7 +59,7 @@ export default function DealsDay() {
                             className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
                             onClick={() => router.push('')}
                         >
-                            <Product img={product.img} isNew={true} />
+                            <Product img={product.img} isNew={true} type={true} />
                             <FlashDealBar endTime={product.endTime} />
                             <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
                             <BtnBuyNow price={product.price} />
