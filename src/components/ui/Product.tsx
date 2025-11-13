@@ -39,7 +39,7 @@ export default function Product({ product, selectedFilter, type }: productProps)
                             {pareEndtime && <FlashDealBar endTime={pareEndtime} />}
                         </div>
                         <p
-                            className="text-[20px] text-start font-medium overflow-hidden whitespace-nowrap text-ellipsis"
+                            className="text-[20px] text-start font-medium"
                             title={product.name}
                         >
                             {product.name}
