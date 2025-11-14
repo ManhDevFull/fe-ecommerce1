@@ -8,7 +8,7 @@ export default function ImgProduct({
     return (
         <div
             className={`relative bg-[#ECEDEF] flex justify-center items-center rounded-3xl group overflow-hidden 
-        ${type ? 'w-full h-[250px]' : 'w-[150px] h-[150px]'}`}
+        ${type ? 'w-full h-[300px]' : 'w-[150px] h-[150px]'}`}
         >
             {/* Ảnh sản phẩm */}
             <img
