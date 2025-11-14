@@ -3,6 +3,7 @@ import AccordionItem from "@/components/ui/AccordionItem";
 import Product from "@/components/ui/Product";
 import loading from "@/components/ui/loading";
 import axios from "axios";
+import { restApiBase } from "@/utils/env";
 import { min, previousDay } from "date-fns";
 import { da } from "date-fns/locale";
 import { number } from "framer-motion";
@@ -56,30 +57,20 @@ export default function Filter(props: {
         key: string;
         values: string[];
     }
-
-    // icon loading khi bắt đầu vào trang
     const [isLoading, setIsLoading] = useState(true);
-    // icon loading sau khi lọc sản phẩm
     const [isLoadingProduct, setIsLoadingProduct] = useState(true);
-    // useState cho variant khi bắt đầu load trang
     const [allVariant, setAllVariant] = useState<allvariant[] | null>(null);
-    // useState cho tên của tất cả các category, luôn cố định khi load trang
     const [getAllcategory, setGetAllCategory] = useState<allcategory>();
-    // lấy tên ra category khi bắt đầu load trang(không thay đổi)
-    // lấy ra tất cả variant khi bắt đầu load trnag
-
     useEffect(() => {
         const fetchData = async () => {
-            // 1. Đảm bảo loading đang BẬT khi bắt đầu fetch
             setIsLoading(true);
 
             try {
                 // 2. Gọi song song 2 API
+                console.log(`${restApiBase}category`)
                 const [categoryRes, variantRes] = await Promise.all([
-                    // axios.get('http://localhost:5200/api/category'),
-                    axios.get(`${restApiBase}category`),
-                    axios.get(`${restApiBase}variant/getAllVariant`)
-                    // axios.get('http://localhost:5200/api/variant/getAllVariant')
+                    axios.get(`${restApiBase}Category`),
+                    axios.get(`${restApiBase}Variant/getAllVariant`)
                 ]);
 
                 // 3. Cả hai API đã thành công, set state
@@ -101,7 +92,7 @@ export default function Filter(props: {
         }
 
         fetchData();
-    }, []); // Chỉ chạy 1 lần khi component mount
+    }, []); 
 
     //lấy các variant tương ưng với category đã chọn 
     useEffect(() => {
@@ -110,10 +101,9 @@ export default function Filter(props: {
                 const categoyrselected = selectedFilter["namecategory"] || [];
                 if (categoyrselected.length > 0) {
                     const name = categoyrselected[0];
-                    // const res = await axios.get('http://localhost:5200/api/variant', {
-                    //     params: { name: name }
-                    // });
-                    const res = await axios.get(`${restApiBase}variant`, {params: { name: name }});
+                    const res = await axios.get(`${restApiBase}variant`, {
+                        params: { name: name }
+                    });
                     console.log("data varaint theo category: ", res.data);
                     setVariantApi(res.data);
                 }
@@ -193,7 +183,6 @@ export default function Filter(props: {
                 //if (Object.keys(selectedFilter).length === 0)
                 //return;
                 const data = await axios.post(`${restApiBase}product/filter`,
-                // const data = await axios.get(`${restApiBase}product/filter`,
                     {
                         filter: selectedFilter,
                         pageNumber: page.pageNumber,
