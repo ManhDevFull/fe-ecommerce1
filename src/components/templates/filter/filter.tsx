@@ -69,8 +69,9 @@ export default function Filter(props: {
                 // 2. Gọi song song 2 API
                 console.log(`${restApiBase}category`)
                 const [categoryRes, variantRes] = await Promise.all([
-                    axios.get(`${restApiBase}Category`),
-                    axios.get(`${restApiBase}Variant/getAllVariant`)
+                    // axios.get('http://localhost:5200/api/category'),
+                    axios.get(`${restApiBase}category`),
+                    axios.get(`${restApiBase}variant/getAllVariant`)
                 ]);
 
                 // 3. Cả hai API đã thành công, set state
