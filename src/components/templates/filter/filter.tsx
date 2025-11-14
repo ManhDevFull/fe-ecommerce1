@@ -79,7 +79,6 @@ export default function Filter(props: {
                     // axios.get('http://localhost:5200/api/category'),
                     axios.get(`${restApiBase}category`),
                     axios.get(`${restApiBase}variant/getAllVariant`)
-                    // axios.get('http://localhost:5200/api/variant/getAllVariant')
                 ]);
 
                 // 3. Cả hai API đã thành công, set state
@@ -193,7 +192,6 @@ export default function Filter(props: {
                 //if (Object.keys(selectedFilter).length === 0)
                 //return;
                 const data = await axios.post(`${restApiBase}product/filter`,
-                // const data = await axios.get(`${restApiBase}product/filter`,
                     {
                         filter: selectedFilter,
                         pageNumber: page.pageNumber,
