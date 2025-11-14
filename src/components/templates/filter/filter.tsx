@@ -20,6 +20,9 @@ import { LoadingProduct } from "@/components/ui/LoadingProduct";
 import { Pagination } from "antd";
 import { PageFilter } from "@/components/ui/Pagination";
 import { useSearchParams } from "next/navigation";
+import { restApiBase } from "@/utils/env";
+import handleAPI from "@/axios/handleAPI";
+
 export default function Filter(props: {
     onSetTotal: (total: number) => void;
     type: boolean;
@@ -73,8 +76,10 @@ export default function Filter(props: {
             try {
                 // 2. Gọi song song 2 API
                 const [categoryRes, variantRes] = await Promise.all([
-                    axios.get('http://localhost:5200/category'),
-                    axios.get('http://localhost:5200/variant/getAllVariant')
+                    // axios.get('http://localhost:5200/api/category'),
+                    axios.get(`${restApiBase}category`),
+                    axios.get(`${restApiBase}variant/getAllVariant`)
+                    // axios.get('http://localhost:5200/api/variant/getAllVariant')
                 ]);
 
                 // 3. Cả hai API đã thành công, set state
@@ -105,9 +110,10 @@ export default function Filter(props: {
                 const categoyrselected = selectedFilter["namecategory"] || [];
                 if (categoyrselected.length > 0) {
                     const name = categoyrselected[0];
-                    const res = await axios.get('http://localhost:5000/variant', {
-                        params: { name: name }
-                    });
+                    // const res = await axios.get('http://localhost:5200/api/variant', {
+                    //     params: { name: name }
+                    // });
+                    const res = await axios.get(`${restApiBase}variant`, {params: { name: name }});
                     console.log("data varaint theo category: ", res.data);
                     setVariantApi(res.data);
                 }
@@ -186,7 +192,8 @@ export default function Filter(props: {
                 setIsLoadingProduct(true);
                 //if (Object.keys(selectedFilter).length === 0)
                 //return;
-                const data = await axios.post('http://localhost:5000/product/filter',
+                const data = await axios.post(`${restApiBase}product/filter`,
+                // const data = await axios.get(`${restApiBase}product/filter`,
                     {
                         filter: selectedFilter,
                         pageNumber: page.pageNumber,
@@ -245,7 +252,7 @@ export default function Filter(props: {
                                         />
                                         <p className="text-[10px] py-[2px] sm:text-[16px] lg:text-[20px] whitespace-nowrap">
                                             {item.charAt(0).toUpperCase() + item.slice(1)}
-                                            </p>
+                                        </p>
                                     </div>
                                 ))
                             }
