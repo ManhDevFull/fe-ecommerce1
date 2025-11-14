@@ -4,69 +4,151 @@ import NavigationPath from "@/components/ui/NavigationPath";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
-import { updateQuantity, removeItem, toggleGiftBox } from "@/redux/reducers/cartReducer";
+import { toggleGiftBox } from "@/redux/reducers/cartReducer";
 import { GoTrash } from "react-icons/go";
 import { FiPlus } from "react-icons/fi";
 import { HiMiniMinus } from "react-icons/hi2";
 import { FaParachuteBox } from "react-icons/fa6";
 import { IoCaretBackOutline, IoCaretForwardOutline } from "react-icons/io5";
+import { useEffect, useMemo, useState } from "react";
+import handleAPI from "@/axios/handleAPI";
 
 
 
-const suggestions = [
-  {
-    id: 101,
-    name: "SHORT PRINTED DRESS",
-    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757728057/ea3860bdc030cccc6452ddae27372b671b93dbb8_g4y0es.jpg",
-    price: 69.99,
-    oldPrice: 129.99,
-    discount: 40,
-    currency: "₹",
-  },
-  {
-    id: 102,
-    name: "SHORT PRINTED DRESS",
-    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757728057/08d2b49da07b42957ca790c064196bf5bb9e1954_gtuthq.jpg",
-    price: 69.99,
-    oldPrice: 129.99,
-    discount: 40,
-    currency: "₹",
-  },
-  {
-    id: 103,
-    name: "SHORT PRINTED DRESS",
-    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757728057/dbf9a533f9d5174a84263385544bc0ba381e415d_phmpyc.jpg",
-    price: 69.99,
-    oldPrice: 129.99,
-    discount: 40,
-    currency: "₹",
-  },
-  {
-    id: 104,
-    name: "SHORT PRINTED DRESS",
-    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1757728057/4740b6c4eae4e6ff9e65423ca8313315efb0a86c_mmfhbt.jpg",
-    price: 69.99,
-    oldPrice: 129.99,
-    discount: 40,
-    currency: "₹",
-  },
-];
+type Suggestion = {
+  productId: number;
+  productName: string;
+  imageUrl?: string;
+  minPrice: number;
+  oldPrice?: number | null;
+  discountPercent?: number | null;
+  categoryName: string;
+};
+const SUGGEST_PAGE_SIZE = 12;
+const SLIDE_STEP = 4;
+
+type CartItemApi = {
+  cartId: number;
+  accountId: number;
+  variantId: number;
+  productId: number;
+  productName: string;
+  imageUrl?: string;
+  color?: string;
+  unitPrice: number;
+  quantity: number;
+};
+
+type CartSummaryApi = {
+  itemsPrice: number;
+  shipping: number;
+  tax: number;
+  discountPrice: number;
+  giftBoxPrice: number;
+  totalPrice: number;
+};
+
+type CartResponseApi = {
+  items: CartItemApi[];
+  summary: CartSummaryApi;
+};
 
 export default function MyCart() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { items: cartItems, giftBox, discount, giftBoxPrice } = useSelector((state: RootState) => state.cart);
+  const { giftBox, giftBoxPrice } = useSelector((state: RootState) => state.cart);
 
-  const handleQtyChange = (id: number, delta: number) => {
-    dispatch(updateQuantity({ id, delta }));
+  const [items, setItems] = useState<CartItemApi[]>([]);
+  const [summary, setSummary] = useState<CartSummaryApi | null>(null);
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestOffset, setSuggestOffset] = useState(0);
+  const [slideIndex, setSlideIndex] = useState(0); // index of first visible card
+  const [loadingSuggest, setLoadingSuggest] = useState(false);
+
+  const fetchCart = async () => {
+    try {
+      const res = await handleAPI<CartResponseApi>(`/Cart`);
+      setItems(res.items || []);
+      setSummary(res.summary || null);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleRemove = (id: number) => {
-    dispatch(removeItem(id));
+  const fetchSuggestions = async (offset: number, excludeIds: number[] = []) => {
+    try {
+      setLoadingSuggest(true);
+      const query = new URLSearchParams();
+      query.set('offset', String(offset));
+      query.set('limit', String(SUGGEST_PAGE_SIZE));
+      if (excludeIds.length) query.set('exclude', excludeIds.join(','));
+      const data = await handleAPI<Suggestion[]>(`/Cart/suggestions?${query.toString()}`);
+      if (Array.isArray(data) && data.length) {
+        // de-dup on FE just in case
+        const existing = new Set(suggestions.map(s => s.productId));
+        const merged = [...suggestions];
+        data.forEach(d => { if (!existing.has(d.productId)) merged.push(d); });
+        setSuggestions(merged);
+        setSuggestOffset(offset + SUGGEST_PAGE_SIZE);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingSuggest(false);
+    }
   };
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const totalPrice = total - discount + (giftBox ? giftBoxPrice : 0);
+  useEffect(() => {
+    fetchCart();
+    // initial suggestions
+    fetchSuggestions(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleQtyChange = async (cartId: number, delta: number) => {
+    const current = items.find(i => i.cartId === cartId);
+    if (!current) return;
+    const nextQty = Math.max(1, current.quantity + delta);
+    try {
+      const res = await handleAPI<CartResponseApi>(`/Cart/quantity`, { cartId, quantity: nextQty }, 'patch');
+      setItems(res.items || []);
+      setSummary(res.summary || null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRemove = async (cartId: number) => {
+    try {
+      const res = await handleAPI<CartResponseApi>(`/Cart/${cartId}`, undefined, 'delete');
+      setItems(res.items || []);
+      setSummary(res.summary || null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const onSlideRight = async () => {
+    const nextIndex = Math.min(slideIndex + SLIDE_STEP, Math.max(0, suggestions.length - SLIDE_STEP));
+    setSlideIndex(nextIndex);
+    // If we are about to expose items beyond what we have (approaching end), prefetch more
+    if (nextIndex + SLIDE_STEP * 2 > suggestions.length && !loadingSuggest) {
+      const excludeIds = suggestions.map(s => s.productId);
+      await fetchSuggestions(suggestOffset, excludeIds);
+    }
+  };
+
+  const onSlideLeft = () => {
+    setSlideIndex(Math.max(0, slideIndex - SLIDE_STEP));
+  };
+
+  const total = useMemo(() => summary?.itemsPrice ?? 0, [summary]);
+  const discount = useMemo(() => summary?.discountPrice ?? 0, [summary]);
+  const totalPrice = useMemo(() => {
+    const base = (summary?.totalPrice ?? total) - (summary?.giftBoxPrice ? 0 : 0);
+    return base + (giftBox ? giftBoxPrice : 0);
+  }, [summary, total, giftBox, giftBoxPrice]);
 
   return (
     <main className="min-h-screen pb-16">
@@ -83,50 +165,50 @@ export default function MyCart() {
         {/* Cart List */}
         <div className="flex-1">
           <h2 className="font-semibold text-xl mb-6">
-            Number of Items <span className="text-gray-400">{cartItems.length}</span>
+            Number of Items <span className="text-gray-400">{items.length}</span>
           </h2>
           <div className="space-y-6">
-            {cartItems.map(item => (
+            {items.map(item => (
               <div
-                key={item.id}
+                key={item.cartId}
                 className="flex items-center gap-6 bg-white p-5 rounded-2xl shadow-md"
               >
                 <img
-                  src={item.img}
-                  alt={item.name}
+                  src={item.imageUrl || ''}
+                  alt={item.productName}
                   className="w-[60px] h-[73px] object-cover rounded-xl border"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[15px] truncate">{item.name}</div>
+                  <div className="font-semibold text-[15px] truncate">{item.productName}</div>
                   <div className="flex items-center gap-2 text-sm mt-1">
                     Color:{" "}
                     <span
                       className="w-4 h-4 rounded-full border"
-                      style={{ background: item.color }}
+                      style={{ background: item.color || '#eee' }}
                     ></span>
                   </div>
                 </div>
-                <div className="w-24 text-center font-medium text-base">₹{item.price}</div>
+                <div className="w-24 text-center font-medium text-base">₹{item.unitPrice}</div>
                 <div className="flex items-center border rounded-lg overflow-hidden">
                   <button
-                    onClick={() => handleQtyChange(item.id, -1)}
+                    onClick={() => handleQtyChange(item.cartId, -1)}
                     className="px-3 py-1 text-xl font-bold hover:bg-gray-100"
                   >
                     <HiMiniMinus />
                   </button>
-                  <span className="px-4 py-1">{item.qty}</span>
+                  <span className="px-4 py-1">{item.quantity}</span>
                   <button
-                    onClick={() => handleQtyChange(item.id, 1)}
+                    onClick={() => handleQtyChange(item.cartId, 1)}
                     className="px-3 py-1 text-xl font-bold hover:bg-gray-100"
                   >
                     <FiPlus />
                   </button>
                 </div>
                 <div className="w-24 text-center font-medium text-base">
-                  ₹{(item.price * item.qty).toFixed(2)}
+                  ₹{(item.unitPrice * item.quantity).toFixed(2)}
                 </div>
                 <button
-                  onClick={() => handleRemove(item.id)}
+                  onClick={() => handleRemove(item.cartId)}
                   className="text-gray-400 hover:text-red-500 p-2 text-2xl"
                   title="Remove"
                 >
@@ -146,11 +228,11 @@ export default function MyCart() {
           </div>
           <div className="flex justify-between mb-3 text-base">
             <span>Shipping</span>
-            <span>₹0</span>
+            <span>₹{summary?.shipping?.toFixed(2) ?? '0.00'}</span>
           </div>
           <div className="flex justify-between mb-3 text-base">
             <span>Tax</span>
-            <span>₹0</span>
+            <span>₹{summary?.tax?.toFixed(2) ?? '0.00'}</span>
           </div>
           <div className="flex justify-between mb-3 text-base">
             <span>Discount price</span>
@@ -186,33 +268,37 @@ export default function MyCart() {
             <h4 className="font-bold text-base sm:text-lg">YOU MIGHT ALSO LIKE</h4>
             <div className="flex border rounded-lg overflow-hidden w-[80px] h-10 bg-white"
                   style={{borderColor: '#D1D5DB'}}>
-            <button className="flex-1 flex items-center justify-center text-xl text-gray-300 hover:bg-gray-100"
+            <button onClick={onSlideLeft} className="flex-1 flex items-center justify-center text-xl text-gray-300 hover:bg-gray-100"
                     style={{borderRight: '1px solid #E5E7EB'}}>
                 <span><IoCaretBackOutline /></span>
             </button>
-            <button className="flex-1 flex items-center justify-center text-xl text-gray-800 hover:bg-gray-100">
+            <button onClick={onSlideRight} className="flex-1 flex items-center justify-center text-xl text-gray-800 hover:bg-gray-100">
                 <span><IoCaretForwardOutline /></span>
             </button>
             </div>
         </div>
         <div className="flex gap-6.5 overflow-x-auto pb-2">
-            {suggestions.map(item => (
+            {suggestions.slice(slideIndex, slideIndex + 4).map(item => (
             <div
-                key={item.id}
+                key={item.productId}
                 className="flex bg-white rounded-lg min-w-[280px] max-w-[160px] p-2 shadow-md"
             >
                 <img
-                src={item.img}
-                alt={item.name}
+                src={item.imageUrl || ''}
+                alt={item.productName}
                 className="w-28 h-24 object-cover rounded-md bg-gray-50"
                 />  
                 <div className="flex flex-col justify-between flex-1 pl-3">
                 <div>
-                    <div className="font-semibold text-xs mb-1">{item.name}</div>
+                    <div className="font-semibold text-xs mb-1">{item.productName}</div>
                     <div className="flex items-center gap-1 mb-1">
-                    <span className="text-red-500 font-bold text-sm">{item.currency}{item.price}</span>
-                    <span className="line-through text-gray-400 text-xs">{item.currency}{item.oldPrice}</span>
-                    <span className="bg-[#FF5722] text-white text-[10px] px-1 py-0.5 rounded ml-1">-{item.discount}%</span>
+                    <span className="text-red-500 font-bold text-sm">₹{item.minPrice}</span>
+                    {item.oldPrice ? (
+                      <span className="line-through text-gray-400 text-xs">₹{item.oldPrice}</span>
+                    ) : null}
+                    {item.discountPercent ? (
+                      <span className="bg-[#FF5722] text-white text-[10px] px-1 py-0.5 rounded ml-1">-{item.discountPercent}%</span>
+                    ) : null}
                     </div>
                 </div>
                 <div className="flex items-center gap-1 mt-1">

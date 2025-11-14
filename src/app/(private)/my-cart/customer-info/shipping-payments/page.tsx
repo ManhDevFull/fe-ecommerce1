@@ -3,18 +3,70 @@ import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
-import { setSelectedPayment, setSelectedShipping } from "@/redux/reducers/checkoutReducer";
+import { setSelectedPayment, setSelectedShipping, setPaymentMethods, setShippingMethods } from "@/redux/reducers/checkoutReducer";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import handleAPI from "@/axios/handleAPI";
 
 
 export default function ShippingPayments() {
     const dispatch = useDispatch();
     const router = useRouter();
     const { selectedPayment, selectedShipping, paymentMethods, shippingMethods } = useSelector((state: RootState) => state.checkout);
-    const { items: cartItems, giftBox, discount, giftBoxPrice } = useSelector((state: RootState) => state.cart);
+    // Read giDftBox state from cartReducer (set in my-cart page)
+    const { giftBox, giftBoxPrice } = useSelector((state: RootState) => state.cart);
+    const [loading, setLoading] = useState(true);
+    // We read cart summary directly from backend so it's consistent with My Cart page
+    const [summary, setSummary] = useState<{ itemsPrice: number; shipping: number; tax: number; discountPrice: number; giftBoxPrice: number; totalPrice: number } | null>(null);
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const totalPrice = total - discount + (giftBox ? giftBoxPrice : 0);
+    // Load payment providers, shipping carriers, and cart summary from backend
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                // Load cart summary from backend
+                const cartData = await handleAPI<{ items: any[]; summary: any }>(`/Cart`);
+                setSummary(cartData.summary);
+                
+                // Load payment and shipping methods
+                const [payments, shippings] = await Promise.all([
+                    handleAPI<any[]>('/Shipping/payment-providers'),
+                    handleAPI<any[]>('/Shipping/carriers-with-options')
+                ]);
+                
+                if (payments && Array.isArray(payments)) {
+                    dispatch(setPaymentMethods(payments.map((p: any) => ({
+                        id: p.id,
+                        name: p.name,
+                        desc: p.desc || '',
+                        img: p.img || ''
+                    }))));
+                }
+                
+                if (shippings && Array.isArray(shippings)) {
+                    dispatch(setShippingMethods(shippings.map((s: any) => ({
+                        id: s.id,
+                        name: s.name,
+                        deliveryTime: s.deliveryTime,
+                        shippingCost: s.shippingCost,
+                        insurance: s.insurance,
+                        img: s.img || ''
+                    }))));
+                }
+            } catch (e: any) {
+                console.error('Failed to load shipping/payment data:', e);
+                console.error('Error details:', {
+                    message: e?.message,
+                    status: e?.response?.status,
+                    statusText: e?.response?.statusText,
+                    url: e?.config?.url,
+                    baseURL: e?.config?.baseURL
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, [dispatch]);
 
     const handleContinue = () => {
         router.push('/my-cart/customer-info/shipping-payments/product-confirm');
@@ -43,7 +95,12 @@ export default function ShippingPayments() {
                     <div className="font-bold text-lg mb-1">Payment</div>
                     <div className="text-gray-500 text-sm mb-4">Please choose a payment method</div>
                     <div className="flex flex-col gap-4">
-                    {paymentMethods.map((item) => (
+                    {loading ? (
+                        <div className="text-gray-500">Loading payment methods...</div>
+                    ) : paymentMethods.length === 0 ? (
+                        <div className="text-gray-500">No payment methods available</div>
+                    ) : (
+                        paymentMethods.map((item: { id: string; name: string; desc: string; img: string }) => (
                         <label
                         key={item.id}
                         className={`border rounded-lg bg-gray-100 px-6 py-4 cursor-pointer transition
@@ -72,7 +129,8 @@ export default function ShippingPayments() {
                         </div>
                         <div className="text-gray-600 text-sm mt-3 ml-[32px]">{item.desc}</div>
                         </label>
-                    ))}
+                    ))
+                    )}
                     </div>
                 </div>
 
@@ -82,7 +140,12 @@ export default function ShippingPayments() {
                     <div className="font-bold text-lg mb-1">Shipping</div>
                     <div className="text-gray-500 text-sm mb-4">Please choose a shipping company based on your region</div>
                     <div className="flex flex-col gap-4">
-                    {shippingMethods.map((item) => (
+                    {loading ? (
+                        <div className="text-gray-500">Loading shipping methods...</div>
+                    ) : shippingMethods.length === 0 ? (
+                        <div className="text-gray-500">No shipping methods available</div>
+                    ) : (
+                        shippingMethods.map((item: { id: string; name: string; deliveryTime: string; shippingCost: string; insurance: string; img: string }) => (
                         <label
                         key={item.id}
                         className={`border rounded-lg bg-gray-100 px-6 py-4 cursor-pointer transition
@@ -115,7 +178,8 @@ export default function ShippingPayments() {
                             <div>Insurance: {item.insurance}</div>
                         </div>
                         </label>
-                    ))}
+                    ))
+                    )}
                     </div>
                 </div>
                         </div>
@@ -125,36 +189,50 @@ export default function ShippingPayments() {
                 {/* Order Summary */}
                 <div className="w-full lg:w-[350px] bg-white rounded-2xl shadow-xl p-8 h-fit">
                     <h3 className="font-bold text-xl mb-6">Order Summary</h3>
-                    <div className="flex justify-between mb-3 text-base">
-                        <span>Price</span>
-                        <span>₹{total.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between mb-3 text-base">
-                        <span>Shipping</span>
-                        <span>₹0</span>
-                    </div>
-                    <div className="flex justify-between mb-3 text-base">
-                        <span>Tax</span>
-                        <span>₹0</span>
-                    </div>
-                    <div className="flex justify-between mb-3 text-base">
-                        <span>Discount price</span>
-                        <span>₹{discount}</span>
-                    </div>
-                    <div className="flex items-center mb-3 text-base">
-                        <input
-                            type="checkbox"
-                            checked={giftBox}
-                            disabled
-                            className="mr-2 accent-blue-600"
-                        />
-                        <span>Pack in a Gift Box</span>
-                        <span className="ml-auto">₹{giftBox ? giftBoxPrice : "0.00"}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg mt-6 mb-6">
-                        <span>Total Price</span>
-                        <span>₹{totalPrice.toFixed(2)}</span>
-                    </div>
+                    {(() => {
+                        const price = summary?.itemsPrice ?? 0;
+                        const shipping = summary?.shipping ?? 0;
+                        const tax = summary?.tax ?? 0;
+                        const discount = summary?.discountPrice ?? 0;
+                        // Calculate totalPrice: backend totalPrice (without giftBox) + giftBoxPrice if checkbox is checked
+                        const baseTotal = summary?.totalPrice ?? 0;
+                        const totalPrice = baseTotal + (giftBox ? giftBoxPrice : 0);
+                        
+                        return (
+                            <>
+                                <div className="flex justify-between mb-3 text-base">
+                                    <span>Price</span>
+                                    <span>₹{price.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between mb-3 text-base">
+                                    <span>Shipping</span>
+                                    <span>₹{shipping.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between mb-3 text-base">
+                                    <span>Tax</span>
+                                    <span>₹{tax.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between mb-3 text-base">
+                                    <span>Discount price</span>
+                                    <span>₹{discount}</span>
+                                </div>
+                                <div className="flex items-center mb-3 text-base">
+                                    <input
+                                        type="checkbox"
+                                        checked={giftBox}
+                                        disabled
+                                        className="mr-2 accent-blue-600"
+                                    />
+                                    <span>Pack in a Gift Box</span>
+                                    <span className="ml-auto">₹{giftBox ? giftBoxPrice.toFixed(2) : "0.00"}</span>
+                                </div>
+                                <div className="flex justify-between font-bold text-lg mt-6 mb-6">
+                                    <span>Total Price</span>
+                                    <span>₹{totalPrice.toFixed(2)}</span>
+                                </div>
+                            </>
+                        );
+                    })()}
                     <button 
                         onClick={handleContinue}
                         className="w-full bg-blue-600 text-white rounded-xl py-4 font-bold text-lg hover:bg-blue-700 transition"

@@ -44,54 +44,10 @@ const initialState: CheckoutState = {
     address: '',
     phone: '',
   },
-  selectedPayment: '1',
-  selectedShipping: 'racecouriers',
-  paymentMethods: [
-    {
-      id: "1",
-      name: "Momo",
-      desc: "PayPal is a trusted online payment platform that allows individuals and businesses to securely send and receive money electronically.",
-      img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1758720527/logo-momo-4_i9zroa.png",
-    },
-    {
-      id: "2",
-      name: "Mastercard",
-      desc: "PayPal is a trusted online payment platform that allows individuals and businesses to securely send and receive money electronically.",
-      img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1758719116/f4a67d389658ed882ce0252d0c52f03601d527b4_szny6e.png",
-    },
-    {
-      id: "3",
-      name: "Bitcoin",
-      desc: "PayPal is a trusted online payment platform that allows individuals and businesses to securely send and receive money electronically.",
-      img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1758720602/f0ecfaedbb689ef1fcc40a43cfc57299665ae7ea_u1hodj.png",
-    },
-  ],
-  shippingMethods: [
-    {
-      id: "ausff",
-      name: "AUSFF",
-      deliveryTime: "14-21 days",
-      shippingCost: "Free",
-      insurance: "Unavailable",
-      img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1758720527/logo-momo-4_i9zroa.png",
-    },
-    {
-      id: "racecouriers",
-      name: "RaceCouriers",
-      deliveryTime: "14-21 days",
-      shippingCost: "₹10",
-      insurance: "Available",
-      img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1758720527/logo-momo-4_i9zroa.png",
-    },
-    {
-      id: "transcocargo",
-      name: "TranscoCargo",
-      deliveryTime: "14-21 days",
-      shippingCost: "₹12",
-      insurance: "Available",
-      img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1758720527/logo-momo-4_i9zroa.png",
-    },
-  ],
+  selectedPayment: '',
+  selectedShipping: '',
+  paymentMethods: [],
+  shippingMethods: [],
 };
 
 const checkoutSlice = createSlice({
@@ -107,8 +63,28 @@ const checkoutSlice = createSlice({
     setSelectedShipping: (state, action: PayloadAction<string>) => {
       state.selectedShipping = action.payload;
     },
+    setPaymentMethods: (state, action: PayloadAction<PaymentMethod[]>) => {
+      state.paymentMethods = action.payload;
+      if (state.paymentMethods.length > 0 && !state.selectedPayment) {
+        state.selectedPayment = state.paymentMethods[0].id;
+      }
+    },
+    setShippingMethods: (state, action: PayloadAction<ShippingMethod[]>) => {
+      state.shippingMethods = action.payload;
+      if (state.shippingMethods.length > 0 && !state.selectedShipping) {
+        state.selectedShipping = state.shippingMethods[0].id;
+      }
+    },
   },
 });
 
-export const { updateCustomerInfo, setSelectedPayment, setSelectedShipping } = checkoutSlice.actions;
+export const { 
+  updateCustomerInfo, 
+  setSelectedPayment, 
+  setSelectedShipping, 
+  setPaymentMethods, 
+  setShippingMethods 
+} = checkoutSlice.actions;
+
 export default checkoutSlice.reducer;
+
