@@ -1,12 +1,12 @@
 "use client";
 import "../globals.css";
 import { Provider } from "react-redux";
-import store from "@/redux/store";
 import Link from "next/link";
 import HeaderComponent from "@/components/templates/layout/HeaderComponent";
 import CategoryComponent from "@/components/templates/layout/CategoryComponent";
 import FooterComponent from "@/components/templates/layout/FooterComponent";
 import { Toaster } from "sonner";
+import store from "@/redux/store";
 export default function RootLayout({
   children,
 }: Readonly<{

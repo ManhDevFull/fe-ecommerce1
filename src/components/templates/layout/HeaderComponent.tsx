@@ -2,7 +2,6 @@ import handleAPI from "@/axios/handleAPI";
 import {
   addAuth,
   authSelector,
-  removeAuth,
   UserAuth,
 } from "@/redux/reducers/authReducer";
 import Link from "next/link";
@@ -11,6 +10,15 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 export default function HeaderComponent() {
+  const [query, setQuery] =useState('');
+  const router = useRouter();
+  // sự kiện tìm kiếm khi bấm enter
+  const handleOnEnter = (e: React.KeyboardEvent<HTMLInputElement>)=>{
+    if(e.key === 'Enter'){
+      router.push(`/all-products?query=${encodeURIComponent(query)}`);
+      console.log(query);
+    }
+  }
   const dispatch = useDispatch();
   const route = useRouter();
   const auth: UserAuth = useSelector(authSelector);
@@ -23,13 +31,21 @@ export default function HeaderComponent() {
     };
     getData();
   }, []);
-  const logUser = async () => {
-    if (auth && auth.token) {
-     route.push("/user")
-    } else {
-      route.push("/auth/login");
-    }
-  };
+  // const logUser = async () => {
+  //   if (auth && auth.token) {
+  //     route.push("/user");
+  //   } else {
+  //     route.push("/auth/login");
+  //   }
+  // };
+  // const isLoggedIn = Boolean(auth?.token);
+  // const accountLabel = isLoggedIn
+  //   ? auth?.name || "My Account"
+  //   : "Login / Sign Up";
+  // function logUser(event: MouseEvent<HTMLParagraphElement, MouseEvent>): void {
+  //   throw new Error("Function not implemented.");
+  // }
+
   return (
     <header className="w-full h-17 md:h-24 flex md:justify-center items-center shadow-lg px-8">
       <div className="flex">
@@ -126,7 +142,10 @@ export default function HeaderComponent() {
           </svg>
         </Link>
       </div>
+
+       {/* tìm kiếm */}
       <div className="w-11 xl:w-96 ml-3 h-11 flex bg-gray-100 rounded-md">
+         {/* nút look */}
         <button className="h-11 w-11 flex justify-center items-center">
           <svg
             width="19"
@@ -151,8 +170,12 @@ export default function HeaderComponent() {
             />
           </svg>
         </button>
+        {/* // ô Search */}
         <input
           type="text"
+          value={query}
+          onChange={(e)=>setQuery(e.target.value)}
+          onKeyDown={handleOnEnter}
           className="bg-gray-100 w-[calc(100%-44px)] h-full focus:outline-none hidden lg:block"
           placeholder="Search essentials, groceries and mode..."
         />
@@ -200,10 +223,10 @@ export default function HeaderComponent() {
           </li>
           <li>
             <p
-              onClick={logUser}
-              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
-                !auth || (!auth.token && "cursor-pointer")
-              }`}
+              // onClick={logUser}
+              // className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
+              //   !auth || (!auth.token && "cursor-pointer")
+              // }`}
             >
               <svg
                 width="25"
@@ -228,7 +251,7 @@ export default function HeaderComponent() {
                 />
               </svg>
               <span className="whitespace-nowrap text-[#666666] hidden sm:block pl-1">
-                {auth && auth.token !== "" ? auth.name : "Sign Up/Sign In"}
+                {/* {accountLabel} */}
               </span>
             </p>
           </li>
