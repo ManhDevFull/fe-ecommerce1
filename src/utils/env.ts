@@ -6,10 +6,12 @@ export const gatewayOrigin = stripTrailingSlash(
   process.env.NEXT_PUBLIC_GATEWAY_ORIGIN ?? 'http://localhost:5200'
 );
 
-export const restApiBase =
-  ensureTrailingSlash(
-    process.env.NEXT_PUBLIC_API_URL ?? `${gatewayOrigin}/api`
-  );
+const apiBase = process.env.NEXT_PUBLIC_API_URL;
+const normalizedApiBase = apiBase
+  ? ensureTrailingSlash(stripTrailingSlash(apiBase))
+  : ensureTrailingSlash(`${gatewayOrigin}/api`);
+
+export const restApiBase = normalizedApiBase;
 
 export const chatApiBase =
   process.env.NEXT_PUBLIC_CHAT_API_URL ?? `${gatewayOrigin}/chat/api/chat`;
