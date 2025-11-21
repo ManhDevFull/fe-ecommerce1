@@ -11,6 +11,25 @@ export type VariantDTO = {
     discounts: DiscountDTO[]
     price: number;
 }
+export type ChatMessage = {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+};
+
+export type ThreadResponse = {
+  contactId: number;
+  contactName: string;
+  avatarInitials: string;
+  lastMessage: string;
+  lastTimestamp: string;
+  unreadCount: number;
+  messages: ChatMessage[];
+};
+
 export type DiscountDTO = {
     id: number;
     typediscount: number;
