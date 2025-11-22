@@ -110,6 +110,7 @@ export default function HeaderAdminComponent() {
   const notifButtonRef = useRef<HTMLButtonElement | null>(null);
   const chatPanelRef = useRef<HTMLDivElement | null>(null);
   const openChatsRef = useRef<ThreadResponse[]>([]);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
   const applyMessageUpdateRef = useRef<
     ((msg: RealtimeMessagePayload | ChatMessage) => void) | null
   >(null);
@@ -207,6 +208,21 @@ export default function HeaderAdminComponent() {
     });
   }, [chatThreads]);
 
+  const markThreadRead = useCallback(
+    async (contactId: number) => {
+      if (!chatFeatureEnabled) return;
+      const conn = connectionRef.current;
+      if (!conn || conn.state !== signalR.HubConnectionState.Connected) return;
+
+      try {
+        await conn.invoke("MarkThreadRead", contactId);
+      } catch (error) {
+        console.error("[Chat] MarkThreadRead failed:", error);
+      }
+    },
+    [chatFeatureEnabled]
+  );
+
   const applyMessageUpdate = useCallback(
     (incoming: RealtimeMessagePayload | ChatMessage) => {
       if (!userInfo.id) return;
@@ -223,6 +239,9 @@ export default function HeaderAdminComponent() {
       const isOpen = openChatsRef.current.some(
         (chat) => chat.contactId === contactId
       );
+      if (!isFromMe && isOpen) {
+        void markThreadRead(contactId);
+      }
       const processedMessage =
         !isFromMe && isOpen ? { ...normalized, isRead: true } : normalized;
       let placeholderCreated = false;
@@ -275,7 +294,7 @@ export default function HeaderAdminComponent() {
         void fetchThreads();
       }
     },
-    [fetchThreads, userInfo.id]
+    [fetchThreads, markThreadRead, userInfo.id]
   );
 
   useEffect(() => {
@@ -296,6 +315,7 @@ export default function HeaderAdminComponent() {
       })
       .withAutomaticReconnect()
       .build();
+    connectionRef.current = conn;
 
     const handleIncomingMessage = (msg: RealtimeMessagePayload) => {
       console.log("[Chat] adminMessage received:", msg);
@@ -303,6 +323,36 @@ export default function HeaderAdminComponent() {
     };
 
     conn.on("adminMessage", handleIncomingMessage);
+    conn.on(
+      "messagesRead",
+      (payload: { contactId: number; updated?: number }) => {
+        if (!payload || typeof payload.contactId !== "number") return;
+        setChatThreads((prev) =>
+          prev.map((thread) =>
+            thread.contactId === payload.contactId
+              ? {
+                  ...thread,
+                  messages: thread.messages.map((m) =>
+                    m.senderId === userInfo.id ? { ...m, isRead: true } : m
+                  ),
+                }
+              : thread
+          )
+        );
+        setOpenChats((prev) =>
+          prev.map((thread) =>
+            thread.contactId === payload.contactId
+              ? {
+                  ...thread,
+                  messages: thread.messages.map((m) =>
+                    m.senderId === userInfo.id ? { ...m, isRead: true } : m
+                  ),
+                }
+              : thread
+          )
+        );
+      }
+    );
 
     let reconnectHandle: ReturnType<typeof setTimeout> | null = null;
     const startConnection = async (attempt = 0) => {
@@ -314,10 +364,14 @@ export default function HeaderAdminComponent() {
         return;
       }
       try {
+        connectionRef.current = conn;
         await conn.start();
         setConnection(conn);
+        openChatsRef.current.forEach((chat) => {
+          void markThreadRead(chat.contactId);
+        });
       } catch (err: unknown) {
-        console.error("❌ SignalR connection failed:", err);
+        console.error("??O SignalR connection failed:", err);
         reconnectHandle = setTimeout(() => startConnection(attempt + 1), 3000);
       }
     };
@@ -326,11 +380,13 @@ export default function HeaderAdminComponent() {
 
     return () => {
       conn.off("adminMessage", handleIncomingMessage);
+      conn.off("messagesRead");
       if (reconnectHandle) clearTimeout(reconnectHandle);
       void conn.stop();
+      connectionRef.current = null;
       setConnection(null);
     };
-  }, [userInfo.token, userInfo.id, chatFeatureEnabled]);
+  }, [chatFeatureEnabled, markThreadRead, userInfo.id, userInfo.token]);
 
   const totalUnread = chatThreads.reduce(
     (acc, thread) => acc + thread.unreadCount,
@@ -384,6 +440,7 @@ export default function HeaderAdminComponent() {
       return [...prev, normalized];
     });
 
+    void markThreadRead(thread.contactId);
     setChatOpen(false);
   };
 

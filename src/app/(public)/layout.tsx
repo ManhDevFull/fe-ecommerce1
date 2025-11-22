@@ -8,6 +8,18 @@ import FooterComponent from "@/components/templates/layout/FooterComponent";
 import { Toaster } from "sonner";
 import type { ReactNode } from "react";
 import { ChatClient } from "@/components/templates/Chat/ChatClient";
+import { useSelector } from "react-redux";
+import { authSelector } from "@/redux/reducers/authReducer";
+
+function ChatClientGate() {
+  const auth = useSelector(authSelector);
+  if (!auth?.token) return null;
+  return (
+    <div className="fixed bottom-20 right-18 z-[9999]">
+      <ChatClient />
+    </div>
+  );
+}
 
 export default function PublicRootLayout({
   children,
@@ -41,10 +53,7 @@ export default function PublicRootLayout({
           </div>
           <HeaderComponent />
           {children}
-                <div className="fixed bottom-20 right-18 z-[9999]">
-            {/* <ChatIcon /> */}
-            <ChatClient />
-          </div>
+          <ChatClientGate />
           <FooterComponent />
         </Provider>
       </body>
