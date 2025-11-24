@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
 type EndTimeProps = {
-    endTime: Date;
+    endTime: string |Date;
 }
 export default function FlashDealBar({ endTime }: EndTimeProps) {
     console.log(endTime);
-    const toltalTime = Math.floor((endTime.getTime() - Date.now()) / 1000);
+    const end = new Date(endTime); //convert về date vì be trả về có thể là string chứ không phải date
+    const toltalTime = Math.floor((end.getTime() - Date.now()) / 1000);
     const [timeLeft, setTimeLeft] = useState(toltalTime);
     useEffect(() => {
         const timer = setInterval(() => {
