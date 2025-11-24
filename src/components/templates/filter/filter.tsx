@@ -21,7 +21,6 @@ import { LoadingProduct } from "@/components/ui/LoadingProduct";
 import { Pagination } from "antd";
 import { PageFilter } from "@/components/ui/Pagination";
 import { useSearchParams } from "next/navigation";
-import { restApiBase } from "@/utils/env";
 import handleAPI from "@/axios/handleAPI";
 
 export default function Filter(props: {

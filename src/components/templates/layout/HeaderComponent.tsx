@@ -10,6 +10,15 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 export default function HeaderComponent() {
+  const [query, setQuery] =useState('');
+  const router = useRouter();
+  // sự kiện tìm kiếm khi bấm enter
+  const handleOnEnter = (e: React.KeyboardEvent<HTMLInputElement>)=>{
+    if(e.key === 'Enter'){
+      router.push(`/all-products?query=${encodeURIComponent(query)}`);
+      console.log(query);
+    }
+  }
   const dispatch = useDispatch();
   const route = useRouter();
   const auth: UserAuth = useSelector(authSelector);
@@ -154,8 +163,11 @@ export default function HeaderComponent() {
             />
           </svg>
         </button>
-        <input
+       <input
           type="text"
+          value={query}
+          onChange={(e)=>setQuery(e.target.value)}
+          onKeyDown={handleOnEnter}
           className="bg-gray-100 w-[calc(100%-44px)] h-full focus:outline-none hidden lg:block"
           placeholder="Search essentials, groceries and mode..."
         />
