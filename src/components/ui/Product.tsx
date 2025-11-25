@@ -27,7 +27,7 @@ export default function Product({ product, selectedFilter, type }: productProps)
     const pareEndtime = discount?.endtime ? new Date(discount.endtime) : null;
     const averageRating = product.order > 0 ? product.rating / product.order : 0;
     return (
-        <div className={`${type ? 'col-span-1' : ''} py-2`}>
+        <div className={`${type ? 'col-span-1' : ''} xl:py-2`}>
             {type ? (
                 <>
                     {/* Dạng GRID */}
@@ -39,7 +39,7 @@ export default function Product({ product, selectedFilter, type }: productProps)
                             {pareEndtime && <FlashDealBar endTime={pareEndtime} />}
                         </div>
                         <p
-                            className="text-[20px] text-start font-medium overflow-hidden whitespace-nowrap text-ellipsis"
+                            className="text-[20px] text-start font-medium"
                             title={product.name}
                         >
                             {product.name}
@@ -68,25 +68,25 @@ export default function Product({ product, selectedFilter, type }: productProps)
                         <p className="text-[20px] font-bold">{product.name}</p>
                         <p className="text-[#474747]">{product.description}</p>
                         <p className="py-[10px] text-lg font-medium">${variant.price}</p>
-                        <Review ratingReviews={product.rating} totalReviews={product.order} />
-
-                    </div>
-                    <div className="flex justify-between">
-                        <button className="w-[100px] bg-[#191C1F] rounded-2xl">
-                            <FaHeart size={20} className="text-white" />
-                        </button>
-                        <button className="w-[100px] bg-[#191C1F] rounded-2xl">
-                            <FiShoppingCart size={20} className="text-white" />
-                        </button>
-                    </div>
-                    {/* <div className="flex flex-shrink-0 gap-[10px]">
-                        <div className="w-[40px] h-[40px] flex justify-center items-center rounded-full bg-[#191C1F]">
-                            <FaHeart size={20} className="text-white" />
+                        <div className="flex items-center gap-10">
+                            <div className="flex gap-2 items-center">
+                                <p className="text-[#5F6C72] text-[20px]">{averageRating}</p>
+                                <FaStar className="text-[#EBC80C]" size={20} />
+                            </div>
+                            <p className="text-[20px] text-[#5F6C72]">{`(${product.order}) Ratings`}</p>
                         </div>
-                        <div className="w-[40px] h-[40px] flex justify-center items-center rounded-full bg-black">
-                            <FiShoppingCart size={20} className="text-white" />
+                        {/* <Review ratingReviews={product.rating} totalReviews={product.order} /> */}
+                    </div>
+                    <div className="h-full flex items-center">
+                        <div className="flex flex-col gap-3">
+                            <button className="w-[100px] p-2 bg-[#677685] rounded-xl hover:cursor-pointer">
+                                <p className="text-[20px] text-white">Order</p>
+                            </button>
+                            <button className="w-[100px] p-2 bg-[#677685] rounded-xl hover:cursor-pointer">
+                                <p className="text-[20px] text-white">Wishlist</p>
+                            </button>
                         </div>
-                    </div> */}
+                    </div>
                 </div>
             )}
         </div>
