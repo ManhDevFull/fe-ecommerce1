@@ -20,7 +20,6 @@ export default function HeaderComponent() {
     }
   }
   const dispatch = useDispatch();
-  const route = useRouter();
   const auth: UserAuth = useSelector(authSelector);
   const [userInfo, setUserInfo] = useState<UserAuth>(auth);
   useEffect(() => {
@@ -31,17 +30,17 @@ export default function HeaderComponent() {
     };
     getData();
   }, []);
-  // const logUser = async () => {
-  //   if (auth && auth.token) {
-  //     route.push("/user");
-  //   } else {
-  //     route.push("/auth/login");
-  //   }
-  // };
-  // const isLoggedIn = Boolean(auth?.token);
-  // const accountLabel = isLoggedIn
-  //   ? auth?.name || "My Account"
-  //   : "Login / Sign Up";
+  const logUser = async () => {
+    if (auth && auth.token) {
+      router.push("/user");
+    } else {
+      router.push("/auth/login");
+    }
+  };
+  const isLoggedIn = Boolean(auth?.token);
+  const accountLabel = isLoggedIn
+    ? auth?.name || "My Account"
+    : "Login / Sign Up";
   // function logUser(event: MouseEvent<HTMLParagraphElement, MouseEvent>): void {
   //   throw new Error("Function not implemented.");
   // }
@@ -223,10 +222,10 @@ export default function HeaderComponent() {
           </li>
           <li>
             <p
-              // onClick={logUser}
-              // className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
-              //   !auth || (!auth.token && "cursor-pointer")
-              // }`}
+              onClick={logUser}
+              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
+                !auth || (!auth.token && "cursor-pointer")
+              }`}
             >
               <svg
                 width="25"

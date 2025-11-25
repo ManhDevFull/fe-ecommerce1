@@ -21,6 +21,7 @@ export default function DealTime({ endTime, unit }: timeUnit) {
   useEffect(() => {
     // 4. Chỉ tính toán thời gian bên trong useEffect (Chỉ chạy ở Client)
     const calculateInitialTime = () => {
+      if (!endTime) return;
       const totalSeconds = Math.floor((endTime.getTime() - Date.now()) / 1000);
       setTimeLeft(totalSeconds > 0 ? totalSeconds : 0);
     };
