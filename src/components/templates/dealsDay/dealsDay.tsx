@@ -1,63 +1,43 @@
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import axios from "axios";
+
+// Components
 import BtnBuyNow from "@/components/ui/BtnBuyNow";
 import FlashDealBar from "@/components/ui/FlashDealBar";
 import Product from "@/components/ui/ImgProduct";
-import { link } from "fs";
-import { Flash } from "iconsax-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { parse } from "date-fns";
-// import DealTime from "@/components/ui/DealTime";
-import DealTime from "@/components/ui/ClientDealTime";
 import { BtnViewAll } from "@/components/ui/BtnViewAll";
+
+// Types & Utils
 import { ProductUi } from "@/types/type";
-import { useEffect, useState } from "react";
-import axios from "axios";
 import { restApiBase } from "@/utils/env";
-import TimeLeft from "@/components/ui/TimeLeft";
+
+// --- 1. SỬ DỤNG DYNAMIC IMPORT ĐỂ FIX LỖI HYDRATION ---
+const TimeLeft = dynamic(() => import("@/components/ui/TimeLeft"), { 
+  ssr: false, // Tắt render phía server cho đồng hồ
+  loading: () => (
+    // Loading skeleton màu vàng để không bị giật layout
+    <div className="w-[120px] h-[40px] bg-yellow-400 rounded-[10px] animate-pulse"></div>
+  ) 
+});
 
 export default function DealsDay() {
-    // const products = [
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("10/09/2025 23:59:59", "dd/MM/yyyy HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 800
-    //     },
-    //     {
-    //         name: 'bcd',
-    //         endTime: parse("12-09-2025 21:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 300
-    //     },
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("13-09-2025 2 3:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 400
-    //     },
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("14-09-2025 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 400
-    //     }
-
-    // ]
-
     const [newProduct, setNewProduct] = useState<ProductUi[]>([]);
-    // gọi api để lấy ra nhuwgx sản phẩm có giảm giá mới nhất
+    const router = useRouter();
+
+    // Gọi api để lấy ra những sản phẩm có giảm giá
     useEffect(() => {
         const fetchNewProduct = async () => {
-                try {
+            try {
                 const res = await axios.get(`${restApiBase}product/discount`);
-                console.log('sản phẩm có discount', res.data);
+                // console.log('sản phẩm có discount', res.data);
                 setNewProduct(res.data);
             }
             catch(error : any){
-                if(error.response)
-                    console.log('lỗi từ server');
-                if(error.request)
-                    console.log('lỗi không nhận được phản hồi server')
+                console.error('Lỗi lấy sản phẩm giảm giá:', error);
             }
         }
         fetchNewProduct();
@@ -67,10 +47,13 @@ export default function DealsDay() {
         price: number;
         discount: any | null;
     }
-    // hàm xử lý lấy ra giá trị discount, price tương ứng vì variant có nhiều value, value có 1 mảng discount.
-    // mảng discount có thể có nhiều loại giảm giá 
+
+    // Hàm xử lý lấy ra giá trị discount hợp lệ
     const getValidDiscount = (product: ProductUi): DiscountInfor | null => {
         const now = new Date();
+        // Kiểm tra an toàn để tránh lỗi nếu product.variant bị null/undefined
+        if (!product.variant) return null;
+
         for (const variant of product.variant) {
             if (variant.discounts && variant.discounts.length > 0) {
                 const discount = variant.discounts.find(dis =>
@@ -80,14 +63,15 @@ export default function DealsDay() {
                     return {
                         price: variant.price,
                         discount: discount
-                    }; // trả về disocunt còn hạn đầu tiên;
+                    }; // trả về discount còn hạn đầu tiên;
             }
         }
         return null;
     }
-    const router = useRouter();
+
     return (
-        <div className="w-ful px-4 sm:px-16 py-4">
+        // ✏️ Đã sửa lỗi chính tả: w-ful -> w-full
+        <div className="w-full px-4 sm:px-16 py-4">
             <div className="w-full sm:flex sm:justify-between sm:items-center gap-2">
                 <div className="flex items-center">
                     <h2 className="sm:text-[18px] md:text-[24px] font-bold">TODAY'S DEALS OF THE DAY</h2>
@@ -95,8 +79,10 @@ export default function DealsDay() {
                 <div className="sm:flex sm:pt-0 sm:gap-2 sm:justify-between items-center">
                     <p className="font-medium hidden lg:block">Deals ends in</p>
                     <div className=" flex justify-between items-center gap-1 lg:gap-4">
-                        {/* <DealTime unit={{ day: 'd', hour: 'h', min: 'm', sec: 's' }} endtime={parse("2025-11-07 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date())} /> */}
+                        
+                        {/* Component đồng hồ đã fix lỗi Hydration */}
                         <TimeLeft />
+
                         <BtnViewAll className={'sm:px-6 !p-2'} />
                     </div>
                 </div>
@@ -109,19 +95,26 @@ export default function DealsDay() {
                         return (
                             <div key={index}
                                 className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
-                                onClick={() => router.push('')}
+                                // Lưu ý: Bạn cần điền đường dẫn chi tiết sản phẩm vào đây, ví dụ: /product/${product.id}
+                                onClick={() => router.push(`/product/${product.id}`)} 
                             >
-                                <Product img={product.imgUrls[1]} isNew={true} type={true} />
+                                {/* Kiểm tra mảng imgUrls trước khi truy cập phần tử số [1] để tránh lỗi crash */}
+                                <Product 
+                                    img={product.imgUrls && product.imgUrls.length > 1 ? product.imgUrls[1] : (product.imgUrls?.[0] || '')} 
+                                    isNew={true} 
+                                    type={true} 
+                                />
+                                
                                 <FlashDealBar endTime={deal?.discount?.endTime} />
-                                <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
+                                <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold truncate">
+                                    {product.name}
+                                </p>
                                 <BtnBuyNow price={deal?.price || 0} />
                             </div>
                         )
-                    }
-                    )
+                    })
                 }
             </div>
         </div>
     );
 }
-
