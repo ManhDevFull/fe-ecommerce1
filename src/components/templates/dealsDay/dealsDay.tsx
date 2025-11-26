@@ -8,11 +8,12 @@ import { useRouter } from "next/navigation";
 import { parse } from "date-fns";
 import DealTime from "@/components/ui/DealTime";
 import { BtnViewAll } from "@/components/ui/BtnViewAll";
-import { ProductUi } from "@/types/type";
+import { DiscountDTO, ProductUi } from "@/types/type";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { restApiBase } from "@/utils/env";
 import TimeLeft from "@/components/ui/TimeLeft";
+import CardIndex from "@/components/ui/CardIndex";
 
 export default function DealsDay() {
     // const products = [
@@ -64,7 +65,7 @@ export default function DealsDay() {
 
     type DiscountInfor = {
         price: number;
-        discount: any | null;
+        discount: DiscountDTO;
     }
     // hàm xử lý lấy ra giá trị discount, price tương ứng vì variant có nhiều value, value có 1 mảng discount.
     // mảng discount có thể có nhiều loại giảm giá 
@@ -82,6 +83,7 @@ export default function DealsDay() {
                     }; // trả về disocunt còn hạn đầu tiên;
             }
         }
+        // hiện tại dữ liệu fake đã hết hạn nên trả về null
         return null;
     }
     const router = useRouter();
@@ -105,15 +107,20 @@ export default function DealsDay() {
                 {
                     newProduct.map((product, index) => {
                         const deal = getValidDiscount(product);
+                        console.log('price: ', deal?.price);
+                        console.log('discount', deal?.discount);
                         return (
                             <div key={index}
                                 className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
                                 onClick={() => router.push('')}
                             >
-                                <Product img={product.imgUrls[1]} isNew={true} type={true} />
-                                <FlashDealBar endTime={deal?.discount?.endTime} />
+                                {/* <Product img={product.imgUrls[1]} isNew={true} type={true} /> */}
+                                <CardIndex isNew = {true} img={product.imgUrls[0]}/>
+                                 {
+                                    deal && <FlashDealBar endTime={deal?.discount?.endtime} />
+                                 }   
                                 <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
-                                <BtnBuyNow price={deal?.price || 0} />
+                                <BtnBuyNow price={deal?.price ?? product.variant[0].price} />
                             </div>
                         )
                     }
