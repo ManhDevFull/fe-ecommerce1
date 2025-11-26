@@ -694,9 +694,162 @@ cells:
 
       LIMIT 4;\r
 
+      \  SELECT *\r
+
+      \              FROM v_products_filter v\r
+
+      \              WHERE EXISTS (\r
+
+      \                  SELECT 1\r
+
+      \                  FROM jsonb_array_elements(v.variant) AS var(variant)\r
+
+      \                  JOIN LATERAL
+      jsonb_array_elements(var.variant->'discounts') AS d(discount) ON TRUE\r
+
+      \                  -- WHERE (d.discount->>'endtime')::timestamp > NOW()\r
+
+      \              )\r
+
+      \              LIMIT 4;\r
+
+      SELECT * FROM v_products_filter\r
+
+      ORDER BY \"order\" DESC\r
+
+      LIMIT 1\r
+
+      select * from category WHERE parent_id = 1\r
+
+      SELECT * from v_products_filter\r
+
+      WHERE categoryid in (1, 2)\r
+
+      LIMIT 12\r
+
+      select * from discount\r
+
       \r
 
-      \r\n"
+      \r
+
+      \r
+
+      [\r
+
+      \  {\r
+
+      \    \"id\": 1,\r
+
+      \    \"price\": 25000,\r
+
+      \    \"stock\": 10,\r
+
+      \    \"discounts\": [\r
+
+      \      {\r
+
+      \        \"id\": 1,\r
+
+      \        \"endtime\": \"2025-10-25T02:54:57.36542\",\r
+
+      \        \"discount\": 10,\r
+
+      \        \"starttime\": \"2025-09-25T02:54:57.36542\",\r
+
+      \        \"typediscount\": 1\r
+
+      \      }\r
+
+      \    ],\r
+
+      \    \"valuevariant\": {\r
+
+      \      \"color\": \"black\",\r
+
+      \      \"storage\": \"128GB\"\r
+
+      \    }\r
+
+      \  },\r
+
+      \  {\r
+
+      \    \"id\": 2,\r
+
+      \    \"price\": 30000,\r
+
+      \    \"stock\": 8,\r
+
+      \    \"discounts\": [\r
+
+      \      {\r
+
+      \        \"id\": 1,\r
+
+      \        \"endtime\": \"2025-10-25T02:54:57.36542\",\r
+
+      \        \"discount\": 10,\r
+
+      \        \"starttime\": \"2025-09-25T02:54:57.36542\",\r
+
+      \        \"typediscount\": 1\r
+
+      \      }\r
+
+      \    ],\r
+
+      \    \"valuevariant\": {\r
+
+      \      \"color\": \"white\",\r
+
+      \      \"storage\": \"256GB\"\r
+
+      \    }\r
+
+      \  },\r
+
+      \  {\r
+
+      \    \"id\": 41,\r
+
+      \    \"price\": 78235,\r
+
+      \    \"stock\": 22,\r
+
+      \    \"discounts\": [],\r
+
+      \    \"valuevariant\": {\r
+
+      \      \"color\": \"blue\",\r
+
+      \      \"storage\": \"256GB\"\r
+
+      \    }\r
+
+      \  },\r
+
+      \  {\r
+
+      \    \"id\": 4261,\r
+
+      \    \"price\": 84300,\r
+
+      \    \"stock\": 31,\r
+
+      \    \"discounts\": [],\r
+
+      \    \"valuevariant\": {\r
+
+      \      \"color\": \"blue\",\r
+
+      \      \"storage\": \"256GB\"\r
+
+      \    }\r
+
+      \  }\r
+
+      ]"
     metadata: {}
 metadata:
   conn:

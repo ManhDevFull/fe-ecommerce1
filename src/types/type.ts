@@ -49,6 +49,12 @@ export type ProductUi = {
     rating: number;
     order: number;
 }
+// khai báo cho Frequently, sản phẩm kèm theo
+export type FrequentlyDTO = {
+  accompanying: ProductUi[];
+  main: ProductUi;
+};
+
 // lấy ra tất cả variant khi bắt đầu load trang
 export type allvariant = {
     key: string;
