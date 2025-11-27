@@ -80,7 +80,7 @@ export default function ReviewDetailModal({
       // Gọi API (handleAPI cần hỗ trợ formData, nếu content-type tự động thì ok)
       // Lưu ý: check lại file handleAPI xem nó có tự set header multipart/form-data không
       // Thường axios tự nhận biết khi data là FormData
-      await handleAPI("/Review/create", formData, "post");
+      await handleAPI("api/Review/create", formData, "post");
 
       toast.success("Cảm ơn bạn đã đánh giá!");
       onSuccess?.(); // Reload dữ liệu cha
