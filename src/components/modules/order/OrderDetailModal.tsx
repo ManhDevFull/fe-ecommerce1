@@ -12,14 +12,14 @@ import LoaderText from "@/components/ui/LoadingText";
 import { Button } from "@/components/ui/button";
 import { IOrderAdmin } from "@/types/type";
 import {
-    formatCurrency,
-    formatDateTime,
-    formatVariant,
-    ORDER_STATUS_STYLES,
-    PAYMENT_STATUS_STYLES,
-    PAY_TYPE_STYLES,
-    badgeClass,
-    extractErrorMessage,
+  formatCurrency,
+  formatDateTime,
+  formatVariant,
+  ORDER_STATUS_STYLES,
+  PAYMENT_STATUS_STYLES,
+  PAY_TYPE_STYLES,
+  badgeClass,
+  extractErrorMessage,
 } from "@/utils/orderHelpers";
 
 interface OrderDetailModalProps {
@@ -56,6 +56,7 @@ export default function OrderDetailModal({
         const res = await handleAPI(`/admin/Order/${orderId}`);
         if (cancelled) return;
         if (res.status === 200) {
+          console.log(res.data)
           setOrder(res.data as IOrderAdmin);
         } else {
           setError("Không tìm thấy thông tin đơn hàng");
@@ -77,7 +78,9 @@ export default function OrderDetailModal({
   }, [open, orderId]);
 
   if (!open) return null;
-
+  const totalPrice = order?.orderdetails?.reduce((sum, detail) => {
+    return sum + (detail.variant?.price ?? 0) * detail.quantity;
+  }, 0) ?? 0;
   return (
     <Modal
       open={open}
@@ -94,17 +97,17 @@ export default function OrderDetailModal({
           </h3>
           {order && (
             <span className="text-xs text-gray-500">
-              Placed on {formatDateTime(order.orderDate)}
+              Placed on {formatDateTime(order.orderdate)}
             </span>
           )}
         </div>
         <span
           className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium uppercase ${badgeClass(
-            order?.statusOrder ?? "",
+            order?.statusorder ?? "",
             ORDER_STATUS_STYLES
           )}`}
         >
-          {order?.statusOrder ?? "-"}
+          {order?.statusorder ?? "-"}
         </span>
       </ModalHeader>
 
@@ -127,35 +130,35 @@ export default function OrderDetailModal({
                 <div>
                   <p className="text-xs uppercase text-gray-500">Order date</p>
                   <p className="text-sm font-medium text-[#242424]">
-                    {formatDateTime(order.orderDate)}
+                    {formatDateTime(order.orderdate)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-gray-500">Receive date</p>
                   <p className="text-sm font-medium text-[#242424]">
-                    {formatDateTime(order.receiveDate)}
+                    {formatDateTime(order.receivedate)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-gray-500">Payment status</p>
                   <span
                     className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${badgeClass(
-                      order.statusPay,
+                      order.statuspay,
                       PAYMENT_STATUS_STYLES
                     )}`}
                   >
-                    {order.statusPay || "-"}
+                    {order.statuspay || "-"}
                   </span>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-gray-500">Payment method</p>
                   <span
                     className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${badgeClass(
-                      order.typePay,
+                      order.typepay,
                       PAY_TYPE_STYLES
                     )}`}
                   >
-                    {order.typePay || "-"}
+                    {order.typepay || "-"}
                   </span>
                 </div>
               </div>
@@ -164,48 +167,70 @@ export default function OrderDetailModal({
             <section className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
                 <h4 className="mb-2 text-sm font-semibold text-[#242424]">Customer</h4>
-                <p className="text-sm font-medium text-[#242424]">
-                  {order.customerName || "Unknown customer"}
-                </p>
-                <p className="text-xs text-gray-500 break-all">
-                  {order.customerEmail || "-"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {order.customerPhone || "-"}
-                </p>
+                <div className="flex">
+                  <div className="flex mr-2 h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
+                    {order.account.avatarimg ? (
+                      <img
+                        src={order.account.avatarimg}
+                        alt={order.account.firstname ?? 'N/A'}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs text-gray-400">N/A</span>
+                    )}
+                  </div>
+
+                  <div> <p className="text-sm font-medium text-[#242424]">
+                    {order.account.firstname + " " + order.account.lastname || "Unknown customer"}
+                  </p>
+                    <p className="text-xs text-gray-500 break-all">
+                      {order.account.email || "-"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {order.address.tel || "-"}
+                    </p></div>
+                </div>
               </div>
               <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
                 <h4 className="mb-2 text-sm font-semibold text-[#242424]">Shipping address</h4>
                 <p className="text-sm text-[#474747]">
-                  {order.shippingAddress || "No shipping address"}
+                  {order.address.codeward || "No shipping address"}
                 </p>
               </div>
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-              <h4 className="mb-3 text-sm font-semibold text-[#242424]">Item</h4>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs uppercase text-gray-500">Product</p>
-                  <p className="text-sm font-medium text-[#242424]">
-                    {order.productName}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatVariant(order.variantAttributes)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase text-gray-500">Pricing</p>
-                  <p className="text-sm text-[#242424]">
-                    Unit price: {formatCurrency(order.unitPrice)}
-                  </p>
-                  <p className="text-sm text-[#242424]">
-                    Quantity: {order.quantity}
-                  </p>
-                  <p className="text-sm font-semibold text-[#242424]">
-                    Total: {formatCurrency(order.totalPrice)}
-                  </p>
-                </div>
+              <h4 className="pb-3 mb-2 text-sm font-semibold text-[#242424] border-b border-b-gray-200">Products</h4>
+              {
+                order.orderdetails.map((item, index) => (
+                  <div className={`flex justify-between w-full border-b border-gray-100 py-2 ${index === order.orderdetails.length - 1 ? 'border-b-0' : ''}`} key={item.id}>
+                    <div className="flex gap-2">
+                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
+                        <img className="h-full w-full object-cover" src={item.variant.product.imageurls[0]} alt={item.variant?.product.nameproduct ?? 'N/A'} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#242424]">
+                          {item.variant.product.nameproduct}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatVariant(item.variant.valuevariant)}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-end text-gray-500">
+                        Quantity: <strong>{item?.quantity ?? 0}</strong>
+                      </p>
+                      <p className="text-sm text-end font-medium text-[#242424]">
+                        Price({formatCurrency(item?.variant.price)}): {formatCurrency(item.variant.price * item.quantity)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              }
+              <div className="flex justify-end pt-3 font-medium border-t border-gray-200">
+                <p className="text-sm mr-1">Total price: </p> {'  '}
+                <u>{formatCurrency(totalPrice)}</u>
               </div>
             </section>
           </div>

@@ -1,15 +1,20 @@
+import { Account } from "./models/Account";
+import { Address } from "./models/Addrress";
+import { OrderDetail } from "./models/OrderDetail";
+import { Variant } from "./models/Variant";
+
 export type category = {
-    _id: number;
-    name_category: string;
+  _id: number;
+  name_category: string;
 }
 
 export type VariantDTO = {
-    id: number;
-    valuevariant:  { [key: string]: string };
-    stock: number;
-    inputprice: number;
-    discounts: DiscountDTO[]
-    price: number;
+  id: number;
+  valuevariant: { [key: string]: string };
+  stock: number;
+  inputprice: number;
+  discounts: DiscountDTO[]
+  price: number;
 }
 export type ChatMessage = {
   id: number;
@@ -31,66 +36,66 @@ export type ThreadResponse = {
 };
 
 export type DiscountDTO = {
-    id: number;
-    typediscount: number;
-    discount: number;
-    starttime: Date;
-    endtime: Date;
+  id: number;
+  typediscount: number;
+  discount: number;
+  starttime: Date;
+  endtime: Date;
 }
 export type ProductUi = {
-    id: number;
-    name: string;
-    description: string;
-    brand: string;
-    categoryId: number;
-    categoryName: string;
-    imgUrls: string[];
-    variant: VariantDTO[];
-    rating: number;
-    order: number;
+  id: number;
+  name: string;
+  description: string;
+  brand: string;
+  categoryId: number;
+  categoryName: string;
+  imgUrls: string[];
+  variant: VariantDTO[];
+  rating: number;
+  order: number;
 }
 // lấy ra tất cả variant khi bắt đầu load trang
 export type allvariant = {
-    key: string;
-    values: string[];
+  key: string;
+  values: string[];
 }
 // lưu khi cetgory thay đổi, lấy brand, variant theo category
 export type variants = {
-    id: number;
-    namecategory: string;
-    brand: string[];
-    variant: valueFilter;
+  id: number;
+  namecategory: string;
+  brand: string[];
+  variant: valueFilter;
 }
 
 export type valueFilter = {
-    [key: string]: string[];
+  [key: string]: string[];
 }
-export type PaginationInfo  = {
-    pageNumber: number;
-    pageSize: number;
+export type PaginationInfo = {
+  pageNumber: number;
+  pageSize: number;
 }
 export type PagedResultDTO<T> = {
-    items: T[];
-    pageNumber: number;
-    pageSize: number;
-    totalCount: number;
-    totalPage: number;
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPage: number;
 }
 // time unit
 export type timeUnit = {
-    endtime: Date;
-    unit: {
-        day?: string,
-        hour: string,
-        min: string,
-        sec: string
-    }
+  endtime: Date;
+  unit: {
+    day?: string,
+    hour: string,
+    min: string,
+    sec: string
+  }
 }
 // img product
 export type imgproductProps = {
-    img: string;
-    type: boolean;
-    isNew: boolean;
+  img: string;
+  type: boolean;
+  isNew: boolean;
 }
 export type ResponData<T = unknown> = {
   data: T;
@@ -161,26 +166,18 @@ export type IVariant = {
 };
 
 export type IOrderAdmin = {
-  id: number;
-  accountId: number;
-  variantId: number;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  shippingAddress: string;
-  productName: string;
-  productImage: string;
-  variantAttributes: Record<string, string>;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  statusOrder: string;
-  statusPay: string;
-  typePay: string;
-  orderDate: string;
-  receiveDate?: string | null;
-};
-
+  account: Account
+  accountid: number
+  address: Address
+  addressid: number
+  id: number
+  orderdate: string
+  orderdetails: OrderDetail[]
+  receivedate: string | null
+  statusorder: string
+  statuspay: string
+  typepay: string
+}
 export type IOrderSummary = {
   total: number;
   pending: number;
