@@ -36,7 +36,6 @@ export default function RootLayout({
               </Link>
             </p>
           </div>
-
           <HeaderComponent />
           <CategoryComponent />
           {children}

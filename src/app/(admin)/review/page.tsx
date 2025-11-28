@@ -103,6 +103,7 @@ export default function ReviewPage() {
         const res = await handleAPI(`admin/Review?${params.toString()}`);
         if (cancelled) return;
         if (res.status === 200) {
+          console.log(res.data)
           setReviews(Array.isArray(res.data?.items) ? res.data.items : []);
           setTotal(Number(res.data?.total) || 0);
           setSummary(res.data?.summary ?? null);

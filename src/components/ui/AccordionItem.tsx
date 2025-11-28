@@ -13,13 +13,13 @@ type AccordionProps = {
 export default function AccordionItem({ title, children }: AccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
     return (
-        <div className="pr-10">
+        <div className="pr-2 sm:pr-10 w-full">
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between py-2 border-b-[1px] border-[#0000001F] cursor-pointer"
+                className="w-full flex items-center justify-between py-2 border-b-[1px] border-[#0000001F] cursor-pointer"
             >
-                <p className="text-[20px] font-bold">{title}</p>
-                <span className="relative w-[20px] h-[20px] flex items-center justify-center">
+                <p className="text-[10px] sm:text-[16px] font-bold">{title}</p>
+                <span className="relative w-[10px] h-[10px] sm:w-[20px] sm:h-[20px] flex items-center flex-nowrap justify-center">
                     <span
                         className={`absolute transition-all duration-300 transform ${isOpen ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
                             }`}
@@ -42,6 +42,7 @@ export default function AccordionItem({ title, children }: AccordionProps) {
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
+                        className="w-full"
                     >
                         {children}
                     </motion.div>

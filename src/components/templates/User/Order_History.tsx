@@ -106,11 +106,14 @@ export default function OrderHistory({ onSelectOrder }: OrderHistoryProps) {
                     <th className="py-3 px-4 font-bold">Dates</th>
                     <th className="py-3 px-4 font-bold">Status</th>
                     <th className="py-3 px-4 font-bold">Price</th>
+                    <th className="py-3 px-4 font-bold"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((order) => (
-                    <tr key={order.orderId}>
+                    <tr key={order.orderId}
+                      className="cursor-pointer hover:bg-gray-50" // Thêm class
+                      onClick={() => onSelectOrder(order.orderId.toString())} >
                       <td className="py-3 px-4">#{order.orderId}</td>
                       <td className="py-3 px-4">{formatOrderDate(order.orderDate)}</td>
                       <td className="py-3 px-4">{order.statusOrder}</td>

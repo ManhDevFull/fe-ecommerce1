@@ -1,4 +1,47 @@
 "use client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import handleAPI from "@/axios/handleAPI";
+
+// --- 1. Cập nhật Type khớp với dữ liệu Log của bạn ---
+interface OrderAddressInfo {
+  title: string;
+  nameRecipient: string;
+  tel: string;
+  fullAddress: string;
+}
+
+// Interface cho Product lồng bên trong
+interface ProductInfo {
+  name: string;
+  thumbnail: string;
+  // variantAttributes trả về Object, không phải String
+  variantAttributes?: Record<string, string>; 
+}
+
+interface OrderItem {
+  orderDetailId?: number; // Có thể null trong log
+  variantId: number;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  // Quan trọng: Dữ liệu nằm trong object product
+  product: ProductInfo; 
+}
+
+interface OrderDetailData {
+  orderId: number;
+  orderDate: string;
+  statusOrder: string;
+  typePay: string;
+  statusPay: string;
+  totalPrice: number;
+  totalDiscount: number;
+  totalPriceAfterDiscount: number;
+  addressInfo: OrderAddressInfo;
+  items: OrderItem[];
+}
+// ----------------------------------------------------
 
 interface OrderDetailProps {
   orderId: string;
@@ -6,33 +49,89 @@ interface OrderDetailProps {
 }
 
 export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
-  const order = {
-    id: orderId,
-    date: "October 10, 2025",
-    status: "Delivered",
-    items: [
-      {
-        name: "Jacket",
-        category: "COAT",
-        qty: 2,
-        price: "$54.99",
-        subtotal: "$109.38",
-        image:
-          "https://res.cloudinary.com/do0im8hgv/image/upload/v1755614948/4eda7f01-e154-4df5-a6bd-ca78c8d1db9c.png",
-      },
-    ],
-    subTotal: "$119.69",
-    discount: "-$13.40",
-    deliveryFee: "-$0.00",
-    grandTotal: "$106.29",
-    paymentDetails: "Cash on Delivery",
-    address: {
-      name: "Vincent Lobo",
-      street: "3068 Woodlawn Drive",
-      city: "Milwaukee",
-      zip: orderId.replace("#", ""),
-    },
+  const [orderDetail, setOrderDetail] = useState<OrderDetailData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!orderId) {
+      setError("Order ID không hợp lệ.");
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchOrderDetail = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response: any = await handleAPI(
+          `/Order/my-orders/${orderId}`,
+          undefined,
+          "get"
+        );
+        // console.log("Fetched order detail:", response); // Debug xong có thể comment
+        setOrderDetail(response);
+      } catch (err: any) {
+        console.error("Error fetching order detail:", err);
+        const errorMsg =
+          err.response?.data?.message || "Không thể tải chi tiết đơn hàng.";
+        setError(errorMsg);
+        toast.error(errorMsg);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrderDetail();
+  }, [orderId]);
+
+  const formatPrice = (price: number) => {
+    return (price ?? 0).toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD", // Hoặc "VND"
+    });
   };
+
+  // --- Hàm helper để hiển thị variant từ Object ---
+  const renderVariantAttributes = (attrs?: Record<string, string>) => {
+    if (!attrs) return null;
+    // Biến object {color: 'blue', rom: '128GB'} thành chuỗi "color: blue, rom: 128GB"
+    return Object.entries(attrs)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(", ");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-white shadow rounded-lg border border-gray-200 text-center">
+        Đang tải chi tiết đơn hàng #{orderId}...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-white shadow rounded-lg border border-gray-200 text-center text-red-500">
+        <p>Lỗi: {error}</p>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          >
+            Quay lại
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (!orderDetail) {
+    return (
+      <div className="p-6 bg-white shadow rounded-lg border border-gray-200 text-center text-gray-500">
+        Không tìm thấy dữ liệu cho đơn hàng #{orderId}.
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
@@ -41,10 +140,6 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
         <button className="px-4 py-2 bg-blue-600 text-white rounded-md">
           Items Ordered
         </button>
-
-        <button className="px-4 py-2 text-gray-600">Invoices</button>
-
-        <button className="px-4 py-2 text-gray-600">Order Shipment</button>
       </div>
 
       {/* Items Table */}
@@ -59,24 +154,50 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item, index) => (
-              <tr key={index} className="border-t border-gray-200">
-                <td className="py-2 flex items-center gap-4">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 rounded object-cover border"
-                  />
-                  <span>
-                    {item.name}{" "}
-                    <span className="text-gray-500">{item.category}</span>
-                  </span>
-                </td>
-                <td className="py-2">{item.price}</td>
-                <td className="py-2">{item.qty}</td>
-                <td className="py-2">{item.subtotal}</td>
-              </tr>
-            ))}
+            {(orderDetail?.items ?? []).map((item, index) => {
+              return (
+                <tr
+                  key={item.orderDetailId || index}
+                  className="border-t border-gray-200"
+                >
+                  <td className="py-2">
+                    <div className="flex items-center gap-4">
+                      {/* --- SỬA LOGIC HIỂN THỊ ẢNH --- */}
+                      <img
+                        src={item.product?.thumbnail || "/placeholder.png"}
+                        alt={item.product?.name || "Product Image"}
+                        className="w-16 h-16 rounded object-cover border"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://via.placeholder.com/64?text=No+Img";
+                        }}
+                      />
+                      
+                      <div className="flex flex-col">
+                        {/* --- SỬA LOGIC HIỂN THỊ TÊN --- */}
+                        <span className="font-medium">{item.product?.name}</span>
+                        
+                        {/* --- SỬA LOGIC HIỂN THỊ VARIANT (Object -> String) --- */}
+                        {item.product?.variantAttributes && (
+                          <span className="text-gray-500 text-sm capitalize">
+                            {renderVariantAttributes(item.product.variantAttributes)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="py-2 align-middle">
+                    {formatPrice(item.unitPrice)}
+                  </td>
+
+                  <td className="py-2 align-middle">{item.quantity}</td>
+
+                  <td className="py-2 align-middle font-medium">
+                    {formatPrice(item.unitPrice * item.quantity)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -85,33 +206,33 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
       <div className="grid grid-cols-3 gap-6">
         <div>
           <h3 className="font-semibold mb-2">Order Information</h3>
-          <p>Sub Total: {order.subTotal}</p>
-          <p>Discount: {order.discount}</p>
-          <p>Delivery Fee: {order.deliveryFee}</p>
-          <p className="font-semibold">Grand Total: {order.grandTotal}</p>
+          <p>Sub Total: {formatPrice(orderDetail.totalPrice)}</p>
+          <p>Discount: -{formatPrice(orderDetail.totalDiscount)}</p>
+          <p>Delivery Fee: {formatPrice(0)}</p>
+          <p className="font-semibold mt-2 pt-2 border-t">
+            Grand Total: {formatPrice(orderDetail.totalPriceAfterDiscount)}
+          </p>
         </div>
         <div>
           <h3 className="font-semibold mb-2">Payment Details</h3>
-          <p>{order.paymentDetails}</p>
+          <p>Hình thức: {orderDetail.typePay}</p>
+          <p>Trạng thái: <span className="font-medium text-blue-600">{orderDetail.statusPay}</span></p>
         </div>
         <div>
           <h3 className="font-semibold mb-2">Address Details</h3>
-          <p>{order.address.name}</p>
-          <p>{order.address.street}</p>
-          <p>{order.address.city}</p>
-          <p>#{order.address.zip}</p>
+          <p className="font-medium">{orderDetail.addressInfo?.nameRecipient}</p>
+          <p>{orderDetail.addressInfo?.tel}</p>
+          <p className="text-sm text-gray-600">{orderDetail.addressInfo?.fullAddress}</p>
         </div>
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-4 mt-6 justify-end">
-        <button className="relative inline-block px-6 py-3 font-semibold text-white bg-blue-600 rounded-md overflow-hidden group">
-          <span className="absolute inset-0 bg-[#29c9d7] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out"></span>
-          <span className="relative z-10">Reorder</span>
+      <div className="flex gap-4 mt-8 justify-end">
+        <button className="px-6 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition">
+           Add Rating
         </button>
-        <button className="relative inline-block px-6 py-3 font-semibold text-white bg-blue-600 rounded-md overflow-hidden group">
-          <span className="absolute inset-0 bg-[#29c9d7] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out"></span>
-          <span className="relative z-10">Add Rating</span>
+        <button className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">
+           Reorder
         </button>
       </div>
     </div>

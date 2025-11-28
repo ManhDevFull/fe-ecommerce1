@@ -20,7 +20,6 @@ export default function HeaderComponent() {
     }
   }
   const dispatch = useDispatch();
-  const route = useRouter();
   const auth: UserAuth = useSelector(authSelector);
   const [userInfo, setUserInfo] = useState<UserAuth>(auth);
   useEffect(() => {
@@ -31,21 +30,17 @@ export default function HeaderComponent() {
     };
     getData();
   }, []);
-  // const logUser = async () => {
-  //   if (auth && auth.token) {
-  //     route.push("/user");
-  //   } else {
-  //     route.push("/auth/login");
-  //   }
-  // };
-  // const isLoggedIn = Boolean(auth?.token);
-  // const accountLabel = isLoggedIn
-  //   ? auth?.name || "My Account"
-  //   : "Login / Sign Up";
-  // function logUser(event: MouseEvent<HTMLParagraphElement, MouseEvent>): void {
-  //   throw new Error("Function not implemented.");
-  // }
-
+  const logUser = async () => {
+    if (auth && auth.token) {
+      router.push("/user");
+    } else {
+      router.push("/auth/login");
+    }
+  };
+  const isLoggedIn = Boolean(auth?.token);
+  const accountLabel = isLoggedIn
+    ? auth?.name || "My Account"
+    : "Login / Sign Up";
   return (
     <header className="w-full h-17 md:h-24 flex md:justify-center items-center shadow-lg px-8">
       <div className="flex">
@@ -142,10 +137,7 @@ export default function HeaderComponent() {
           </svg>
         </Link>
       </div>
-
-       {/* tìm kiếm */}
       <div className="w-11 xl:w-96 ml-3 h-11 flex bg-gray-100 rounded-md">
-         {/* nút look */}
         <button className="h-11 w-11 flex justify-center items-center">
           <svg
             width="19"
@@ -170,8 +162,7 @@ export default function HeaderComponent() {
             />
           </svg>
         </button>
-        {/* // ô Search */}
-        <input
+       <input
           type="text"
           value={query}
           onChange={(e)=>setQuery(e.target.value)}
@@ -223,10 +214,10 @@ export default function HeaderComponent() {
           </li>
           <li>
             <p
-              // onClick={logUser}
-              // className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
-              //   !auth || (!auth.token && "cursor-pointer")
-              // }`}
+              onClick={logUser}
+              className={`!px-6 flex h-10 items-center border-r xl:border-l border-black justify-center whitespace-nowrap ${
+                !auth || (!auth.token && "cursor-pointer")
+              }`}
             >
               <svg
                 width="25"
@@ -251,7 +242,7 @@ export default function HeaderComponent() {
                 />
               </svg>
               <span className="whitespace-nowrap text-[#666666] hidden sm:block pl-1">
-                {/* {accountLabel} */}
+                {accountLabel}
               </span>
             </p>
           </li>

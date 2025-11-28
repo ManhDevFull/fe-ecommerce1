@@ -24,3 +24,4 @@ export default function DealTime({ endtime, unit }: timeUnit) {
         </div>
     )
 }
+

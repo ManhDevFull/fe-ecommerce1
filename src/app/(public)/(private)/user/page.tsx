@@ -18,6 +18,7 @@ import {
   UserAuth,
 } from "@/redux/reducers/authReducer";
 import { useDispatch, useSelector } from "react-redux";
+import HamsterWheel from "@/components/ui/HamsterWheel";
 
 const menuItems = [
   {
@@ -52,7 +53,7 @@ export default function User() {
   const router = useRouter();
   const dispatch = useDispatch();
   const auth: UserAuth = useSelector(authSelector);
-
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleMenuClick = async (id: SetStateAction<string>) => {
@@ -84,32 +85,62 @@ export default function User() {
     }
   };
 
-  // Upload avatar mới và cập nhật Redux
+  // Upload avatar mới VÀ xóa avatar cũ (VỚI HIỆU ỨNG PRE-LOAD)
   const handleAvatarUpload = async (fileToUpload: File) => {
     if (!fileToUpload) return;
 
-    // Tạo FormData để gửi file
+    // 1. KÍCH HOẠT LOADING (Hiển thị Hamster)
+    setIsUploadingAvatar(true);
+
+    const oldAvatarUrl = auth.avata;
     const uploadData = new FormData();
     uploadData.append("file", fileToUpload);
+
     try {
       toast.loading("Đang cập nhật avatar...");
 
-      // Gọi API (POST /User/avatar)
+      // 2. GỌI API (POST)
       const response: any = await handleAPI("/User/avatar", uploadData, "post");
-
-      // BE trả về { message: "...", avatarUrl: "new_url" }
       const newAvatarUrl = response.avatarUrl;
+      if (!newAvatarUrl) {
+        throw new Error("Không nhận được URL ảnh mới từ server.");
+      }
 
-      // Cập nhật avatar mới vào Redux
+      // 3. ✅ TẢI NGẦM (PRE-LOAD) ẢNH MỚI
+      // Hamster vẫn quay trong khi trình duyệt tải ảnh mới vào cache
+      await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = newAvatarUrl;
+        img.onload = () => resolve(true); // Ảnh đã vào cache
+        img.onerror = (err) => reject(err); // Lỗi tải ảnh
+      });
+
+      // 4. ✅ TẢI NGẦM XONG -> CẬP NHẬT REDUX
+      // (Lúc này <img> ở dưới đã đổi src, nhưng vẫn bị Hamster che)
       dispatch(updateAuthAvatar({ avata: newAvatarUrl }));
 
       toast.dismiss();
-      toast.success(response.message || "Cập nhật avatar thành công!");
+      toast.success(response.message || "Cập nhật thành công!");
+
+      // 5. GỌI API XÓA (chạy ngầm, không ảnh hưởng UI)
+      if (oldAvatarUrl) {
+        try {
+          const encodedOldUrl = encodeURIComponent(oldAvatarUrl);
+          handleAPI(`/User/avatar?oldAvatarUrl=${encodedOldUrl}`, undefined, "delete");
+          console.log("Đã gửi yêu cầu xóa ảnh cũ:", oldAvatarUrl);
+        } catch (deleteError) {
+          console.warn("Lỗi khi gửi yêu cầu xóa ảnh cũ:", deleteError);
+        }
+      }
 
     } catch (error: any) {
       toast.dismiss();
       console.error("Lỗi upload avatar:", error);
       toast.error(error.response?.data?.message || "Tải ảnh lên thất bại.");
+      // Nếu lỗi, Redux không đổi, Hamster sẽ mờ đi và hiện lại ảnh cũ
+    } finally {
+      // 6. ✅ TẮT LOADING (Kích hoạt hiệu ứng mờ dần (fade-out))
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -122,24 +153,48 @@ export default function User() {
         <div className="flex gap-6">
           {/* Sidebar */}
           <div className="w-[390px] h-[580px] bg-white shadow rounded-xl p-6 flex flex-col items-center border border-gray-300">
-            <div className="relative">
+            {/* SỬA KHỐI NÀY (từ dòng 131) */}
+            <div className="relative w-32 h-32">
+
+              {/* 1. ẢNH (Luôn nằm ở lớp dưới) */}
               <img
                 src={
-                  auth.avata || // Ảnh lấy từ Redux (sẽ tự cập nhật khi dispatch)
+                  auth.avata || // Ảnh lấy từ Redux
                   "https://res.cloudinary.com/do0im8hgv/image/upload/v1757949054/image_zbt0bw.png"
                 }
                 alt="profile"
                 className="w-32 h-32 rounded-full object-cover"
               />
-              {/* 5. Sửa nút camera */}
+
+              {/* 2. LOADER (Luôn nằm ở lớp trên, sẽ mờ dần) */}
+              <div
+                className={`
+                  absolute inset-0 w-32 h-32 rounded-full flex items-center justify-center 
+                  bg-gray-100 border-2 border-dashed
+                  transition-opacity duration-500 ease-out 
+                  ${isUploadingAvatar ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                `}
+              // duration-500: Hiệu ứng mờ trong 0.5 giây
+              // opacity-100: (Khi loading) Hiện
+              // opacity-0: (Khi xong) Ẩn
+              // pointer-events-none: (Khi ẩn) Không cho bấm vào lớp này
+              >
+                <HamsterWheel scale={0.7} />
+              </div>
+
+              {/* 3. NÚT CAMERA (Cũng mờ dần) */}
               <button
-                className="absolute bottom-2 right-2 bg-black text-white text-xs p-2 rounded-full"
-                onClick={() => fileInputRef.current?.click()} // Kích hoạt input file
+                className={`
+                  absolute bottom-2 right-2 bg-black text-white text-xs p-2 rounded-full
+                  transition-opacity duration-300
+                  ${isUploadingAvatar ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+                `}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <CiCamera size={20} />
               </button>
             </div>
-
+            {/* KẾT THÚC KHỐI SỬA */}
             {/* 6. Thêm input file ẩn */}
             <input
               type="file"
@@ -160,18 +215,16 @@ export default function User() {
                     onClick={() => handleMenuClick(item.id)}
                     className={`
                       w-full h-[140px] flex flex-col items-center justify-center p-4 rounded-lg transition-all
-                      ${
-                        active === item.id
-                          ? "bg-white border border-[#1877F2]"
-                          : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`
+                      ${active === item.id
+                        ? "bg-white border border-[#1877F2]"
+                        : `${item.bg} border border-transparent hover:bg-white hover:border-[#1877F2]`
                       }
                     `}
                   >
                     <img src={item.img} className="w-[70px] h-[70px]" />
                     <span
-                      className={`mt-2 text-[14px] font-bold ${
-                        active === item.id ? "text-[#1877F2]" : "text-gray-700"
-                      }`}
+                      className={`mt-2 text-[14px] font-bold ${active === item.id ? "text-[#1877F2]" : "text-gray-700"
+                        }`}
                     >
                       {item.label}
                     </span>
