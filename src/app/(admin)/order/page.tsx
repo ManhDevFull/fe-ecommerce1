@@ -33,7 +33,6 @@ const DEFAULT_FILTER: FilterState = {
 
 export default function OrderPage() {
   const [orders, setOrders] = useState<IOrderAdmin[]>([]);
-  const [summary, setSummary] = useState<IOrderSummary | null>(null);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [pendingKeyword, setPendingKeyword] = useState(() => DEFAULT_FILTER.keyword);
   const [page, setPage] = useState(1);
@@ -89,19 +88,18 @@ export default function OrderPage() {
         if (cancelled) return;
 
         if (res.status === 200) {
+          console.log(res.data)
           setOrders(Array.isArray(res.data?.items) ? res.data.items : []);
           setTotal(Number(res.data?.total) || 0);
-          setSummary(res.data?.summary ?? null);
         } else {
           setOrders([]);
           setTotal(0);
-          setSummary(null);
         }
       } catch (err) {
+        console.log(err)
         if (!cancelled) {
           setOrders([]);
           setTotal(0);
-          setSummary(null);
           setError(extractErrorMessage(err, "Không thể tải danh sách đơn hàng"));
         }
       } finally {
@@ -122,35 +120,7 @@ export default function OrderPage() {
     [total, pageSize]
   );
 
-  const summaryCards = useMemo(() => {
-    if (!summary) {
-      return [
-        { label: "Total orders", value: "-", accent: "bg-[#f5f5f5]" },
-        { label: "Pending", value: "-", accent: "bg-yellow-50" },
-        { label: "Shipped", value: "-", accent: "bg-sky-50" },
-        { label: "Delivered", value: "-", accent: "bg-emerald-50" },
-        { label: "Cancelled", value: "-", accent: "bg-rose-50" },
-        { label: "Paid orders", value: "-", accent: "bg-emerald-50" },
-        { label: "Unpaid orders", value: "-", accent: "bg-amber-50" },
-        { label: "Delivered revenue", value: "-", accent: "bg-purple-50" },
-      ];
-    }
 
-    return [
-      { label: "Total orders", value: summary.total, accent: "bg-[#f5f5f5]" },
-      { label: "Pending", value: summary.pending, accent: "bg-yellow-50" },
-      { label: "Shipped", value: summary.shipped, accent: "bg-sky-50" },
-      { label: "Delivered", value: summary.delivered, accent: "bg-emerald-50" },
-      { label: "Cancelled", value: summary.cancelled, accent: "bg-rose-50" },
-      { label: "Paid orders", value: summary.paid, accent: "bg-emerald-50" },
-      { label: "Unpaid orders", value: summary.unpaid, accent: "bg-amber-50" },
-      {
-        label: "Delivered revenue",
-        value: formatCurrency(summary.revenue),
-        accent: "bg-purple-50",
-      },
-    ];
-  }, [summary]);
 
   const handleStatusFilterChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
@@ -228,11 +198,11 @@ export default function OrderPage() {
       message = `Mark order #${order.id} as shipped?`;
     } else if (nextStatus === "DELIVERED") {
       message = `Mark order #${order.id} as delivered${
-        order.typePay === "COD" && order.statusPay === "UNPAID"
+        order.typepay === "COD" && order.statuspay === "UNPAID"
           ? " and set payment to PAID"
           : ""
       }?`;
-      if (order.typePay === "COD" && order.statusPay === "UNPAID") {
+      if (order.typepay === "COD" && order.statuspay === "UNPAID") {
         paymentStatus = "PAID";
       }
     } else if (nextStatus === "CANCELLED") {
@@ -277,11 +247,11 @@ export default function OrderPage() {
           return {
             ...prev,
             statusOrder: confirmState.nextStatus,
-            statusPay: confirmState.paymentStatus ?? prev.statusPay,
+            statusPay: confirmState.paymentStatus ?? prev.statuspay,
             receiveDate:
               confirmState.nextStatus === "DELIVERED"
                 ? new Date().toISOString()
-                : prev.receiveDate,
+                : prev.receivedate,
           };
         });
       } else {
@@ -334,9 +304,6 @@ export default function OrderPage() {
         onSubmit={handleSearch}
         onReset={handleResetFilters}
       />
-
-      <OrderSummaryCards cards={summaryCards} />
-
       <OrderFilters
         filter={{
           status: filter.status,
