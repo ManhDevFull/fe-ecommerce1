@@ -12,23 +12,7 @@ export default function Media({ product }: { product: ProductUi }) {
     const images = product.imgUrls;
     return (
         // sử dụng thư viện swiper
-        <div className="flex gap-4">
-            {/* Thumbnail */}
-            <Swiper
-                onSwiper={setThumbsSwiper}
-                direction="vertical"
-                slidesPerView={4}
-                spaceBetween={10}
-                watchSlidesProgress
-                className="w-24 h-[500px]"
-                modules={[Thumbs]}
-            >
-                {images.map((img) => (
-                    <SwiperSlide key={img}>
-                        <img src={img} className="w-full h-24 object-cover cursor-pointer rounded" />
-                    </SwiperSlide>
-                ))}
-            </Swiper>
+        <div className="">
 
             {/* Main Slider */}
             <div className="relative w-[500px] h-[500px]">
@@ -46,6 +30,22 @@ export default function Media({ product }: { product: ProductUi }) {
                     ))}
                 </Swiper>
             </div>
+            {/* Thumbnail */}
+            <Swiper
+                onSwiper={setThumbsSwiper}
+                direction="horizontal"
+                slidesPerView={4}
+                spaceBetween={10}
+                watchSlidesProgress
+                className="w-full h-[500px] mt-10"
+                modules={[Thumbs]}
+            >
+                {images.map((img) => (
+                    <SwiperSlide key={img}>
+                        <img src={img} className="w-full h-24 object-cover cursor-pointer rounded" />
+                    </SwiperSlide>
+                ))}
+            </Swiper>
         </div>
     )
 }

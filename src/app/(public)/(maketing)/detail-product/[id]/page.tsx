@@ -1,4 +1,7 @@
+"use client";
 import handleAPI from "@/axios/handleAPI";
+import Information from "@/components/templates/Detail/Information";
+import Media from "@/components/templates/Detail/media";
 import { ProductUi } from "@/types/type"
 import { restApiBase } from "@/utils/env";
 import axios from "axios";
@@ -9,13 +12,15 @@ import { AiFillWarning } from "react-icons/ai";
 export default function Detail() {
     const params = useParams();
     const id = params.id; // lấy id sản phẩm
+    console.log("id: ", id);
     // gọi api để lấy danh ra sản phẩm với id tương ứng
     const [product, setProduct] = useState<ProductUi | null>(null);
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 // const res = await axios.get(`${restApiBase}`);
-                const res = await handleAPI(`${restApiBase}`, 'get');
+                 const res = await axios(`${restApiBase}product/detail-product/${id}`);
+                // const res = await handleAPI(`${restApiBase}product/detail-product/${id}`, undefined, 'get');
                 console.log("product: ", res.data);
                 setProduct(res.data);
             }
@@ -27,8 +32,18 @@ export default function Detail() {
             }
             ;
         }
-    })
+        fetchProduct();
+    }, [id]);
     return (
-        <p>đây là trang detail</p>
+        <div>
+            {
+                product && (
+                    <div className="flex">
+                        <Media product={product} />
+                        <Information product={product} />
+                    </div>
+                )
+            }
+        </div>
     )
 }
