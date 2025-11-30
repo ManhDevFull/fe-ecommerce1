@@ -20,7 +20,7 @@ export default function Quantity({onchange} : prop) {
         });
     }
     return (
-        <div className="flex justify-between border-2 border-[#E4E7E9] p-4">
+        <div className="flex justify-between items-center w-[200px] border-2 rounded-[20px] border-[#E4E7E9] p-2">
             <GoPlus size={20} onClick={increase} />
             <p className="text-[#475156] text-[20px]">{value}</p>
             <FiMinus size={20} onClick={decrease} />

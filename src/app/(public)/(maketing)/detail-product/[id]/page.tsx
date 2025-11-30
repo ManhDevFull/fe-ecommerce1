@@ -35,10 +35,10 @@ export default function Detail() {
         fetchProduct();
     }, [id]);
     return (
-        <div>
+        <div className="px-10 pt-8">
             {
                 product && (
-                    <div className="flex">
+                    <div className="flex justify-center">
                         <Media product={product} />
                         <Information product={product} />
                     </div>
