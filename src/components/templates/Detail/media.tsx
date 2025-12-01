@@ -26,7 +26,7 @@ export default function Media({ product }: { product: ProductUi }) {
                     {images.map((img) => (
                         <SwiperSlide key={img} className="">
                             <div className="flex justify-center">
-                                <img src={img} className="w-[250px] h-[300px] object-cover rounded-xl" />
+                                <img src={img} className="w-[200px] h-[220px] object-cover rounded-xl" />
                             </div>
                         </SwiperSlide>
                     ))}
