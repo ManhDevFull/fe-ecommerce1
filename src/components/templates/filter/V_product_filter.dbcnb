@@ -707,7 +707,7 @@ cells:
       \                  JOIN LATERAL
       jsonb_array_elements(var.variant->'discounts') AS d(discount) ON TRUE\r
 
-      \                  -- WHERE (d.discount->>'endtime')::timestamp > NOW()\r
+      \                  WHERE (d.discount->>'endtime')::timestamp > NOW()\r
 
       \              )\r
 
