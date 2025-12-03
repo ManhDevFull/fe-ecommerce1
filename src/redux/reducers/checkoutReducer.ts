@@ -32,6 +32,9 @@ export interface CheckoutState {
   selectedShipping: string;
   paymentMethods: PaymentMethod[];
   shippingMethods: ShippingMethod[];
+  checkoutItems: any[];
+  checkoutSummary: any | null;
+  selectedCartIds: number[];
 }
 
 const initialState: CheckoutState = {
@@ -48,6 +51,9 @@ const initialState: CheckoutState = {
   selectedShipping: '',
   paymentMethods: [],
   shippingMethods: [],
+  checkoutItems: [],
+  checkoutSummary: null,
+  selectedCartIds: [],
 };
 
 const checkoutSlice = createSlice({
@@ -75,6 +81,20 @@ const checkoutSlice = createSlice({
         state.selectedShipping = state.shippingMethods[0].id;
       }
     },
+    setCheckoutCart: (state, action: PayloadAction<{ items: any[]; summary: any; selectedIds?: number[] }>) => {
+      state.checkoutItems = action.payload.items ?? [];
+      state.checkoutSummary = action.payload.summary ?? null;
+      const ids = action.payload.selectedIds ?? (action.payload.items ?? []).map((i: any) => i.cartId ?? i.id ?? 0);
+      state.selectedCartIds = Array.isArray(ids) ? ids : [];
+    },
+    setSelectedCartIds: (state, action: PayloadAction<number[]>) => {
+      state.selectedCartIds = action.payload;
+    },
+    clearCheckoutCart: (state) => {
+      state.checkoutItems = [];
+      state.checkoutSummary = null;
+      state.selectedCartIds = [];
+    }
   },
 });
 
@@ -83,7 +103,10 @@ export const {
   setSelectedPayment, 
   setSelectedShipping, 
   setPaymentMethods, 
-  setShippingMethods 
+  setShippingMethods,
+  setCheckoutCart,
+  setSelectedCartIds,
+  clearCheckoutCart
 } = checkoutSlice.actions;
 
 export default checkoutSlice.reducer;

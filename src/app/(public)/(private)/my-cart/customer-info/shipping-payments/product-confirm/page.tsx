@@ -1,48 +1,82 @@
-"use client";
+﻿"use client";
 import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
-import { FaShare } from "react-icons/fa";
-import { FaGift } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { FaShare, FaGift } from "react-icons/fa";
+import { useEffect, useState, useMemo } from "react";
 import handleAPI from "@/axios/handleAPI";
 import { useRouter } from "next/navigation";
+import { setCheckoutCart } from "@/redux/reducers/checkoutReducer";
+import { formatCurrency } from "@/utils/currency";
+
+type CartItem = { cartId: number; productName: string; imageUrl?: string; color?: string; unitPrice: number; quantity: number };
+type Summary = { itemsPrice: number; shipping: number; tax: number; discountPrice: number; giftBoxPrice: number; totalPrice: number };
 
 export default function ProductConfirmation() {
   const router = useRouter();
-  // Read giftBox state from cartReducer (set in my-cart page)
+  const dispatch = useDispatch();
   const { giftBox, giftBoxPrice } = useSelector((state: RootState) => state.cart);
-  const { customerInfo, selectedPayment, selectedShipping, paymentMethods, shippingMethods } = useSelector((state: RootState) => state.checkout);
-  // We read cart summary directly from backend so it's consistent with My Cart page
-  const [summary, setSummary] = useState<{ itemsPrice: number; shipping: number; tax: number; discountPrice: number; giftBoxPrice: number; totalPrice: number } | null>(null);
-  const [cartItems, setCartItems] = useState<Array<{ cartId: number; productName: string; imageUrl?: string; color?: string; unitPrice: number; quantity: number }>>([]);
+  const { customerInfo, selectedPayment, selectedShipping, paymentMethods, shippingMethods, checkoutItems, checkoutSummary, selectedCartIds } = useSelector((state: RootState) => state.checkout);
+  const auth = useSelector((state: RootState) => state.authReducer.data);
+
+  const [summary, setSummary] = useState<Summary | null>(checkoutSummary ?? null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const selectedPaymentMethod = paymentMethods.find((p: { id: string }) => p.id === selectedPayment);
-  const selectedShippingMethod = shippingMethods.find((s: { id: string }) => s.id === selectedShipping);
+  const calcSummary = (items: CartItem[], baseSummary?: Summary | null): Summary => {
+    const itemsPrice = items.reduce((s, i) => s + (i.unitPrice ?? 0) * (i.quantity ?? 1), 0);
+    const totalAll = baseSummary?.itemsPrice ?? itemsPrice;
+    const ratio = totalAll > 0 ? itemsPrice / totalAll : 0;
+    const shipping = (baseSummary?.shipping ?? 0) * ratio;
+    const tax = (baseSummary?.tax ?? 0) * ratio;
+    const discountPrice = (baseSummary?.discountPrice ?? 0) * ratio;
+    const giftBoxPrice = (baseSummary?.giftBoxPrice ?? 0) * ratio;
+    const totalPrice = itemsPrice + shipping + tax - discountPrice;
+    return { itemsPrice, shipping, tax, discountPrice, giftBoxPrice, totalPrice };
+  };
 
-  // Load cart data from backend
+  // hydrate from store or fetch once if user lands directly
   useEffect(() => {
-    (async () => {
+    const init = async () => {
+      if (checkoutItems.length) {
+        const filtered = selectedCartIds.length
+          ? checkoutItems.filter((i: any) => selectedCartIds.includes(i.cartId ?? i.id))
+          : checkoutItems;
+        const sum = calcSummary(filtered as any, checkoutSummary ?? undefined);
+        setCartItems(filtered as any);
+        setSummary(sum);
+        dispatch(setCheckoutCart({ items: filtered as any, summary: sum, selectedIds: selectedCartIds }));
+        return;
+      }
+
       try {
-        const data = await handleAPI<{ items: any[]; summary: any }>(`/Cart`);
-        setCartItems(data.items || []);
-        setSummary(data.summary || null);
+        const data = await handleAPI(`/Cart`);
+        const payload = (data as any)?.data ?? data ?? {};
+        const items = payload.items ?? [];
+        const baseSummary: Summary | null = payload.summary ?? null;
+        const ids = items.map((i: any) => i.cartId ?? i.id ?? 0);
+        const filtered = selectedCartIds.length
+          ? items.filter((i: any) => selectedCartIds.includes(i.cartId ?? i.id))
+          : items;
+        const sum = calcSummary(filtered as any, baseSummary ?? undefined);
+        setCartItems(filtered);
+        setSummary(sum);
+        dispatch(setCheckoutCart({ items: filtered, summary: sum, selectedIds: ids }));
       } catch (e) {
         console.error('Failed to load cart data:', e);
       }
-    })();
-  }, []);
+    };
+    init();
+  }, [checkoutItems, checkoutSummary, dispatch, selectedCartIds]);
 
   // Handle CONFIRM button click - Create payment
   const handleConfirm = async () => {
-    if (!summary) {
+    if (!summary || !cartItems.length) {
       alert('Please wait for cart data to load');
       return;
     }
 
-    // Calculate total price
     const baseTotal = summary.totalPrice ?? 0;
     const totalPrice = baseTotal + (giftBox ? giftBoxPrice : 0);
 
@@ -51,83 +85,59 @@ export default function ProductConfirmation() {
       return;
     }
 
-    // Check if payment method is MoMo
-    // if (selectedPaymentMethod?.name?.toLowerCase() !== 'momo') {
-    //   alert('Please select MoMo as payment method');
-    //   return;
-    // }
-
     setLoading(true);
     try {
-      // Convert price to VND (assuming current price is already in VND, or multiply by 1000 if needed)
-      // MoMo expects amount in VND (long integer)
-      const amountInVND = Math.round(totalPrice * 10); // Convert to VND (if price is in thousands)
+      const amountInVND = Math.round(totalPrice);
+      const orderId = `ORD-${Date.now()}`;
 
-      // Create payment request
-      const response = await handleAPI<{
-        success: boolean;
-        orderId: string;
-        paymentUrl: string;
-        qrCode?: string;
-        requestId: string;
-        message: string;
-      }>('/Payment/create', {
+      const response = await handleAPI('/payment/create', {
         amount: amountInVND,
-        orderInfo: `Payment for order - ${cartItems.length} items`,
-        returnUrl: `${window.location.origin}/product-confirmation`
+        orderInfo: `Payment for order ${orderId} - ${cartItems.length} items`,
+        returnUrl: `${window.location.origin}/product-confirmation`,
+        orderId,
+        accountId: auth?.id ?? 0,
+        selectedCartIds
       }, 'post');
 
-      if (response.success && response.paymentUrl) {
-        // Redirect to MoMo payment page
-        window.location.href = response.paymentUrl;
+      const payload = (response as any)?.data ?? response ?? {};
+
+      if (payload.success && payload.paymentUrl) {
+        window.location.href = payload.paymentUrl;
       } else {
-        alert(response.message || 'Failed to create payment');
+        alert(payload.message || 'Failed to create payment');
         setLoading(false);
       }
     } catch (error: any) {
       console.error('Error creating payment - Full error object:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error keys:', Object.keys(error || {}));
-      
-      // Try to extract error message from different possible structures
-      // Note: axiosClient interceptor returns response?.data || error, so error might be response.data directly
       let errorMessage = 'Failed to create payment. Please try again.';
-      
+
       if (error?.error) {
-        // Direct response.data structure (from axiosClient interceptor)
         errorMessage = error.error;
-        if (error.details) {
-          errorMessage += ` - ${error.details}`;
-        }
+        if (error.details) errorMessage += ` - ${error.details}`;
       } else if (error?.message) {
-        // Standard error message
         errorMessage = error.message;
       } else if (typeof error === 'string') {
-        // String error
         errorMessage = error;
       } else if (error?.response) {
-        // Axios error (if not intercepted)
-        errorMessage = error.response.data?.error || 
-                      error.response.data?.message || 
-                      error.response.statusText || 
-                      `HTTP ${error.response.status}`;
-      } else {
-        // Try to stringify the error
-        try {
-          const errorStr = JSON.stringify(error);
-          if (errorStr !== '{}') {
-            errorMessage = errorStr;
-          }
-        } catch (e) {
-          errorMessage = 'Unknown error occurred';
-        }
+        errorMessage = error.response.data?.error || error.response.data?.message || error.response.statusText || `HTTP ${error.response.status}`;
       }
-      
-      console.error('Final error message:', errorMessage);
+
       alert(errorMessage);
       setLoading(false);
     }
   };
+
+  const selectedPaymentMethod = paymentMethods.find((p: { id: string }) => p.id === selectedPayment);
+  const selectedShippingMethod = shippingMethods.find((s: { id: string }) => s.id === selectedShipping);
+
+  const price = useMemo(() => summary?.itemsPrice ?? cartItems.reduce((s, i) => s + (i.unitPrice ?? 0) * (i.quantity ?? 1), 0), [summary, cartItems]);
+  const shipping = useMemo(() => summary?.shipping ?? 0, [summary]);
+  const tax = useMemo(() => summary?.tax ?? 0, [summary]);
+  const discount = useMemo(() => summary?.discountPrice ?? 0, [summary]);
+  const totalPrice = useMemo(() => {
+    const base = summary?.totalPrice ?? price + shipping + tax - discount;
+    return base + (giftBox ? giftBoxPrice : 0);
+  }, [summary, price, shipping, tax, discount, giftBox, giftBoxPrice]);
 
   return (
     <main className="min-h-screen pb-16">
@@ -172,9 +182,9 @@ export default function ProductConfirmation() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium text-base">₹{item.unitPrice}</div>
+                    <div className="font-medium text-base">{formatCurrency(item.unitPrice)}</div>
                     <div className="text-sm text-gray-500">x{item.quantity}</div>
-                    <div className="font-semibold text-base">₹{(item.unitPrice * item.quantity).toFixed(2)}</div>
+                    <div className="font-semibold text-base">{formatCurrency(item.unitPrice * item.quantity)}</div>
                   </div>
                 </div>
               ))}
@@ -245,31 +255,23 @@ export default function ProductConfirmation() {
         <div className="w-full lg:w-[350px] bg-white rounded-2xl shadow-xl p-8 h-fit">
           <h3 className="font-bold text-xl mb-6">Order Summary</h3>
           {(() => {
-            const price = summary?.itemsPrice ?? 0;
-            const shipping = summary?.shipping ?? 0;
-            const tax = summary?.tax ?? 0;
-            const discount = summary?.discountPrice ?? 0;
-            // Calculate totalPrice: backend totalPrice (without giftBox) + giftBoxPrice if checkbox is checked
-            const baseTotal = summary?.totalPrice ?? 0;
-            const totalPrice = baseTotal + (giftBox ? giftBoxPrice : 0);
-            
             return (
               <>
                 <div className="flex justify-between mb-3 text-base">
                   <span>Price</span>
-                  <span>₹{price.toFixed(2)}</span>
+                  <span>{formatCurrency(price)}</span>
                 </div>
                 <div className="flex justify-between mb-3 text-base">
                   <span>Shipping</span>
-                  <span>₹{shipping.toFixed(2)}</span>
+                  <span>{formatCurrency(shipping)}</span>
                 </div>
                 <div className="flex justify-between mb-3 text-base">
                   <span>Tax</span>
-                  <span>₹{tax.toFixed(2)}</span>
+                  <span>{formatCurrency(tax)}</span>
                 </div>
                 <div className="flex justify-between mb-3 text-base">
                   <span>Discount price</span>
-                  <span>₹{discount}</span>
+                  <span>{formatCurrency(discount)}</span>
                 </div>
                 <div className="flex items-center mb-3 text-base">
                   <input
@@ -279,11 +281,11 @@ export default function ProductConfirmation() {
                     className="mr-2 accent-blue-600"
                   />
                   <span>Pack in a Gift Box</span>
-                  <span className="ml-auto">₹{giftBox ? giftBoxPrice.toFixed(2) : "0.00"}</span>
+                  <span className="ml-auto">{formatCurrency(giftBox ? giftBoxPrice : 0)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg mt-6 mb-6">
                   <span>Total Price</span>
-                  <span>₹{totalPrice.toFixed(2)}</span>
+                  <span>{formatCurrency(totalPrice)}</span>
                 </div>
               </>
             );

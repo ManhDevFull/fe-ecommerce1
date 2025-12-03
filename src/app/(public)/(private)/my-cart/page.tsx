@@ -1,10 +1,12 @@
-"use client";
+﻿"use client";
 import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { toggleGiftBox } from "@/redux/reducers/cartReducer";
+import { setCheckoutCart, setSelectedCartIds } from "@/redux/reducers/checkoutReducer";
+import { formatCurrency } from "@/utils/currency";
 import { GoTrash } from "react-icons/go";
 import { FiPlus } from "react-icons/fi";
 import { HiMiniMinus } from "react-icons/hi2";
@@ -60,6 +62,8 @@ export default function MyCart() {
 
   const [items, setItems] = useState<CartItemApi[]>([]);
   const [summary, setSummary] = useState<CartSummaryApi | null>(null);
+  const [baseSummary, setBaseSummary] = useState<CartSummaryApi | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   // Suggestions state
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [suggestOffset, setSuggestOffset] = useState(0);
@@ -68,9 +72,15 @@ export default function MyCart() {
 
   const fetchCart = async () => {
     try {
-      const res = await handleAPI<CartResponseApi>(`/Cart`);
-      setItems(res.items || []);
-      setSummary(res.summary || null);
+      const res:any = await handleAPI(`/Cart`);
+      const newItems:any[] = res.items || [];
+      const newSummary = res.summary || null;
+      setItems(newItems);
+      setSummary(newSummary);
+      setBaseSummary(newSummary);
+      const ids = newItems.map(i => i.cartId);
+      setSelectedIds(ids);
+      dispatch(setCheckoutCart({ items: newItems, summary: newSummary, selectedIds: ids }));
     } catch (e) {
       console.error(e);
     }
@@ -83,7 +93,7 @@ export default function MyCart() {
       query.set('offset', String(offset));
       query.set('limit', String(SUGGEST_PAGE_SIZE));
       if (excludeIds.length) query.set('exclude', excludeIds.join(','));
-      const data = await handleAPI<Suggestion[]>(`/Cart/suggestions?${query.toString()}`);
+      const data = await handleAPI(`/Cart/suggestions?${query.toString()}`);
       if (Array.isArray(data) && data.length) {
         // de-dup on FE just in case
         const existing = new Set(suggestions.map(s => s.productId));
@@ -111,9 +121,15 @@ export default function MyCart() {
     if (!current) return;
     const nextQty = Math.max(1, current.quantity + delta);
     try {
-      const res = await handleAPI<CartResponseApi>(`/Cart/quantity`, { cartId, quantity: nextQty }, 'patch');
-      setItems(res.items || []);
-      setSummary(res.summary || null);
+      const res:any = await handleAPI(`/Cart/quantity`, { cartId, quantity: nextQty }, 'patch');
+      const newItems = res.items || [];
+      const newSummary = res.summary || null;
+      setItems(newItems);
+      setSummary(newSummary);
+      setBaseSummary(newSummary);
+      const ids = selectedIds.filter(id => newItems.some(i => i.cartId === id));
+      setSelectedIds(ids);
+      dispatch(setCheckoutCart({ items: newItems, summary: newSummary, selectedIds: ids }));
     } catch (e) {
       console.error(e);
     }
@@ -121,9 +137,15 @@ export default function MyCart() {
 
   const handleRemove = async (cartId: number) => {
     try {
-      const res = await handleAPI<CartResponseApi>(`/Cart/${cartId}`, undefined, 'delete');
-      setItems(res.items || []);
-      setSummary(res.summary || null);
+      const res:any = await handleAPI(`/Cart/${cartId}`, undefined, 'delete');
+      const newItems = res.items || [];
+      const newSummary = res.summary || null;
+      setItems(newItems);
+      setSummary(newSummary);
+      setBaseSummary(newSummary);
+      const ids = selectedIds.filter(id => id !== cartId && newItems.some(i => i.cartId === id));
+      setSelectedIds(ids);
+      dispatch(setCheckoutCart({ items: newItems, summary: newSummary, selectedIds: ids }));
     } catch (e) {
       console.error(e);
     }
@@ -143,18 +165,51 @@ export default function MyCart() {
     setSlideIndex(Math.max(0, slideIndex - SLIDE_STEP));
   };
 
-  const total = useMemo(() => summary?.itemsPrice ?? 0, [summary]);
-  const discount = useMemo(() => summary?.discountPrice ?? 0, [summary]);
-  const totalPrice = useMemo(() => {
-    const base = (summary?.totalPrice ?? total) - (summary?.giftBoxPrice ? 0 : 0);
-    return base + (giftBox ? giftBoxPrice : 0);
-  }, [summary, total, giftBox, giftBoxPrice]);
+  const selectedItems = useMemo(() => items.filter(i => selectedIds.includes(i.cartId)), [items, selectedIds]);
+  const baseItemsTotal = useMemo(() => items.reduce((sum, i) => sum + (i.unitPrice ?? 0) * (i.quantity ?? 1), 0), [items]);
+  const selectedItemsPrice = useMemo(() => selectedItems.reduce((sum, i) => sum + (i.unitPrice ?? 0) * (i.quantity ?? 1), 0), [selectedItems]);
+  const selectionSummary = useMemo(() => {
+    const ratio = baseItemsTotal > 0 ? selectedItemsPrice / baseItemsTotal : 0;
+    const shipping = (baseSummary?.shipping ?? 0) * ratio;
+    const tax = (baseSummary?.tax ?? 0) * ratio;
+    const discountPrice = (baseSummary?.discountPrice ?? 0) * ratio;
+    const giftBoxFromBase = baseSummary?.giftBoxPrice ?? 0;
+    const totalPrice = selectedItemsPrice + shipping + tax - discountPrice;
+    return {
+      itemsPrice: selectedItemsPrice,
+      shipping,
+      tax,
+      discountPrice,
+      giftBoxPrice: giftBoxFromBase * ratio,
+      totalPrice,
+    };
+  }, [baseSummary, baseItemsTotal, selectedItemsPrice]);
+  const totalPrice = useMemo(
+    () => selectionSummary.totalPrice + (giftBox ? giftBoxPrice : 0),
+    [selectionSummary.totalPrice, giftBox, giftBoxPrice]
+  );
+
+  const toggleSelect = (cartId: number) => {
+    setSelectedIds((prev) => {
+      const next = prev.includes(cartId) ? prev.filter(id => id !== cartId) : [...prev, cartId];
+      dispatch(setSelectedCartIds(next));
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    const ids = items.map(i => i.cartId);
+    setSelectedIds(ids);
+    dispatch(setSelectedCartIds(ids));
+  };
+
+  useEffect(() => {
+    dispatch(setCheckoutCart({ items: selectedItems, summary: selectionSummary, selectedIds }));
+  }, [dispatch, selectedItems, selectionSummary, selectedIds]);
 
   return (
     <main className="min-h-screen pb-16">
       <BackNavigation />
-      <NavigationPath />
-
       {/* Title */}
       <div className="px-40 pt-6">
         <h1 className="font-bold text-5xl sm:text-6xl text-gray-900 mb-2">My Cart</h1>
@@ -167,12 +222,26 @@ export default function MyCart() {
           <h2 className="font-semibold text-xl mb-6">
             Number of Items <span className="text-gray-400">{items.length}</span>
           </h2>
+          <div className="mb-3">
+            <button
+              onClick={selectAll}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Select all
+            </button>
+          </div>
           <div className="space-y-6">
             {items.map(item => (
               <div
                 key={item.cartId}
                 className="flex items-center gap-6 bg-white p-5 rounded-2xl shadow-md"
               >
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.cartId)}
+                  onChange={() => toggleSelect(item.cartId)}
+                  className="h-4 w-4 accent-blue-600"
+                />
                 <img
                   src={item.imageUrl || ''}
                   alt={item.productName}
@@ -188,7 +257,7 @@ export default function MyCart() {
                     ></span>
                   </div>
                 </div>
-                <div className="w-24 text-center font-medium text-base">₹{item.unitPrice}</div>
+                <div className="w-24 text-center font-medium text-base">{formatCurrency(item.unitPrice)}</div>
                 <div className="flex items-center border rounded-lg overflow-hidden">
                   <button
                     onClick={() => handleQtyChange(item.cartId, -1)}
@@ -205,7 +274,7 @@ export default function MyCart() {
                   </button>
                 </div>
                 <div className="w-24 text-center font-medium text-base">
-                  ₹{(item.unitPrice * item.quantity).toFixed(2)}
+                  {formatCurrency(item.unitPrice * item.quantity)}
                 </div>
                 <button
                   onClick={() => handleRemove(item.cartId)}
@@ -224,19 +293,19 @@ export default function MyCart() {
           <h3 className="font-bold text-xl mb-6">Order Summary</h3>
           <div className="flex justify-between mb-3 text-base">
             <span>Price</span>
-            <span>₹{total.toFixed(2)}</span>
+            <span>{formatCurrency(selectionSummary.itemsPrice)}</span>
           </div>
           <div className="flex justify-between mb-3 text-base">
             <span>Shipping</span>
-            <span>₹{summary?.shipping?.toFixed(2) ?? '0.00'}</span>
+            <span>{formatCurrency(selectionSummary.shipping)}</span>
           </div>
           <div className="flex justify-between mb-3 text-base">
             <span>Tax</span>
-            <span>₹{summary?.tax?.toFixed(2) ?? '0.00'}</span>
+            <span>{formatCurrency(selectionSummary.tax)}</span>
           </div>
           <div className="flex justify-between mb-3 text-base">
             <span>Discount price</span>
-            <span>₹{discount}</span>
+            <span>{formatCurrency(selectionSummary.discountPrice)}</span>
           </div>
           <div className="flex items-center mb-3 text-base">
             <input
@@ -246,11 +315,11 @@ export default function MyCart() {
               className="mr-2 accent-blue-600"
             />
             <span>Pack in a Gift Box</span>
-            <span className="ml-auto">₹{giftBox ? giftBoxPrice : "0.00"}</span>
+            <span className="ml-auto">{formatCurrency(giftBox ? giftBoxPrice : 0)}</span>
           </div>
           <div className="flex justify-between font-bold text-lg mt-6 mb-6">
             <span>Total Price</span>
-            <span>₹{totalPrice.toFixed(2)}</span>
+            <span>{formatCurrency(totalPrice)}</span>
           </div>
           <button 
             onClick={() => router.push('/my-cart/customer-info')}
@@ -292,9 +361,9 @@ export default function MyCart() {
                 <div>
                     <div className="font-semibold text-xs mb-1">{item.productName}</div>
                     <div className="flex items-center gap-1 mb-1">
-                    <span className="text-red-500 font-bold text-sm">₹{item.minPrice}</span>
+                    <span className="text-red-500 font-bold text-sm">{item.minPrice}</span>
                     {item.oldPrice ? (
-                      <span className="line-through text-gray-400 text-xs">₹{item.oldPrice}</span>
+                      <span className="line-through text-gray-400 text-xs">{item.oldPrice}</span>
                     ) : null}
                     {item.discountPercent ? (
                       <span className="bg-[#FF5722] text-white text-[10px] px-1 py-0.5 rounded ml-1">-{item.discountPercent}%</span>
@@ -314,3 +383,4 @@ export default function MyCart() {
     </main>
   );
 }
+

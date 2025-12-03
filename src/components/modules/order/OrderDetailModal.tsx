@@ -56,14 +56,15 @@ export default function OrderDetailModal({
         const res = await handleAPI(`/admin/Order/${orderId}`);
         if (cancelled) return;
         if (res.status === 200) {
-          console.log(res.data)
-          setOrder(res.data as IOrderAdmin);
+          const payload = (res as any)?.data ?? res;
+          const normalized = payload?.data ?? payload;
+          setOrder(normalized as IOrderAdmin);
         } else {
-          setError("Không tìm thấy thông tin đơn hàng");
+          setError("KhA'ng tA�m th���y thA'ng tin �`��n hA�ng");
         }
       } catch (err) {
         if (!cancelled) {
-          setError(extractErrorMessage(err, "Không thể tải chi tiết đơn hàng"));
+          setError(extractErrorMessage(err, "KhA'ng th��� t���i chi ti���t �`��n hA�ng"));
         }
       } finally {
         if (!cancelled) {
@@ -78,9 +79,12 @@ export default function OrderDetailModal({
   }, [open, orderId]);
 
   if (!open) return null;
-  const totalPrice = order?.orderdetails?.reduce((sum, detail) => {
+
+  const orderDetails = order?.orderdetails ?? [];
+  const totalPrice = orderDetails.reduce((sum, detail) => {
     return sum + (detail.variant?.price ?? 0) * detail.quantity;
-  }, 0) ?? 0;
+  }, 0);
+
   return (
     <Modal
       open={open}
@@ -168,11 +172,11 @@ export default function OrderDetailModal({
               <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
                 <h4 className="mb-2 text-sm font-semibold text-[#242424]">Customer</h4>
                 <div className="flex">
-                  <div className="flex mr-2 h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
-                    {order.account.avatarimg ? (
+                  <div className="mr-2 flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
+                    {order.account?.avatarimg ? (
                       <img
                         src={order.account.avatarimg}
-                        alt={order.account.firstname ?? 'N/A'}
+                        alt={order.account.firstname ?? "N/A"}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -180,56 +184,74 @@ export default function OrderDetailModal({
                     )}
                   </div>
 
-                  <div> <p className="text-sm font-medium text-[#242424]">
-                    {order.account.firstname + " " + order.account.lastname || "Unknown customer"}
-                  </p>
-                    <p className="text-xs text-gray-500 break-all">
-                      {order.account.email || "-"}
+                  <div>
+                    <p className="text-sm font-medium text-[#242424]">
+                      {(order.account?.firstname ?? "") + " " + (order.account?.lastname ?? "") || "Unknown customer"}
+                    </p>
+                    <p className="break-all text-xs text-gray-500">
+                      {order.account?.email || "-"}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {order.address.tel || "-"}
-                    </p></div>
+                      {order.address?.tel || "-"}
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
                 <h4 className="mb-2 text-sm font-semibold text-[#242424]">Shipping address</h4>
                 <p className="text-sm text-[#474747]">
-                  {order.address.codeward || "No shipping address"}
+                  {order.address?.detail || order.address?.description || String(order.address?.codeward ?? "") || "No shipping address"}
                 </p>
               </div>
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-              <h4 className="pb-3 mb-2 text-sm font-semibold text-[#242424] border-b border-b-gray-200">Products</h4>
-              {
-                order.orderdetails.map((item, index) => (
-                  <div className={`flex justify-between w-full border-b border-gray-100 py-2 ${index === order.orderdetails.length - 1 ? 'border-b-0' : ''}`} key={item.id}>
+              <h4 className="mb-2 border-b border-b-gray-200 pb-3 text-sm font-semibold text-[#242424]">
+                Products
+              </h4>
+              {orderDetails.map((item, index) => {
+                const product = item.variant?.product;
+                const thumb = product?.imageurls?.[0];
+                return (
+                  <div
+                    className={`flex w-full justify-between border-b border-gray-100 py-2 ${index === orderDetails.length - 1 ? "border-b-0" : ""}`}
+                    key={item.id}
+                  >
                     <div className="flex gap-2">
                       <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
-                        <img className="h-full w-full object-cover" src={item.variant.product.imageurls[0]} alt={item.variant?.product.nameproduct ?? 'N/A'} />
+                        {thumb ? (
+                          <img
+                            className="h-full w-full object-cover"
+                            src={thumb}
+                            alt={product?.nameproduct ?? "N/A"}
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-400">N/A</span>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[#242424]">
-                          {item.variant.product.nameproduct}
+                          {product?.nameproduct ?? "_"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {formatVariant(item.variant.valuevariant)}
+                          {formatVariant(item.variant?.valuevariant) ?? "_"}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-end text-gray-500">
+                      <p className="text-end text-xs text-gray-500">
                         Quantity: <strong>{item?.quantity ?? 0}</strong>
                       </p>
-                      <p className="text-sm text-end font-medium text-[#242424]">
-                        Price({formatCurrency(item?.variant.price)}): {formatCurrency(item.variant.price * item.quantity)}
+                      <p className="text-end text-sm font-medium text-[#242424]">
+                        Price({formatCurrency(item?.variant?.price ?? 0)}):{" "}
+                        {formatCurrency((item?.variant?.price ?? 0) * (item?.quantity ?? 0))}
                       </p>
                     </div>
                   </div>
-                ))
-              }
-              <div className="flex justify-end pt-3 font-medium border-t border-gray-200">
-                <p className="text-sm mr-1">Total price: </p> {'  '}
+                );
+              })}
+              <div className="flex justify-end border-t border-gray-200 pt-3 font-medium">
+                <p className="mr-1 text-sm">Total price: </p>{" "}
                 <u>{formatCurrency(totalPrice)}</u>
               </div>
             </section>

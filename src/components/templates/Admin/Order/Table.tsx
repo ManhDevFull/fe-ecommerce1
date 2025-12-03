@@ -69,6 +69,7 @@ function OrdersTable({
             </div>
           ) : (
             orders.map((order) => {
+              const orderDetails = order.orderdetails ?? [];
               const statusUpper = (order.statusorder ?? '').toUpperCase();
               const isPending = statusUpper === 'PENDING';
               const isShipped = statusUpper === 'SHIPPED';
@@ -81,10 +82,10 @@ function OrdersTable({
                 cancel: isDelivered || isCancelled,
               };
 
-              const firstDetail = order.orderdetails?.[0];
+              const firstDetail = orderDetails[0];
               const variant = firstDetail?.variant;
               const product = variant?.product;
-              const totalPrice = order.orderdetails?.reduce((sum, detail) => {
+              const totalPrice = orderDetails.reduce((sum, detail) => {
                 return sum + (detail.variant?.price ?? 0) * detail.quantity;
               }, 0) ?? 0;
               return (
@@ -101,9 +102,9 @@ function OrdersTable({
                   {/* Customer */}
                   <div className="col-span-5 flex flex-col justify-center gap-1 border-l border-[#00000008] px-3 py-3">
                     <span className="text-sm font-medium text-[#242424]">
-                      {order.account.firstname + order.account.lastname || 'Unknown customer'}
+                      {(order.account.firstname + " " + order.account.lastname) || 'Unknown customer'}
                     </span>
-                    <span className="text-xs text-gray-500 truncate">{order.account.email}</span>
+                    <span className="text-xs text-gray-500 truncate">{order.account?.email || "Unknow email"}</span>
                     <span className="text-xs text-gray-500">{order.address.tel || '-'}</span>
                     <span className="text-xs text-gray-500">{order.address.codeward || '-'}</span>
                   </div>
@@ -145,46 +146,51 @@ function OrdersTable({
                           </div>
                         </div>
                       </TooltipTrigger>
-                      {
-                        order.orderdetails.length < 2 ? null : (
-                          <TooltipContent side="top">
-                            {
-                              order.orderdetails.length > 1 && order.orderdetails.map((detail, index) => (
-                                <div className={`flex h-full gap-3 border-b border-gray-100 py-2 ${index === order.orderdetails.length - 1 ? 'border-b-0' : ''}`} key={index}>
-                                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
-                                    {detail.variant.product.imageurls?.[0] ? (
-                                      <img
-                                        src={detail.variant.product.imageurls[0]}
-                                        alt={detail.variant.product?.nameproduct ?? 'N/A'}
-                                        className="h-full w-full object-cover"
-                                      />
-                                    ) : (
-                                      <span className="text-xs text-gray-400">N/A</span>
-                                    )}
-                                  </div>
-
-                                  <div className="flex flex-col gap-1">
-                                    <span className="text-sm font-medium text-[#242424]">
-                                      {detail.variant.product.nameproduct ?? '_'}
-                                    </span>
-
-                                    <span className="text-xs text-gray-500">
-                                      Variant: {formatVariant(detail.variant?.valuevariant) ?? '_'}
-                                    </span>
-
-                                    <span className="text-xs text-gray-500">
-                                      Qty: <strong>{detail?.quantity ?? 0}</strong>
-                                    </span>
-
-                                    <span className="text-xs text-gray-500">
-                                      Price: {formatCurrency(detail?.variant?.price ?? 0)}
-                                    </span>
-                                  </div>
+                      {orderDetails.length < 2 ? null : (
+                        <TooltipContent side="top">
+                          {orderDetails.map((detail, index) => {
+                            const detailVariant = detail.variant;
+                            const detailProduct = detailVariant?.product;
+                            return (
+                              <div
+                                className={`flex h-full gap-3 border-b border-gray-100 py-2 ${index === orderDetails.length - 1 ? 'border-b-0' : ''
+                                  }`}
+                                key={index}
+                              >
+                                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
+                                  {detailProduct?.imageurls?.[0] ? (
+                                    <img
+                                      src={detailProduct.imageurls[0]}
+                                      alt={detailProduct?.nameproduct ?? 'N/A'}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs text-gray-400">N/A</span>
+                                  )}
                                 </div>
-                              ))
-                            }</TooltipContent>
-                        )
-                      }
+
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-sm font-medium text-[#242424]">
+                                    {detailProduct?.nameproduct ?? '_'}
+                                  </span>
+
+                                  <span className="text-xs text-gray-500">
+                                    Variant: {formatVariant(detailVariant?.valuevariant) ?? '_'}
+                                  </span>
+
+                                  <span className="text-xs text-gray-500">
+                                    Qty: <strong>{detail?.quantity ?? 0}</strong>
+                                  </span>
+
+                                  <span className="text-xs text-gray-500">
+                                    Price: {formatCurrency(detailVariant?.price ?? 0)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </TooltipContent>
+                      )}
 
                     </Tooltip>
                   </TooltipProvider>
@@ -213,11 +219,11 @@ function OrdersTable({
                   </div>
 
                   {/* Actions */}
-                  <div className="col-span-2 flex items-center justify-center border-l border-[#00000008] py-3">
-                    <OrderAction
-                      onView={() => onView(order)}
-                      onShip={() => onShip(order)}
-                      onDeliver={() => onDeliver(order)}
+                <div className="col-span-2 flex items-center justify-center border-l border-[#00000008] py-3">
+                  <OrderAction
+                    onView={() => onView(order)}
+                    onShip={() => onShip(order)}
+                    onDeliver={() => onDeliver(order)}
                       onCancel={() => onCancel(order)}
                       disabled={disabledActions}
                     />
