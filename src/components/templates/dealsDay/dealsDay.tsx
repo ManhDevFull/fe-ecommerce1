@@ -16,7 +16,7 @@ import { restApiBase } from "@/utils/env";
 import TimeLeft from "@/components/ui/TimeLeft";
 import CardIndex from "@/components/ui/CardIndex";
 
-export default function DealsDay() {
+export default function DealsDay({ products }: { products: ProductUi[] }) {
     // const products = [
     //     {
     //         name: 'abc',
@@ -46,23 +46,26 @@ export default function DealsDay() {
     // ]
 
     const [newProduct, setNewProduct] = useState<ProductUi[]>([]);
-    // gọi api để lấy ra nhuwgx sản phẩm có giảm giá mới nhất
     useEffect(() => {
-        const fetchNewProduct = async () => {
-                try {
-                const res = await axios.get(`${restApiBase}product/discount`);
-                console.log('sản phẩm có discount', res.data);
-                setNewProduct(res.data);
-            }
-            catch(error : any){
-                if(error.response)
-                    console.log('lỗi từ server');
-                if(error.request)
-                    console.log('lỗi không nhận được phản hồi server')
-            }
-        }
-        fetchNewProduct();
-    }, []);
+        setNewProduct(products);
+    }, [products]);
+    // // gọi api để lấy ra nhuwgx sản phẩm có giảm giá mới nhất
+    // useEffect(() => {
+    //     const fetchNewProduct = async () => {
+    //             try {
+    //             const res = await axios.get(`${restApiBase}product/discount`);
+    //             console.log('sản phẩm có discount', res.data);
+    //             setNewProduct(res.data);
+    //         }
+    //         catch(error : any){
+    //             if(error.response)
+    //                 console.log('lỗi từ server');
+    //             if(error.request)
+    //                 console.log('lỗi không nhận được phản hồi server')
+    //         }
+    //     }
+    //     fetchNewProduct();
+    // }, []);
 
     type DiscountInfor = {
         price: number;
@@ -116,10 +119,10 @@ export default function DealsDay() {
                                 onClick={() => router.push('')}
                             >
                                 {/* <Product img={product.imgUrls[1]} isNew={true} type={true} /> */}
-                                <CardIndex isNew = {true} img={product.imgUrls[0]}/>
-                                 {
+                                <CardIndex isNew={true} img={product.imgUrls[0]} />
+                                {
                                     deal && <FlashDealBar endTime={deal?.discount?.endtime} />
-                                 }   
+                                }
                                 <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
                                 <BtnBuyNow price={deal?.price ?? product.variant[0].price} />
                             </div>

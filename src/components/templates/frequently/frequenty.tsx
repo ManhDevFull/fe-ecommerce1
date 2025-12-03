@@ -9,7 +9,7 @@ import { FaRupeeSign, FaStar } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import { IoEyeOutline } from "react-icons/io5";
 
-export default function Frequently() {
+export default function Frequently({product} : {product : FrequentlyDTO} ) {
     // const products = [
     //     {
     //         "name": "Xbox Series S - 512GB SSD Console with Wireless Controller - EU Version",
@@ -129,22 +129,9 @@ export default function Frequently() {
     //         "category": "Speaker"
     //     }
     // ]
-    const [product, setProduct] = useState<FrequentlyDTO | null>(null);
+    const [products, setProducts] = useState<FrequentlyDTO | null>(null);
     useEffect(() => {
-        const fetchProduct = async () => {
-            try {
-                const res = await axios.get(`${restApiBase}product/frequently`);
-                console.log('frequently: ', res.data);
-                setProduct(res.data);
-            }
-            catch (error: any) {
-                if (error.response)
-                    console.log('lỗi từ server')
-                if (error.request)
-                    console.log('không nhận được phản hồi từ server');
-            }
-        }
-        fetchProduct();
+        setProducts(product);
     }, []);
     // nhóm mainProduct và accompanyingProducts và 1 mảng
     const mergedProduct = [

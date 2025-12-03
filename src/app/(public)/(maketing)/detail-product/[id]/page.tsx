@@ -27,15 +27,15 @@ export default function Detail() {
                 // const res = await handleAPI(`${restApiBase}product/detail-product/${id}`, undefined, 'get');
                 console.log("product: ", res.data);
                 setProduct(res.data);
-                setIsLoading(false);
             }
             catch (error: any) {
                 if (error.response)
                     console.log("lỗi từ server");
                 if (error.request)
                     console.log("không nhận được phản hồi từ server");
+            } finally {
+                setIsLoading(false);
             }
-            ;
         }
         fetchProduct();
     }, [id]);
