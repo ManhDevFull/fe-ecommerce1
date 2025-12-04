@@ -57,37 +57,7 @@ export default function Home({ children, params }: RootLayoutProps) {
       <Brands />
       {isLoading ? (
         <>
-          {/* HEADER DEALS DAY */}
-          <div className="w-full flex justify-between sm:items-center gap-4">
-            {/* title */}
-            <Skeleton type="title" className="w-1/3 h-8" />
-
-            {/* timer + view all */}
-            <div className="flex items-center gap-3">
-              {/* 3 ô timer fake */}
-              <Skeleton type="title" className="w-20 h-8 rounded-md" />
-              <Skeleton type="title" className="w-20 h-8 rounded-md" />
-              <Skeleton type="title" className="w-20 h-8 rounded-md" />
-
-              {/* view all */}
-              <Skeleton type="title" className="w-24 h-8 rounded-md" />
-            </div>
-          </div>
-
-          {/* LIST PRODUCT SKELETON */}
-          <div className="w-full grid grid-cols-2 justify-items-center gap-2 sm:grid-cols-2 lg:grid-cols-4 pt-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-4 shadow-sm w-[220px]"
-              >
-                <Skeleton type="img" className="w-full h-[200px] rounded-2xl" />
-                <Skeleton type="title" className="w-3/4 mt-3 h-5" />
-                <Skeleton type="text" lines={2} className="mt-3" />
-                <Skeleton type="title" className="w-full h-[30px] mt-3" />
-              </div>
-            ))}
-          </div>
+          
         </>
       ) : (
         <DealsDay products={newProduct} />
