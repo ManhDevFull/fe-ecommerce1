@@ -3,7 +3,9 @@
 import { memo, useMemo } from 'react';
 import LoaderText from '@/components/ui/LoadingText';
 import OrderAction from '@/components/templates/Admin/OrderAction';
+
 import type { IOrderAdmin } from '@/types/type';
+
 import {
   ORDER_STATUS_STYLES,
   badgeClass,
@@ -11,6 +13,7 @@ import {
   formatDateTime,
   formatVariant,
 } from '@/utils/orderHelpers';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 type OrdersTableProps = {
   orders: IOrderAdmin[];
@@ -30,26 +33,32 @@ function OrdersTable({
   onCancel,
 }: OrdersTableProps) {
   const scrollContainerStyle = useMemo(
-    () => ({ maxHeight: 'calc(100vh - 330px)' }),
+    () => ({ height: 'calc(100vh - 330px)' }),
     []
   );
 
   return (
     <div className="relative mt-4 rounded-lg border border-gray-200 bg-white shadow">
       <div
-        className={`grid grid-cols-24 overflow-hidden rounded-t-lg bg-[#f4f4f4] text-[#474747] ${
-          loading ? 'opacity-50' : ''
-        }`}
+        className={`grid grid-cols-24 overflow-hidden rounded-t-lg bg-[#f4f4f4] text-[#474747] ${loading ? 'opacity-50' : ''
+          }`}
       >
         <div className="col-span-3 py-3 text-center text-sm font-medium">Order ID</div>
-        <div className="col-span-4 py-3 pl-3 text-sm font-medium">Customer</div>
-        <div className="col-span-5 py-3 pl-3 text-sm font-medium">Product</div>
-        <div className="col-span-2 py-3 text-center text-sm font-medium">Qty</div>
+        <div className="col-span-5 py-3 pl-3 text-sm font-medium">Customer</div>
+
+        {/* PRODUCT (gộp Product + Qty) */}
+        <div className="col-span-7 py-3 pl-3 text-sm font-medium">Product</div>
+
+        {/* TOTAL */}
         <div className="col-span-3 py-3 text-center text-sm font-medium">Total</div>
-        <div className="col-span-5 py-3 text-center text-sm font-medium">Status</div>
+
+        <div className="col-span-4 py-3 text-center text-sm font-medium">Status</div>
         <div className="col-span-2 py-3 text-center text-sm font-medium">Actions</div>
 
-        <div className="col-span-24 overflow-y-auto bg-white scrollbar-hidden" style={scrollContainerStyle}>
+        <div
+          className="col-span-24 overflow-y-auto bg-white scrollbar-hidden"
+          style={scrollContainerStyle}
+        >
           {loading ? (
             <div className="flex h-48 items-center justify-center">
               <LoaderText />
@@ -60,7 +69,8 @@ function OrdersTable({
             </div>
           ) : (
             orders.map((order) => {
-              const statusUpper = (order.statusOrder ?? '').toUpperCase();
+              const orderDetails = order.orderdetails ?? [];
+              const statusUpper = (order.statusorder ?? '').toUpperCase();
               const isPending = statusUpper === 'PENDING';
               const isShipped = statusUpper === 'SHIPPED';
               const isDelivered = statusUpper === 'DELIVERED';
@@ -72,67 +82,148 @@ function OrdersTable({
                 cancel: isDelivered || isCancelled,
               };
 
+              const firstDetail = orderDetails[0];
+              const variant = firstDetail?.variant;
+              const product = variant?.product;
+              const totalPrice = orderDetails.reduce((sum, detail) => {
+                return sum + (detail.variant?.price ?? 0) * detail.quantity;
+              }, 0) ?? 0;
               return (
                 <div
                   key={order.id}
                   className="grid grid-cols-24 items-start border-t border-[#00000008] bg-white text-[#474747]"
                 >
-                  <div className="col-span-3 flex h-full flex-col items-center justify-center gap-1 py-3 text-center">
+                  {/* Order ID */}
+                  <div className="col-span-3 flex flex-col items-center justify-center gap-1 py-3 text-center">
                     <span className="text-sm font-medium text-[#2b2b2b]">#{order.id}</span>
-                    <span className="text-xs text-gray-500">{formatDateTime(order.orderDate)}</span>
+                    <span className="text-xs text-gray-500">{formatDateTime(order.orderdate)}</span>
                   </div>
-                  <div className="col-span-4 flex h-full flex-col justify-center gap-1 border-l border-[#00000008] px-3 py-3">
+
+                  {/* Customer */}
+                  <div className="col-span-5 flex flex-col justify-center gap-1 border-l border-[#00000008] px-3 py-3">
                     <span className="text-sm font-medium text-[#242424]">
-                      {order.customerName || 'Unknown customer'}
+                      {(order.account.firstname + " " + order.account.lastname) || 'Unknown customer'}
                     </span>
-                    <span className="text-xs text-gray-500 truncate">{order.customerEmail}</span>
-                    <span className="text-xs text-gray-500">{order.customerPhone || '-'}</span>
-                    <span className="text-xs text-gray-500">{order.shippingAddress || '-'}</span>
+                    <span className="text-xs text-gray-500 truncate">{order.account?.email || "Unknow email"}</span>
+                    <span className="text-xs text-gray-500">{order.address.tel || '-'}</span>
+                    <span className="text-xs text-gray-500">{order.address.codeward || '-'}</span>
                   </div>
-                  <div className="col-span-5 flex h-full gap-3 border-l border-[#00000008] px-3 py-3">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
-                      {order.productImage ? (
-                        <img
-                          src={order.productImage}
-                          alt={order.productName}
-                          width={48}
-                          height={48}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">N/A</div>
+
+                  {/* PRODUCT + QTY */}
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="col-span-7 flex h-full gap-3 border-l border-[#00000008] px-3 py-3">
+                          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
+                            {product?.imageurls?.[0] ? (
+                              <img
+                                src={product.imageurls[0]}
+                                alt={product?.nameproduct ?? 'N/A'}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xs text-gray-400">N/A</span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm font-medium text-[#242424]">
+                              {product?.nameproduct ?? '_'}
+                            </span>
+
+                            <span className="text-xs text-gray-500">
+                              Variant: {formatVariant(variant?.valuevariant) ?? '_'}
+                            </span>
+
+                            <span className="text-xs text-gray-500">
+                              Qty: <strong>{firstDetail?.quantity ?? 0}</strong>
+                            </span>
+
+                            <span className="text-xs text-gray-500">
+                              Price: {formatCurrency(variant?.price ?? 0)}
+                            </span>
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      {orderDetails.length < 2 ? null : (
+                        <TooltipContent side="top">
+                          {orderDetails.map((detail, index) => {
+                            const detailVariant = detail.variant;
+                            const detailProduct = detailVariant?.product;
+                            return (
+                              <div
+                                className={`flex h-full gap-3 border-b border-gray-100 py-2 ${index === orderDetails.length - 1 ? 'border-b-0' : ''
+                                  }`}
+                                key={index}
+                              >
+                                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-[#fafafa]">
+                                  {detailProduct?.imageurls?.[0] ? (
+                                    <img
+                                      src={detailProduct.imageurls[0]}
+                                      alt={detailProduct?.nameproduct ?? 'N/A'}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs text-gray-400">N/A</span>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-sm font-medium text-[#242424]">
+                                    {detailProduct?.nameproduct ?? '_'}
+                                  </span>
+
+                                  <span className="text-xs text-gray-500">
+                                    Variant: {formatVariant(detailVariant?.valuevariant) ?? '_'}
+                                  </span>
+
+                                  <span className="text-xs text-gray-500">
+                                    Qty: <strong>{detail?.quantity ?? 0}</strong>
+                                  </span>
+
+                                  <span className="text-xs text-gray-500">
+                                    Price: {formatCurrency(detailVariant?.price ?? 0)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </TooltipContent>
                       )}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-medium text-[#242424]">{order.productName}</span>
-                      <span className="text-xs text-gray-500">{formatVariant(order.variantAttributes)}</span>
-                    </div>
+
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  {/* TOTAL PRICE (Của cả đơn) */}
+                  <div className="col-span-3 flex flex-col items-center justify-center gap-1 border-l border-[#00000008] py-3">
+                    <span className="text-sm font-semibold text-[#242424]">
+                      {formatCurrency(totalPrice)}
+                    </span>
                   </div>
-                  <div className="col-span-2 flex h-full flex-col items-center justify-center gap-1 border-l border-[#00000008] py-3">
-                    <span className="text-sm font-semibold text-[#242424]">{order.quantity}</span>
-                    <span className="text-xs text-gray-500">{formatCurrency(order.unitPrice)}</span>
-                  </div>
-                  <div className="col-span-3 flex h-full flex-col items-center justify-center gap-1 border-l border-[#00000008] py-3">
-                    <span className="text-sm font-semibold text-[#242424]">{formatCurrency(order.totalPrice)}</span>
-                  </div>
-                  <div className="col-span-5 flex h-full flex-col items-center justify-center gap-2 border-l border-[#00000008] py-3 text-center">
+
+                  {/* Status */}
+                  <div className="col-span-4 flex flex-col items-center justify-center gap-2 border-l border-[#00000008] py-3 text-center">
                     <span
-                      className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold uppercase ${badgeClass(
-                        order.statusOrder,
-                        ORDER_STATUS_STYLES,
+                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase ${badgeClass(
+                        order.statusorder,
+                        ORDER_STATUS_STYLES
                       )}`}
                     >
-                      {order.statusOrder || '-'}
+                      {order.statusorder || '-'}
                     </span>
-                    {order.typePay === 'COD' && order.statusPay === 'UNPAID' && (
+
+                    {order.typepay === 'COD' && order.statuspay === 'UNPAID' && (
                       <span className="text-xs text-gray-500">Collect on delivery</span>
                     )}
                   </div>
-                  <div className="col-span-2 flex h-full items-center justify-center border-l border-[#00000008] py-3">
-                    <OrderAction
-                      onView={() => onView(order)}
-                      onShip={() => onShip(order)}
-                      onDeliver={() => onDeliver(order)}
+
+                  {/* Actions */}
+                <div className="col-span-2 flex items-center justify-center border-l border-[#00000008] py-3">
+                  <OrderAction
+                    onView={() => onView(order)}
+                    onShip={() => onShip(order)}
+                    onDeliver={() => onDeliver(order)}
                       onCancel={() => onCancel(order)}
                       disabled={disabledActions}
                     />
