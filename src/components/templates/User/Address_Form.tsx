@@ -48,8 +48,18 @@ export default function AddressForm() {
   // --- Load địa chỉ ---
   const fetchAddresses = async () => {
     try {
-      const res: any = await handleAPI("/Address/my-addresses", undefined, "get");
-      setAddresses(res);
+      const res: any = await handleAPI("Address/my-addresses", undefined, "get");
+      const normalized = (Array.isArray(res) ? res : []).map((item: any) => ({
+        id: item.id ?? item.Id ?? 0,
+        title: item.title ?? item.Title ?? "",
+        nameRecipient: item.nameRecipient ?? item.NameRecipient ?? "",
+        tel: item.tel ?? item.Tel ?? "",
+        codeWard: item.codeWard ?? item.CodeWard ?? 0,
+        detail: item.detail ?? item.Detail ?? "",
+        description: item.description ?? item.Description ?? "",
+        fullAddress: item.fullAddress ?? item.FullAddress,
+      }));
+      setAddresses(normalized);
     } catch (err) {
       console.error("Lỗi tải địa chỉ:", err);
       toast.error("Không tải được danh sách địa chỉ");
@@ -120,7 +130,7 @@ export default function AddressForm() {
   const handleDelete = async (id: number) => {
     if (!confirm("Xóa địa chỉ này?")) return;
     try {
-      await handleAPI(`/api/Address/${id}`, undefined, "delete");
+      await handleAPI(`Address/${id}`, undefined, "delete");
       toast.success("Xóa thành công");
       fetchAddresses();
     } catch (err: any) {
@@ -146,11 +156,11 @@ export default function AddressForm() {
 
     setIsLoading(true);
     try {
-      if (editingId) {
-        await handleAPI(`/Address/${editingId}`, payload, "put");
+      if (editingId !== null) {
+        await handleAPI(`Address/${editingId}`, payload, "put");
         toast.success("Cập nhật địa chỉ thành công");
       } else {
-        await handleAPI("/Address", payload, "post");
+        await handleAPI("Address", payload, "post");
         toast.success("Thêm địa chỉ mới thành công");
       }
       setOpen(false);
@@ -212,7 +222,7 @@ export default function AddressForm() {
         <Modal open={open} onClose={() => setOpen(false)} variant="centered" size="lg" showOverlay showCloseButton>
           <ModalBody>
             <div className="p-6 max-h-[80vh] overflow-y-auto">
-              <h2 className="text-2xl font-semibold mb-4">{editingId ? "Edit Address" : "Add New Address"}</h2>
+              <h2 className="text-2xl font-semibold mb-4">{editingId !== null ? "Edit Address" : "Add New Address"}</h2>
               <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
