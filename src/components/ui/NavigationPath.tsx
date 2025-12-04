@@ -31,7 +31,6 @@ export default function NavigationPath() {
         }
     ]
     const path = usePathname();
-    console.log(path)
     return (
         <div className="w-full flex items-center border-b-2 border-gray-100 !px-10 lg:!px-40 py-2 ">
             <div className="flex gap-2 items-center ">

@@ -2,6 +2,7 @@
 
 import { formatTree } from "@/app/utils/formartTree";
 import handleAPI from "@/axios/handleAPI";
+import axiosClient from "@/axios/axiosClient";
 import ChooseModule from "@/components/modules/ChooseModal";
 import ProductUpsertModal, {
   ProductFormSubmit,
@@ -30,6 +31,84 @@ const DEFAULT_FILTER: FilterState = {
   brand: "",
   cate: undefined,
   isStock: false,
+};
+
+const PAGE_SIZE = 30;
+
+const toNumber = (value: unknown, fallback = 0) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
+const toStringValue = (value: unknown, fallback = "") =>
+  typeof value === "string" ? value : fallback;
+
+const parseJsonArray = (value: unknown): any[] => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const normalizeVariant = (variant: any): IVariant => {
+  const rawValueVariant = variant?.valuevariant;
+  let valuevariant: unknown = rawValueVariant;
+  if (typeof rawValueVariant === "string" && rawValueVariant.trim()) {
+    try {
+      valuevariant = JSON.parse(rawValueVariant);
+    } catch {
+      valuevariant = rawValueVariant;
+    }
+  }
+
+  return {
+    variant_id: toNumber(variant?.variant_id ?? variant?.id),
+    product_id: toNumber(variant?.product_id ?? variant?.productId),
+    valuevariant,
+    stock: toNumber(variant?.stock),
+    inputprice: toNumber(variant?.inputprice),
+    price: toNumber(variant?.price),
+    createdate: toStringValue(variant?.createdate),
+    updatedate: toStringValue(variant?.updatedate ?? variant?.createdate),
+    isdeleted: Boolean(variant?.isdeleted),
+    sold:
+      variant?.sold !== undefined && variant?.sold !== null
+        ? toNumber(variant?.sold)
+        : undefined,
+  };
+};
+
+const normalizeProductAdmin = (item: any): IProductAdmin => {
+  const imageurls = Array.isArray(item?.imageurls)
+    ? item.imageurls.filter((url: unknown): url is string => typeof url === "string")
+    : [];
+  const variants = parseJsonArray(item?.variants).map(normalizeVariant);
+
+  return {
+    brand: toStringValue(item?.brand),
+    category_id: toNumber(item?.category_id),
+    category_name: toStringValue(item?.category_name),
+    createdate: toStringValue(item?.createdate),
+    description: toStringValue(item?.description),
+    imageurls,
+    max_price: toNumber(item?.max_price),
+    min_price: toNumber(item?.min_price),
+    name: toStringValue(item?.name),
+    product_id: toNumber(item?.product_id),
+    updatedate: toStringValue(item?.updatedate ?? item?.createdate),
+    variant_count: toNumber(item?.variant_count),
+    variants,
+  };
 };
 
 const extractErrorMessage = (error: unknown, fallback: string) => {
@@ -63,7 +142,6 @@ export default function ProductPage() {
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [listCate, setListCate] = useState<CategoryTree[]>([]);
   const [brands, setBrands] = useState<BrandItem[]>([]);
-  const [reloadFlag, setReloadFlag] = useState(0);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Product modal state
@@ -121,7 +199,7 @@ export default function ProductPage() {
 
       const params = new URLSearchParams();
       params.set("page", String(isPage));
-      params.set("size", "20");
+      params.set("size", String(PAGE_SIZE));
 
       if (filter.name) params.set("name", filter.name);
       if (filter.brand) params.set("brand", filter.brand);
@@ -131,11 +209,15 @@ export default function ProductPage() {
 
       try {
         const res = await handleAPI(`admin/Product?${params.toString()}`);
-        console.log(res)
         if (!cancelled) {
           if (res.status === 200) {
-            setProducts(res.data.items ?? []);
-            setTotalItem(res.data.total ?? 0);
+            const normalizedItems = Array.isArray(res.data?.items)
+              ? res.data.items.map(normalizeProductAdmin)
+              : [];
+            setProducts(normalizedItems);
+            setTotalItem(
+              typeof res.data?.total === "number" ? res.data.total : normalizedItems.length
+            );
           } else {
             setProducts([]);
             setTotalItem(0);
@@ -156,7 +238,7 @@ export default function ProductPage() {
     return () => {
       cancelled = true;
     };
-  }, [isPage, filter, reloadFlag]);
+  }, [isPage, filter]);
 
   // Fetch brands whenever category filter changes
   useEffect(() => {
@@ -188,7 +270,75 @@ export default function ProductPage() {
     };
   }, [filter.brand, filter.cate]);
 
-  const refreshProducts = () => setReloadFlag((flag) => flag + 1);
+  const matchesCurrentFilters = useCallback(
+    (product: IProductAdmin) => {
+      const searchTerm = (filter.name ?? "").trim().toLowerCase();
+      const productName = product.name?.toLowerCase() ?? "";
+
+      if (searchTerm && !productName.includes(searchTerm)) {
+        return false;
+      }
+      if (filter.brand && product.brand !== filter.brand) {
+        return false;
+      }
+      if (filter.cate !== undefined && product.category_id !== filter.cate) {
+        return false;
+      }
+      if (filter.isStock) {
+        const hasStock =
+          Array.isArray(product.variants) && product.variants.some((variant) => (variant.stock ?? 0) > 0);
+        if (!hasStock) {
+          return false;
+        }
+      }
+      return true;
+    },
+    [filter]
+  );
+
+  const sortByCurrentFilters = useCallback(
+    (list: IProductAdmin[]) => {
+      const sorted = [...list];
+      const activeSort = filter.sort || "newest";
+
+      const normalizeDate = (value?: string) => {
+        if (!value) return 0;
+        const timestamp = new Date(value).getTime();
+        return Number.isFinite(timestamp) ? timestamp : 0;
+      };
+      const normalizePriceAsc = (price: number | null | undefined) =>
+        typeof price === "number" ? price : Number.MAX_SAFE_INTEGER;
+      const normalizePriceDesc = (price: number | null | undefined) =>
+        typeof price === "number" ? price : Number.MIN_SAFE_INTEGER;
+
+      switch (activeSort) {
+        case "priceAsc":
+          sorted.sort((a, b) => {
+            const diff = normalizePriceAsc(a.min_price) - normalizePriceAsc(b.min_price);
+            return diff !== 0 ? diff : a.product_id - b.product_id;
+          });
+          break;
+        case "priceDesc":
+          sorted.sort((a, b) => {
+            const priceA = normalizePriceDesc(a.max_price ?? a.min_price);
+            const priceB = normalizePriceDesc(b.max_price ?? b.min_price);
+            const diff = priceB - priceA;
+            return diff !== 0 ? diff : b.product_id - a.product_id;
+          });
+          break;
+        default:
+          sorted.sort((a, b) => {
+            const timeA = normalizeDate(a.createdate ?? a.updatedate);
+            const timeB = normalizeDate(b.createdate ?? b.updatedate);
+            const diff = timeB - timeA;
+            return diff !== 0 ? diff : b.product_id - a.product_id;
+          });
+          break;
+      }
+      return sorted;
+    },
+    [filter.sort]
+  );
 
   const handleFilterChange = useCallback(
     (f: FilterParams) => {
@@ -233,6 +383,84 @@ export default function ProductPage() {
     setProductModalOpen(true);
   };
 
+  const applyProductUpdate = (
+    responseProduct: IProductAdmin,
+    mode: "create" | "edit",
+    previousProduct?: IProductAdmin | null
+  ) => {
+    const previouslyMatched = previousProduct
+      ? matchesCurrentFilters(previousProduct)
+      : false;
+    const nowMatches = matchesCurrentFilters(responseProduct);
+
+    let pendingDelta = 0;
+    let removedProductId: number | null = null;
+
+    setProducts((prev) => {
+      const existingIndex = prev.findIndex(
+        (item) => item.product_id === responseProduct.product_id
+      );
+
+      if (!nowMatches) {
+        if (existingIndex !== -1 && previouslyMatched) {
+          removedProductId = responseProduct.product_id;
+          pendingDelta = mode === "edit" ? -1 : 0;
+          return prev.filter((_, idx) => idx !== existingIndex);
+        }
+        return prev;
+      }
+
+      if (existingIndex !== -1) {
+        const updatedList = [...prev];
+        updatedList[existingIndex] = responseProduct;
+        const requiresResort =
+          filter.sort === "priceAsc" || filter.sort === "priceDesc";
+        return requiresResort
+          ? sortByCurrentFilters(updatedList)
+          : updatedList;
+      }
+
+      if (mode === "create") {
+        pendingDelta = 1;
+        if (isPage === 1) {
+          const updatedList = sortByCurrentFilters([responseProduct, ...prev]);
+          return updatedList.slice(0, PAGE_SIZE);
+        }
+        return prev;
+      }
+
+      if (!previouslyMatched) {
+        pendingDelta = 1;
+      }
+
+      return prev;
+    });
+
+    if (removedProductId !== null) {
+      const removedId = removedProductId;
+      setOpenIds((prev) =>
+        prev.includes(removedId) ? prev.filter((id) => id !== removedId) : prev
+      );
+    }
+
+    if (pendingDelta !== 0) {
+      setTotalItem((prev) => Math.max(0, prev + pendingDelta));
+    }
+  };
+
+  const removeProductFromState = (productId: number) => {
+    let removed = false;
+    setProducts((prev) => {
+      const next = prev.filter((item) => item.product_id !== productId);
+      removed = next.length !== prev.length;
+      return next;
+    });
+    setOpenIds((prev) => prev.filter((id) => id !== productId));
+    if (removed) {
+      setTotalItem((prev) => Math.max(0, prev - 1));
+    }
+  };
+
   const handleProductSubmit = async (payload: ProductFormSubmit) => {
     setProductModalSubmitting(true);
     setProductModalError("");
@@ -245,14 +473,60 @@ export default function ProductPage() {
         method = "put";
       }
 
-      const res: any = await handleAPI(endpoint, payload, method);
+      const formData = new FormData();
+      formData.append("name", payload.name);
+      formData.append("description", payload.description);
+      formData.append("brandId", String(payload.brandId));
+      formData.append("categoryId", String(payload.categoryId));
+
+      payload.existingImageUrls.forEach((url) => {
+        formData.append("existingImageUrls", url);
+      });
+
+      payload.newImages.forEach((file) => {
+        formData.append("newImages", file);
+      });
+
+      let shouldUpdateImages = payload.newImages.length > 0;
+      if (!shouldUpdateImages && productModalMode === "edit" && editingProduct) {
+        const originalUrls = editingProduct.imageurls ?? [];
+        if (payload.existingImageUrls.length !== originalUrls.length) {
+          shouldUpdateImages = true;
+        } else {
+          const originalSet = new Set(originalUrls);
+          const currentSet = new Set(payload.existingImageUrls);
+          if (originalSet.size !== currentSet.size) {
+            shouldUpdateImages = true;
+          } else {
+            for (const url of originalSet) {
+              if (!currentSet.has(url)) {
+                shouldUpdateImages = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      formData.append("imageUpdate", shouldUpdateImages ? "true" : "false");
+
+      const res: any = await axiosClient(endpoint, {
+        method,
+        data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       if (res.status === 200 || res.status === 201) {
+        const responseProduct = res.data
+          ? normalizeProductAdmin(res.data)
+          : undefined;
+        if (responseProduct) {
+          applyProductUpdate(responseProduct, productModalMode, editingProduct);
+        }
+
         setProductModalOpen(false);
         setEditingProduct(null);
-        if (productModalMode === "create") {
-          setIsPage(1);
-        }
-        refreshProducts();
       } else {
         setProductModalError(res?.message ?? "Operation failed");
       }
@@ -300,9 +574,14 @@ export default function ProductPage() {
 
       const res: any = await handleAPI(endpoint, payload, method);
       if (res.status === 200) {
+        const responseProduct = res.data
+          ? normalizeProductAdmin(res.data)
+          : undefined;
+        if (responseProduct) {
+          applyProductUpdate(responseProduct, "edit", product);
+        }
         setVariantModalOpen(false);
         setVariantContext(null);
-        refreshProducts();
       } else {
         setVariantModalError(res?.message ?? "Operation failed");
       }
@@ -323,7 +602,7 @@ export default function ProductPage() {
       );
       if (res.status === 200) {
         setProductToDelete(null);
-        refreshProducts();
+        removeProductFromState(productToDelete.product_id);
       }
     } catch (error) {
       console.error("Failed to delete product", error);
@@ -340,8 +619,13 @@ export default function ProductPage() {
         "delete"
       );
       if (res.status === 200) {
+        const responseProduct = res.data
+          ? normalizeProductAdmin(res.data)
+          : undefined;
+        if (responseProduct) {
+          applyProductUpdate(responseProduct, "edit", variantToDelete.product);
+        }
         setVariantToDelete(null);
-        refreshProducts();
       }
     } catch (error) {
       console.error("Failed to delete variant", error);
@@ -379,7 +663,7 @@ export default function ProductPage() {
 
       <div className="mb-1 flex h-10 items-center justify-center">
         <Pagination
-          totalPage={Math.max(1, Math.ceil(totalItem / 30))}
+          totalPage={Math.max(1, Math.ceil(totalItem / PAGE_SIZE))}
           page={isPage}
           totalProduct={totalItem}
           onChangePage={setIsPage}

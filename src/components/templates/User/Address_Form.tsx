@@ -147,7 +147,7 @@ export default function AddressForm() {
     setIsLoading(true);
     try {
       if (editingId) {
-        await handleAPI(`/api/Address/${editingId}`, payload, "put");
+        await handleAPI(`/Address/${editingId}`, payload, "put");
         toast.success("Cập nhật địa chỉ thành công");
       } else {
         await handleAPI("/api/Address", payload, "post");
@@ -161,6 +161,7 @@ export default function AddressForm() {
       setSelectedDistrictCode("");
       setSelectedWardCode("");
     } catch (err: any) {
+      console.log(err);
       console.error("Lỗi lưu địa chỉ:", err.response?.data || err);
       toast.error(err.response?.data?.message || "Lỗi khi lưu địa chỉ");
     } finally {

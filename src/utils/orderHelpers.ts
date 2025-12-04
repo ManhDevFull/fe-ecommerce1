@@ -38,11 +38,14 @@ export const formatDateTime = (value?: string | null) => {
     minute: "2-digit",
   });
 };
-
+export function capitalize(key: string) {
+  if (!key) return key;
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
 export const formatVariant = (attributes: Record<string, string>) => {
   const entries = Object.entries(attributes ?? {});
   if (entries.length === 0) return "-";
-  return entries.map(([key, value]) => `${key}: ${value}`).join(", ");
+  return entries.map(([key, value]) => `${capitalize(key)}: ${value}`).join(", ");
 };
 
 export const ORDER_STATUS_STYLES: Record<string, string> = {

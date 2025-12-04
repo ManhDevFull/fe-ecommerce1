@@ -247,7 +247,7 @@ export default function HeaderComponent() {
             </p>
           </li>
           <li>
-            <Link href={"my-cart"} className="flex !px-6">
+            <Link href={"/my-cart"} className="flex !px-6">
               <svg
                 width="25"
                 height="24"
