@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import handleAPI from "@/axios/handleAPI";
+import ReviewDetailModal from "@/components/modules/review/ReviewDetailModalClient";
 
 // --- 1. Cập nhật Type khớp với dữ liệu Log của bạn ---
 interface OrderAddressInfo {
@@ -16,17 +17,17 @@ interface ProductInfo {
   name: string;
   thumbnail: string;
   // variantAttributes trả về Object, không phải String
-  variantAttributes?: Record<string, string>; 
+  variantAttributes?: Record<string, string>;
 }
 
 interface OrderItem {
-  orderDetailId?: number; // Có thể null trong log
+  id: number;
   variantId: number;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
   // Quan trọng: Dữ liệu nằm trong object product
-  product: ProductInfo; 
+  product: ProductInfo;
 }
 
 interface OrderDetailData {
@@ -52,6 +53,8 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
   const [orderDetail, setOrderDetail] = useState<OrderDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedItemForReview, setSelectedItemForReview] = useState<any>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     if (!orderId) {
@@ -69,6 +72,7 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
           undefined,
           "get"
         );
+        console.log("OrderDetail Items:", response.items);
         // console.log("Fetched order detail:", response); // Debug xong có thể comment
         setOrderDetail(response);
       } catch (err: any) {
@@ -99,6 +103,13 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
     return Object.entries(attrs)
       .map(([key, value]) => `${key}: ${value}`)
       .join(", ");
+  };
+
+  const handleOpenReview = (item: any) => {
+    console.log("🛠 DATA ITEM CHUẨN BỊ REVIEW:", item);
+    console.log("OrderDetailId gửi lên API:", item.id);
+    setSelectedItemForReview(item);
+    setIsReviewModalOpen(true);
   };
 
   if (isLoading) {
@@ -151,13 +162,14 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
               <th className="text-left pb-2">Price</th>
               <th className="text-left pb-2">Qty</th>
               <th className="text-left pb-2">Subtotal</th>
+              <th className="text-center pb-2">Action</th>
             </tr>
           </thead>
           <tbody>
             {(orderDetail?.items ?? []).map((item, index) => {
               return (
                 <tr
-                  key={item.orderDetailId || index}
+                  key={item.id || index}
                   className="border-t border-gray-200"
                 >
                   <td className="py-2">
@@ -171,11 +183,11 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
                           e.currentTarget.src = "https://via.placeholder.com/64?text=No+Img";
                         }}
                       />
-                      
+
                       <div className="flex flex-col">
                         {/* --- SỬA LOGIC HIỂN THỊ TÊN --- */}
                         <span className="font-medium">{item.product?.name}</span>
-                        
+
                         {/* --- SỬA LOGIC HIỂN THỊ VARIANT (Object -> String) --- */}
                         {item.product?.variantAttributes && (
                           <span className="text-gray-500 text-sm capitalize">
@@ -194,6 +206,20 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
 
                   <td className="py-2 align-middle font-medium">
                     {formatPrice(item.unitPrice * item.quantity)}
+                  </td>
+
+                  <td className="py-2 align-middle font-medium">
+                    {formatPrice(item.unitPrice * item.quantity)}
+                  </td>
+
+                  {/* 👇 THÊM CỘT NÀY VÀO SAU CÙNG TRONG THẺ <tr> 👇 */}
+                  <td className="py-2 align-middle text-center">
+                    <button
+                      onClick={() => handleOpenReview(item)}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                    >
+                      Viết đánh giá
+                    </button>
                   </td>
                 </tr>
               );
@@ -228,13 +254,24 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
 
       {/* Buttons */}
       <div className="flex gap-4 mt-8 justify-end">
-        <button className="px-6 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition">
-           Add Rating
-        </button>
         <button className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">
-           Reorder
+          Reorder
         </button>
       </div>
+
+      {/* 👇 THÊM ĐOẠN NÀY VÀO CUỐI CÙNG 👇 */}
+      {isReviewModalOpen && selectedItemForReview && (
+        <ReviewDetailModal
+          open={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          productName={selectedItemForReview.product.name}
+          productImage={selectedItemForReview.product.thumbnail}
+          orderDetailId={selectedItemForReview.id}
+          onSuccess={() => {
+            toast.success("Đánh giá thành công!");
+          }}
+        />
+      )}
     </div>
   );
 }
