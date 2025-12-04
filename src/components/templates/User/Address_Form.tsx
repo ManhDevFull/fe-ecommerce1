@@ -48,7 +48,7 @@ export default function AddressForm() {
   // --- Load địa chỉ ---
   const fetchAddresses = async () => {
     try {
-      const res: any = await handleAPI("/api/Address/my-addresses", undefined, "get");
+      const res: any = await handleAPI("/Address/my-addresses", undefined, "get");
       setAddresses(res);
     } catch (err) {
       console.error("Lỗi tải địa chỉ:", err);
@@ -150,7 +150,7 @@ export default function AddressForm() {
         await handleAPI(`/Address/${editingId}`, payload, "put");
         toast.success("Cập nhật địa chỉ thành công");
       } else {
-        await handleAPI("/api/Address", payload, "post");
+        await handleAPI("/Address", payload, "post");
         toast.success("Thêm địa chỉ mới thành công");
       }
       setOpen(false);

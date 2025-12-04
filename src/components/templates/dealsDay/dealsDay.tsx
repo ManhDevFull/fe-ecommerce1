@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import axios from "axios";
+// import { useEffect, useState } from "react";
+// import Link from "next/link";
+// import { useRouter } from "next/navigation";
+// import dynamic from "next/dynamic";
+// import axios from "axios";
 
 // Components
 import BtnBuyNow from "@/components/ui/BtnBuyNow";
@@ -16,6 +16,7 @@ import axios from "axios";
 import { restApiBase } from "@/utils/env";
 import TimeLeft from "@/components/ui/TimeLeft";
 import CardIndex from "@/components/ui/CardIndex";
+import router from "next/router";
 
 export default function DealsDay({ products }: { products: ProductUi[] }) {
     // const products = [
