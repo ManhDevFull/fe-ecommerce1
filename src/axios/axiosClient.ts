@@ -136,8 +136,9 @@ axiosClient.interceptors.request.use(async (config: InternalAxiosRequestConfig &
 
 axiosClient.interceptors.response.use(
   (res) => {
-    if (res.data && res.status >= 200 && res.status < 300) {
-      return res.data
+    // Treat 2xx with empty body (e.g. 204 No Content) as success instead of throwing
+    if (res.status >= 200 && res.status < 300) {
+      return res.data ?? true
     }
     return Promise.reject(res.data)
   },

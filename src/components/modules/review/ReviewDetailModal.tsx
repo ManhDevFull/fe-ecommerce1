@@ -48,6 +48,7 @@ export default function ReviewDetailModal({
         const res = await handleAPI(`/admin/Review/${reviewId}`);
         if (cancelled) return;
         if (res.status === 200) {
+          console.log(res.data)
           setReview(res.data as IReviewAdmin);
         } else {
           setError("Review not found");
