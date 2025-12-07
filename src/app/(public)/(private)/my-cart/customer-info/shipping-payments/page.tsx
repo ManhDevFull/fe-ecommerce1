@@ -110,7 +110,7 @@ export default function ShippingPayments() {
     const loadMeta = async () => {
       try {
         if (!paymentMethods.length) {
-          const payments = await handleAPI("shipping/payment/providers");
+          const payments = await handleAPI("/shipping/payment-providers");
           if (payments && Array.isArray(payments) && payments.length) {
             dispatch(
               setPaymentMethods(
@@ -126,26 +126,31 @@ export default function ShippingPayments() {
         }
 
         if (!shippingMethods.length) {
-          const shippings = await handleAPI("/shipping/shipping/carriers-with-options");
+          const shippings = await handleAPI("/shipping/carriers-with-options");
           console.log(shippings)
           if (shippings && Array.isArray(shippings) && shippings.length) {
             const flattened = shippings.flatMap((carrier: any) => {
               const carrierName = carrier?.name ?? "";
+              const carrierCode = carrier?.id ?? carrier?.code ?? carrierName;
               const logo = carrier?.logoUrl ?? "";
               const options = Array.isArray(carrier?.options)
                 ? carrier.options
                 : [];
-              return options.map((opt: any) => ({
-                id: opt.code ?? opt.id ?? `${carrierName}-${Math.random()}`,
-                name: `${carrierName} - ${opt.name ?? ""}`.trim(),
-                deliveryTime: formatDelivery(
-                  opt.deliveryMinDays,
-                  opt.deliveryMaxDays
-                ),
-                shippingCost: opt.shippingCost ?? 0,
-                insurance: opt.insuranceAvailable ? "Available" : "Unavailable",
-                img: logo,
-              }));
+              return options.map((opt: any) => {
+                const rawOptId = opt.id ?? opt.code ?? "";
+                const uniqueId = `${carrierCode}-${rawOptId || Math.random()}`;
+                return {
+                  id: uniqueId,
+                  name: `${carrierName} - ${opt.name ?? ""}`.trim(),
+                  deliveryTime: formatDelivery(
+                    opt.deliveryMinDays,
+                    opt.deliveryMaxDays
+                  ),
+                  shippingCost: opt.shippingCost ?? 0,
+                  insurance: opt.insuranceAvailable ? "Available" : "Unavailable",
+                  img: logo,
+                };
+              });
             });
             dispatch(setShippingMethods(flattened));
           }

@@ -121,13 +121,13 @@ export default function MyCart() {
     if (!current) return;
     const nextQty = Math.max(1, current.quantity + delta);
     try {
-      const res:any = await handleAPI(`/Cart/quantity`, { cartId, quantity: nextQty }, 'patch');
+      const res:any = await handleAPI(`/Cart/quantity`, { cartId, quantity: nextQty }, 'put');
       const newItems = res.items || [];
       const newSummary = res.summary || null;
       setItems(newItems);
       setSummary(newSummary);
       setBaseSummary(newSummary);
-      const ids = selectedIds.filter(id => newItems.some(i => i.cartId === id));
+      const ids = selectedIds.filter(id => newItems.some((i: CartItemApi) => i.cartId === id));
       setSelectedIds(ids);
       dispatch(setCheckoutCart({ items: newItems, summary: newSummary, selectedIds: ids }));
     } catch (e) {
@@ -143,7 +143,7 @@ export default function MyCart() {
       setItems(newItems);
       setSummary(newSummary);
       setBaseSummary(newSummary);
-      const ids = selectedIds.filter(id => id !== cartId && newItems.some(i => i.cartId === id));
+      const ids = selectedIds.filter(id => id !== cartId && newItems.some((i: CartItemApi) => i.cartId === id));
       setSelectedIds(ids);
       dispatch(setCheckoutCart({ items: newItems, summary: newSummary, selectedIds: ids }));
     } catch (e) {
