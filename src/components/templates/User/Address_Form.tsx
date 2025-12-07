@@ -48,7 +48,7 @@ export default function AddressForm() {
   // --- Load địa chỉ ---
   const fetchAddresses = async () => {
     try {
-      const res: any = await handleAPI("api/Address/my-addresses", undefined, "get");
+      const res: any = await handleAPI("Address/my-addresses", undefined, "get");
       const normalized = (Array.isArray(res) ? res : []).map((item: any) => ({
         id: item.id ?? item.Id ?? 0,
         title: item.title ?? item.Title ?? "",
@@ -130,7 +130,7 @@ export default function AddressForm() {
   const handleDelete = async (id: number) => {
     if (!confirm("Xóa địa chỉ này?")) return;
     try {
-      await handleAPI(`api/Address/${id}`, undefined, "delete");
+      await handleAPI(`Address/${id}`, undefined, "delete");
       toast.success("Xóa thành công");
       fetchAddresses();
     } catch (err: any) {
@@ -157,10 +157,10 @@ export default function AddressForm() {
     setIsLoading(true);
     try {
       if (editingId !== null) {
-        await handleAPI(`api/Address/${editingId}`, payload, "put");
+        await handleAPI(`Address/${editingId}`, payload, "put");
         toast.success("Cập nhật địa chỉ thành công");
       } else {
-        await handleAPI("api/Address", payload, "post");
+        await handleAPI("Address", payload, "post");
         toast.success("Thêm địa chỉ mới thành công");
       }
       setOpen(false);
@@ -171,6 +171,7 @@ export default function AddressForm() {
       setSelectedDistrictCode("");
       setSelectedWardCode("");
     } catch (err: any) {
+      console.log(err);
       console.error("Lỗi lưu địa chỉ:", err.response?.data || err);
       toast.error(err.response?.data?.message || "Lỗi khi lưu địa chỉ");
     } finally {
