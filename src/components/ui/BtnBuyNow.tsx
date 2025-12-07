@@ -15,7 +15,7 @@ export default function BtnBuyNow({ price, id }: PriceProps) {
     return (
         <button onClick={()=>handleBuy(id)} className="w-full hover:cursor-pointer rounded-xl py-2 sm:py-4 flex justify-center items-center bg-[#232321]">
             <p className="text-white">BUY NOW - </p>
-            <p className="text-[#FFA52F] font-bold flex items-center"> <FaRupeeSign /> {formatCurrency(price, {decimals: 2})}</p>
+            <p className="text-[#FFA52F] font-bold flex items-center">{formatCurrency(price, {decimals: 2})}</p>
         </button>
     )
 }

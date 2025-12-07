@@ -33,8 +33,8 @@ export default function Detail() {
             setIsLoading(true);
             try {
                 // const res = await axios.get(`${restApiBase}`);
-                const res = await axios(`${restApiBase}product/detail-product/${id}`);
-                // const res = await handleAPI(`${restApiBase}product/detail-product/${id}`, undefined, 'get');
+                // const res = await axios(`${restApiBase}product/detail-product/${id}`);
+                const res = await handleAPI(`product/detail-product/${id}`, null, 'get');
                 console.log("product: ", res.data);
                 setProduct(res.data);
             }
@@ -54,7 +54,7 @@ export default function Detail() {
     return (
         isLoading ? (
             // <div className="flex items-center justify-center"><HamsterWheel /></div>
-            <div>
+            <div className="w-full flex justify-center items-center">
                 <div className="w-full flex justify-center">
                     {/* Main Slider */}
                     <div className="relative w-[500px] h-auto flex items-center pt-[20px]">
@@ -200,26 +200,26 @@ export default function Detail() {
                         {/* wish list and compare  */}
                         <div className="flex gap-4 items-center">
                             <div className="flex items-center gap-2 cursor-pointer">
-                                <Skeleton height={30} width={30} type="img"/>                            
-                                <Skeleton type="title" className="text-center text-[#475156]"/>
+                                <Skeleton height={30} width={30} type="img" />
+                                <Skeleton type="title" className="text-center text-[#475156]" />
                             </div>
                             <div className="flex gap-2 items-center cursor-pointer">
-                                <Skeleton height={30} width={30} type="img"/>    
-                                <Skeleton type="title" className="text-center text-[#475156]"/>
+                                <Skeleton height={30} width={30} type="img" />
+                                <Skeleton type="title" className="text-center text-[#475156]" />
                             </div>
                         </div>
                         {/* share */}
                         <div className="flex gap-2">
-                            <Skeleton height={30} width={30} type="img"/>  
-                            <Skeleton height={30} width={30} type="img"/>  
-                            <Skeleton height={30} width={30} type="img"/>  
-                            <Skeleton height={30} width={30} type="img"/>  
-                            <Skeleton height={30} width={30} type="img"/>  
+                            <Skeleton height={30} width={30} type="img" />
+                            <Skeleton height={30} width={30} type="img" />
+                            <Skeleton height={30} width={30} type="img" />
+                            <Skeleton height={30} width={30} type="img" />
+                            <Skeleton height={30} width={30} type="img" />
                         </div>
                     </div>
                     {/* khu vực checkout */}
                     <div className="border-[1px] border-[#E4E7E9] p-4 mt-8">
-                        <Skeleton type="title" className="text-center text-[#475156]"/>
+                        <Skeleton type="title" className="text-center text-[#475156]" />
                     </div>
                 </div>
 
