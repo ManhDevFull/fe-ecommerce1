@@ -90,7 +90,7 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
         // hiện tại dữ liệu fake đã hết hạn nên trả về null
         return null;
     }
-    const router = useRouter();
+
     return (
         <div className="w-ful px-4 sm:px-16 py-4">
             <div className="w-full sm:flex sm:justify-between sm:items-center gap-2">
@@ -116,7 +116,6 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
                         return (
                             <div key={index}
                                 className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
-                                onClick={() => router.push('')}
                             >
                                 {/* <Product img={product.imgUrls[1]} isNew={true} type={true} /> */}
                                 <CardIndex isNew={true} img={product.imgUrls[0]} />
@@ -124,7 +123,7 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
                                     deal && <FlashDealBar endTime={deal?.discount?.endtime} />
                                 }
                                 <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
-                                <BtnBuyNow price={deal?.price ?? product.variant[0].price} />
+                                <BtnBuyNow id={product.id} price={deal?.price ?? product.variant[0].price} />
                             </div>
                         )
                     }
