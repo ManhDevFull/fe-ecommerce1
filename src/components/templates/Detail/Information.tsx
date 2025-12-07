@@ -5,6 +5,7 @@ import Product from "@/components/ui/Product";
 import Quantity from "@/components/ui/Quantity";
 import { Review } from "@/components/ui/Review";
 import { ProductUi, VariantDTO } from "@/types/type";
+import { formatCurrency } from "@/utils/currency";
 import { useEffect, useState } from "react";
 import { FaFacebook, FaPinterestP, FaRegHeart, FaTwitter } from "react-icons/fa";
 import { IoLogoFacebook } from "react-icons/io";
@@ -145,10 +146,12 @@ export default function Information({ product }: { product: ProductUi }) {
                             <p className="text-[30px] text-[#2EB100]">
                                 {currentValuevariant.price -
                                     currentValuevariant.price * (discount?.discount / 100)} VND
+                                {formatCurrency((currentValuevariant.price -
+                                    currentValuevariant.price * (discount?.discount / 100)), { decimals: 2 })}
                             </p>
 
                             <p className="line-through decoration-gray-500">
-                                {currentValuevariant.price} VND
+                                {formatCurrency(currentValuevariant.price, { decimals: 2 })}
                             </p>
 
                             <p className="text-[20px] text-[#191C1F] text-center p-2">
@@ -158,7 +161,7 @@ export default function Information({ product }: { product: ProductUi }) {
                     ) : (
                         <div>
                             <p className="text-[30px] text-[#2EB100] font-bold">
-                                {currentValuevariant.price} VND
+                                {formatCurrency(currentValuevariant.price, { decimals: 2 })}
                             </p>
                         </div>
                     )}
@@ -198,13 +201,13 @@ export default function Information({ product }: { product: ProductUi }) {
             {/* Deal member Filled */}
             <div className="flex gap-30 items-center mt-2 bg-green-200 p-4">
                 <div className="">
-                    <div className="flex justify-between gap-2 items-center py-2"> 
+                    <div className="flex justify-between gap-2 items-center py-2">
                         <p className="text-[#000000] flex flex-nowrap">Deal Members Filled</p>
                         <p className="font-bold">700/1000</p>
                     </div>
                     <div className="flex justify-between items-center py-2">
                         <p>Current Deal Price</p>
-                        <p className="font-bold">Rs {currentValuevariant.price}</p>
+                        <p className="font-bold">{formatCurrency(currentValuevariant.price, { decimals: 2 })}</p>
                     </div>
                 </div>
                 <div className="">
