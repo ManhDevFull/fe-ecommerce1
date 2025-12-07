@@ -34,9 +34,10 @@ export default function Detail() {
             try {
                 // const res = await axios.get(`${restApiBase}`);
                 // const res = await axios(`${restApiBase}product/detail-product/${id}`);
-                const res = await handleAPI(`product/detail-product/${id}`, null, 'get');
-                console.log("product: ", res.data);
-                setProduct(res.data);
+                const res = await handleAPI(`Product/detail-product/${id}`) as unknown as ProductUi;
+                setProduct(res);
+                console.log('res: ', res);
+                setProduct(res);
             }
             catch (error: any) {
                 if (error.response)
