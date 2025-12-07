@@ -30,6 +30,7 @@ export interface CheckoutState {
   customerInfo: CustomerInfo;
   selectedPayment: string;
   selectedShipping: string;
+  selectedAddressId: number | null;
   paymentMethods: PaymentMethod[];
   shippingMethods: ShippingMethod[];
   checkoutItems: any[];
@@ -49,6 +50,7 @@ const initialState: CheckoutState = {
   },
   selectedPayment: '',
   selectedShipping: '',
+  selectedAddressId: null,
   paymentMethods: [],
   shippingMethods: [],
   checkoutItems: [],
@@ -90,6 +92,9 @@ const checkoutSlice = createSlice({
     setSelectedCartIds: (state, action: PayloadAction<number[]>) => {
       state.selectedCartIds = action.payload;
     },
+    setSelectedAddressId: (state, action: PayloadAction<number | null>) => {
+      state.selectedAddressId = action.payload;
+    },
     clearCheckoutCart: (state) => {
       state.checkoutItems = [];
       state.checkoutSummary = null;
@@ -102,6 +107,7 @@ export const {
   updateCustomerInfo, 
   setSelectedPayment, 
   setSelectedShipping, 
+  setSelectedAddressId,
   setPaymentMethods, 
   setShippingMethods,
   setCheckoutCart,

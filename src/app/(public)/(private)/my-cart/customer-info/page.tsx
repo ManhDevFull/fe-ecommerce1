@@ -3,7 +3,7 @@ import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
-import { setCheckoutCart, setSelectedCartIds, updateCustomerInfo } from "@/redux/reducers/checkoutReducer";
+import { setCheckoutCart, setSelectedCartIds, updateCustomerInfo, setSelectedAddressId } from "@/redux/reducers/checkoutReducer";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import handleAPI from "@/axios/handleAPI";
@@ -37,7 +37,7 @@ type SavedAddress = {
 export default function CustomerInfo() {
     const dispatch = useDispatch();
     const router = useRouter();
-    const { customerInfo, checkoutItems, checkoutSummary, selectedCartIds } = useSelector((state: RootState) => state.checkout);
+    const { customerInfo, checkoutItems, checkoutSummary, selectedCartIds, selectedAddressId } = useSelector((state: RootState) => state.checkout);
     const auth = useSelector((state: RootState) => state.authReducer.data);
     // Read giftBox state from cartReducer (set in my-cart page)
     const { giftBox, giftBoxPrice } = useSelector((state: RootState) => state.cart);
@@ -47,7 +47,6 @@ export default function CustomerInfo() {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [addresses, setAddresses] = useState<SavedAddress[]>([]);
     const [addressLoading, setAddressLoading] = useState(false);
-    const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
     const [resolvingAddress, setResolvingAddress] = useState(false);
     
     // Province display is read-only because address selection provides it
@@ -168,9 +167,18 @@ export default function CustomerInfo() {
             if (!auth?.id) return;
             setAddressLoading(true);
             try {
-                const res = await handleAPI("admin/Address", { id: auth.id }, "post");
+                const res = await handleAPI("Address/my-addresses", undefined, "get");
                 const list = (res as any)?.data ?? res ?? [];
-                const normalized = Array.isArray(list) ? list : [];
+                const normalized = Array.isArray(list) ? list.map((item: any) => ({
+                    id: item.id ?? item.Id ?? 0,
+                    accountid: item.accountid ?? item.AccountId ?? auth.id,
+                    title: item.title ?? item.Title ?? "",
+                    namerecipient: item.nameRecipient ?? item.NameRecipient ?? item.namerecipient ?? item.Namerecipient ?? "",
+                    tel: item.tel ?? item.Tel ?? "",
+                    codeward: item.codeWard ?? item.CodeWard ?? item.codeward ?? item.Codeward ?? 0,
+                    description: item.description ?? item.Description ?? "",
+                    detail: item.detail ?? item.Detail ?? "",
+                })) : [];
                 const resolved = await Promise.all(
                   normalized.map(async (adr: SavedAddress) => ({
                     ...adr,
@@ -178,19 +186,31 @@ export default function CustomerInfo() {
                   }))
                 );
                 setAddresses(resolved);
-                if (resolved.length && selectedAddressId === null) {
-                    const first = resolved[0];
-                    setSelectedAddressId(first.id);
-                    applyAddressToForm(first);
+                // Nếu đã có selectedAddressId trong Redux thì dùng nó, nếu không thì chọn address đầu tiên
+                if (resolved.length > 0) {
+                    const addressIdToUse = selectedAddressId ?? resolved[0].id;
+                    const addressToUse = resolved.find(a => a.id === addressIdToUse) ?? resolved[0];
+                    // Chỉ update nếu chưa có selectedAddressId hoặc address hiện tại không tồn tại trong danh sách mới
+                    if (!selectedAddressId || !resolved.find(a => a.id === selectedAddressId)) {
+                        dispatch(setSelectedAddressId(addressToUse.id));
+                        applyAddressToForm(addressToUse);
+                    } else {
+                        // Nếu đã có selectedAddressId và nó vẫn tồn tại, chỉ apply form
+                        const existingAddress = resolved.find(a => a.id === selectedAddressId);
+                        if (existingAddress) {
+                            applyAddressToForm(existingAddress);
+                        }
+                    }
                 }
-            } catch {
+            } catch (err) {
+                console.error("Failed to load addresses:", err);
                 setAddresses([]);
             } finally {
                 setAddressLoading(false);
             }
         };
         fetchAddresses();
-    }, [auth?.id]);
+    }, [auth?.id, dispatch]);
 
     const resolveFullAddress = async (adr: SavedAddress) => {
         try {
@@ -276,21 +296,18 @@ export default function CustomerInfo() {
                           }`}
                           onClick={() => {
                             if (selectedAddressId === adr.id) return;
-                            setSelectedAddressId(adr.id);
+                            dispatch(setSelectedAddressId(adr.id));
                             applyAddressToForm(adr);
                           }}
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-1">
-                              <div className="text-sm font-semibold text-gray-800">{adr.title || "Address"}</div>
-                              <div className="text-sm text-gray-700">
-                                {adr.namerecipient || "Recipient"} Â· {adr.tel || "No phone"}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {adr.fullText || [adr.detail, adr.description].filter(Boolean).join(", ")}
-                              </div>
+                          <div className="space-y-1">
+                            <div className="text-sm font-semibold text-gray-800">{adr.title || "Address"}</div>
+                            <div className="text-sm text-gray-700">
+                              {adr.namerecipient || "Recipient"} · {adr.tel || "No phone"}
                             </div>
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">#{adr.id}</span>
+                            <div className="text-sm text-gray-600">
+                              {adr.fullText || [adr.detail, adr.description].filter(Boolean).join(", ")}
+                            </div>
                           </div>
                         </button>
                       ))}

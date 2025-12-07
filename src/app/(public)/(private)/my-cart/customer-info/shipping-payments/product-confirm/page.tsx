@@ -17,12 +17,13 @@ export default function ProductConfirmation() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { giftBox, giftBoxPrice } = useSelector((state: RootState) => state.cart);
-  const { customerInfo, selectedPayment, selectedShipping, paymentMethods, shippingMethods, checkoutItems, checkoutSummary, selectedCartIds } = useSelector((state: RootState) => state.checkout);
+  const { customerInfo, selectedPayment, selectedShipping, selectedAddressId, paymentMethods, shippingMethods, checkoutItems, checkoutSummary, selectedCartIds } = useSelector((state: RootState) => state.checkout);
   const auth = useSelector((state: RootState) => state.authReducer.data);
 
   const [summary, setSummary] = useState<Summary | null>(checkoutSummary ?? null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
 
   const calcSummary = (items: CartItem[], baseSummary?: Summary | null): Summary => {
     const itemsPrice = items.reduce((s, i) => s + (i.unitPrice ?? 0) * (i.quantity ?? 1), 0);
@@ -35,6 +36,38 @@ export default function ProductConfirmation() {
     const totalPrice = itemsPrice + shipping + tax - discountPrice;
     return { itemsPrice, shipping, tax, discountPrice, giftBoxPrice, totalPrice };
   };
+
+  // Load selected address
+  useEffect(() => {
+    const loadAddress = async () => {
+      if (!selectedAddressId || !auth?.id) {
+        setSelectedAddress(null);
+        return;
+      }
+      try {
+        const res = await handleAPI("Address/my-addresses", undefined, "get");
+        const list = (res as any)?.data ?? res ?? [];
+        const address = Array.isArray(list) ? list.find((a: any) => (a.id ?? a.Id) === selectedAddressId) : null;
+        if (address) {
+          setSelectedAddress({
+            id: address.id ?? address.Id ?? 0,
+            title: address.title ?? address.Title ?? "",
+            namerecipient: address.nameRecipient ?? address.NameRecipient ?? address.namerecipient ?? address.Namerecipient ?? "",
+            tel: address.tel ?? address.Tel ?? "",
+            codeward: address.codeWard ?? address.CodeWard ?? address.codeward ?? address.Codeward ?? 0,
+            description: address.description ?? address.Description ?? "",
+            detail: address.detail ?? address.Detail ?? "",
+          });
+        } else {
+          setSelectedAddress(null);
+        }
+      } catch (err) {
+        console.error("Failed to load address:", err);
+        setSelectedAddress(null);
+      }
+    };
+    loadAddress();
+  }, [selectedAddressId, auth?.id]);
 
   // hydrate from store or fetch once if user lands directly
   useEffect(() => {
@@ -90,18 +123,37 @@ export default function ProductConfirmation() {
       const amountInVND = Math.round(totalPrice);
       const orderId = `ORD-${Date.now()}`;
 
+      // Ensure selectedCartIds is an array
+      const cartIdsToSend = Array.isArray(selectedCartIds) && selectedCartIds.length > 0 
+        ? selectedCartIds 
+        : cartItems.map((item: any) => item.cartId ?? item.id ?? 0).filter((id: number) => id > 0);
+      
+      console.log('Creating payment:', {
+        orderId,
+        accountId: auth?.id ?? 0,
+        amount: amountInVND,
+        selectedCartIds: cartIdsToSend,
+        addressId: selectedAddressId,
+        cartItemsCount: cartItems.length
+      });
+
       const response = await handleAPI('/payment/create', {
         amount: amountInVND,
         orderInfo: `Payment for order ${orderId} - ${cartItems.length} items`,
         returnUrl: `${window.location.origin}/product-confirmation`,
         orderId,
         accountId: auth?.id ?? 0,
-        selectedCartIds
+        selectedCartIds: cartIdsToSend.length > 0 ? cartIdsToSend : undefined,
+        addressId: selectedAddressId ?? undefined
       }, 'post');
 
       const payload = (response as any)?.data ?? response ?? {};
 
       if (payload.success && payload.paymentUrl) {
+        // Lưu orderId vào localStorage để có thể lấy lại sau khi redirect về
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lastPaymentOrderId', orderId);
+        }
         window.location.href = payload.paymentUrl;
       } else {
         alert(payload.message || 'Failed to create payment');
@@ -225,28 +277,55 @@ export default function ProductConfirmation() {
           <div className="bg-gray-50 p-6 rounded-2xl">
             <h2 className="font-semibold text-xl mb-4">Shipping Address</h2>
             <div className="bg-white p-4 rounded-xl">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Name:</span>
-                  <div className="font-medium">{customerInfo.firstName} {customerInfo.lastName}</div>
+              {selectedAddress ? (
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Label:</span>
+                    <span className="font-medium ml-2">{selectedAddress.title || "Address"}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Recipient:</span>
+                    <span className="font-medium ml-2">{selectedAddress.namerecipient || customerInfo.firstName + " " + customerInfo.lastName}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Phone:</span>
+                    <span className="font-medium ml-2">{selectedAddress.tel || customerInfo.phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Address:</span>
+                    <div className="font-medium mt-1">{selectedAddress.detail || customerInfo.address}</div>
+                  </div>
+                  {selectedAddress.description && (
+                    <div>
+                      <span className="text-gray-500">Note:</span>
+                      <div className="font-medium mt-1 italic">{selectedAddress.description}</div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <span className="text-gray-500">Country:</span>
-                  <div className="font-medium">{customerInfo.country}</div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Name:</span>
+                    <div className="font-medium">{customerInfo.firstName} {customerInfo.lastName}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Country:</span>
+                    <div className="font-medium">{customerInfo.country}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Address:</span>
+                    <div className="font-medium">{customerInfo.address}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">City:</span>
+                    <div className="font-medium">{customerInfo.state}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Phone:</span>
+                    <div className="font-medium">{customerInfo.phone}</div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-gray-500">Address:</span>
-                  <div className="font-medium">{customerInfo.address}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">City:</span>
-                  <div className="font-medium">{customerInfo.state}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Phone:</span>
-                  <div className="font-medium">{customerInfo.phone}</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
