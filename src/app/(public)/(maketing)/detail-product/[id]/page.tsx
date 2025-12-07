@@ -4,12 +4,9 @@ import Description from "@/components/templates/Detail/Description";
 import Information from "@/components/templates/Detail/Information";
 import Media from "@/components/templates/Detail/media";
 import HamsterWheel from "@/components/ui/HamsterWheel";
-import { ProductUi } from "@/types/type"
-import { restApiBase } from "@/utils/env";
-import axios from "axios";
+import { ProductUi } from "@/types/type";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react"
-import { AiFillWarning } from "react-icons/ai";
+import { useEffect, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs } from "swiper/modules";
@@ -21,6 +18,9 @@ import { PiCopy, PiHandbagSimple, PiShoppingCartSimpleLight } from "react-icons/
 import { FaFacebook, FaPinterestP, FaRegHeart, FaTwitter } from "react-icons/fa";
 import { TfiReload } from "react-icons/tfi";
 import BtnGetDeal from "@/components/ui/BtnGetDeal";
+import { useWishlist } from "@/hooks/useWishlist";
+import { toast } from "sonner";
+import { addToCart } from "@/axios/cart";
 export default function Detail() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const params = useParams();
@@ -52,6 +52,28 @@ export default function Detail() {
     }, [id]);
     const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
     const images = product?.imgUrls ?? [];
+    const { has, toggle, loading: wishlistLoading } = useWishlist();
+
+    const isInWishlist = product ? has(product.id) : false;
+
+    const handleAddToCart = async (variantId: number, quantity: number) => {
+        try {
+            await addToCart(variantId, quantity);
+            toast.success("Added to cart");
+            // TODO: nếu muốn chuyển sang giỏ: router.push("/my-cart");
+        } catch (e: any) {
+            toast.error(e?.message || "Add to cart failed");
+        }
+    };
+
+    const handleToggleWishlist = async () => {
+        if (!product) return;
+        try {
+            await toggle(product.id);
+        } catch (e: any) {
+            toast.error(e?.message || "Wishlist action failed");
+        }
+    };
     return (
         isLoading ? (
             // <div className="flex items-center justify-center"><HamsterWheel /></div>
@@ -233,7 +255,13 @@ export default function Detail() {
                         <>
                             <div className="flex justify-center">
                                 <Media product={product} />
-                                <Information product={product} />
+                                <Information
+                                    product={product}
+                                    isInWishlist={isInWishlist}
+                                    onToggleWishlist={handleToggleWishlist}
+                                    wishlistLoading={wishlistLoading}
+                                    onAddToCart={handleAddToCart}
+                                />
                             </div>
                             // Descrip tion
                             <Description product={product} />

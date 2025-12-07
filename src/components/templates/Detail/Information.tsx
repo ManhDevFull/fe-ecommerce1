@@ -12,7 +12,21 @@ import { IoLogoFacebook } from "react-icons/io";
 import { PiCopy, PiHandbagSimple, PiShoppingCartSimpleLight } from "react-icons/pi";
 import { TfiReload } from "react-icons/tfi";
 
-export default function Information({ product }: { product: ProductUi }) {
+type InformationProps = {
+    product: ProductUi;
+    isInWishlist?: boolean;
+    onToggleWishlist?: () => void;
+    wishlistLoading?: boolean;
+    onAddToCart?: (variantId: number, quantity: number) => void;
+};
+
+export default function Information({
+    product,
+    isInWishlist = false,
+    onToggleWishlist,
+    wishlistLoading = false,
+    onAddToCart
+}: InformationProps) {
     const [quantity, setQuantity] = useState<number>(1);
     console.log(quantity);
     const [attribute, setAtribute] = useState<Record<string, string[]>>({});
@@ -239,7 +253,10 @@ export default function Information({ product }: { product: ProductUi }) {
                     discount && <BtnGetDeal discount={discount.discount} />
                 }
                 {/* nút add card */}
-                <button className="w-[100px] flex gap-2 border-[2px] cursor-pointer border-[#1877F2] rounded-2xl p-2">
+                <button
+                    className="w-[100px] flex gap-2 border-[2px] cursor-pointer border-[#1877F2] rounded-2xl p-2"
+                    onClick={() => onAddToCart?.(currentValuevariant.id, quantity)}
+                >
                     <PiShoppingCartSimpleLight className="text-[#1877F2]" size={28} />
                     <p className="text-[20px] font-medium text-[#1877F2]">ADD</p>
                 </button>
@@ -253,12 +270,16 @@ export default function Information({ product }: { product: ProductUi }) {
             <div className="flex justify-between">
                 {/* wish list and compare  */}
                 <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2 cursor-pointer">
-                        <FaRegHeart className="text-[#475156]" size={28} />
+                    <button
+                        className="flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        onClick={onToggleWishlist}
+                        disabled={wishlistLoading}
+                    >
+                        <FaRegHeart className={isInWishlist ? "text-red-500" : "text-[#475156]"} size={28} />
                         <p className="text-center text-[#475156]">
-                            Add to wishlist
+                            {isInWishlist ? "In wishlist" : "Add to wishlist"}
                         </p>
-                    </div>
+                    </button>
                     <div className="flex gap-2 items-center cursor-pointer">
                         <TfiReload size={28} />
                         <p className="text-center text-[#475156]">

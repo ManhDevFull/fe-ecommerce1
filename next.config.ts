@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   },
   images: {
      domains: [
-      'imgs.search.brave.com', // ✅ domain cần thêm
+      'imgs.search.brave.com',
+      'cdn.kienthuc.net.vn', // ✅ domain cần thêm
     ],
     remotePatterns: [
       {
