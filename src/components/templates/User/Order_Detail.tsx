@@ -9,6 +9,8 @@ interface OrderAddressInfo {
   title: string;
   nameRecipient: string;
   tel: string;
+  detail?: string;
+  description?: string;
   fullAddress: string;
 }
 
@@ -267,7 +269,12 @@ export default function OrderDetail({ orderId, onBack }: OrderDetailProps) {
           <h3 className="font-semibold mb-2">Address Details</h3>
           <p className="font-medium">{orderDetail.addressInfo?.nameRecipient}</p>
           <p>{orderDetail.addressInfo?.tel}</p>
-          <p className="text-sm text-gray-600">{orderDetail.addressInfo?.fullAddress}</p>
+          <p className="text-sm text-gray-600">
+            {orderDetail.addressInfo?.fullAddress ||
+              [orderDetail.addressInfo?.detail, orderDetail.addressInfo?.description, "Việt Nam"]
+                .filter((x) => x && x.trim().length > 0)
+                .join(", ")}
+          </p>
         </div>
       </div>
 

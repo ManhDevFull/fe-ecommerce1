@@ -67,6 +67,14 @@ export default function OrderHistory({ onSelectOrder }: OrderHistoryProps) {
     return (price ?? 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
   };
 
+  const statusClass = (status: string) => {
+    const normalized = status.trim().toUpperCase();
+    if (normalized === "DELIVERED") return "text-green-600 font-semibold";
+    if (normalized === "CANCELLED" || normalized === "CANCELED") return "text-red-600 font-semibold";
+    if (normalized === "SHIPPED") return "text-blue-600 font-semibold";
+    if (normalized === "PENDING" || normalized === "PROCESSING") return "text-amber-600 font-semibold";
+    return "text-gray-700";
+  };
 
 
   return (
@@ -116,7 +124,9 @@ export default function OrderHistory({ onSelectOrder }: OrderHistoryProps) {
                       onClick={() => onSelectOrder(order.orderId.toString())} >
                       <td className="py-3 px-4">#{order.orderId}</td>
                       <td className="py-3 px-4">{formatOrderDate(order.orderDate)}</td>
-                      <td className="py-3 px-4">{order.statusOrder}</td>
+                      <td className="py-3 px-4">
+                        <span className={statusClass(order.statusOrder)}>{order.statusOrder}</span>
+                      </td>
                       <td className="py-3 px-4">{formatPrice(order.totalPriceAfterDiscount)}</td>
                     </tr>
                   ))}
