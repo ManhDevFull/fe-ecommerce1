@@ -263,10 +263,10 @@ export default function Detail() {
                                     onAddToCart={handleAddToCart}
                                 />
                             </div>
-                            // Descrip tion
                             <Description product={product} />
                         </>
                     )
+
                 }
             </div>)
     )

@@ -18,34 +18,6 @@ import CardIndex from "@/components/ui/CardIndex";
 import router from "next/router";
 
 export default function DealsDay({ products }: { products: ProductUi[] }) {
-    // const products = [
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("10/09/2025 23:59:59", "dd/MM/yyyy HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 800
-    //     },
-    //     {
-    //         name: 'bcd',
-    //         endTime: parse("12-09-2025 21:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 300
-    //     },
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("13-09-2025 2 3:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 400
-    //     },
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("14-09-2025 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 400
-    //     }
-
-    // ]
-
     const [newProduct, setNewProduct] = useState<ProductUi[]>([]);
     useEffect(() => {
         setNewProduct(products);

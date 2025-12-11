@@ -11,6 +11,9 @@ import { FaFacebook, FaPinterestP, FaRegHeart, FaTwitter } from "react-icons/fa"
 import { IoLogoFacebook } from "react-icons/io";
 import { PiCopy, PiHandbagSimple, PiShoppingCartSimpleLight } from "react-icons/pi";
 import { TfiReload } from "react-icons/tfi";
+import { useRouter, usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
+import { authSelector } from "@/redux/reducers/authReducer";
 
 type InformationProps = {
     product: ProductUi;
@@ -27,6 +30,9 @@ export default function Information({
     wishlistLoading = false,
     onAddToCart
 }: InformationProps) {
+    const auth = useSelector(authSelector);
+    const router = useRouter();
+    const pathname = usePathname();
     const [quantity, setQuantity] = useState<number>(1);
     console.log(quantity);
     const [attribute, setAtribute] = useState<Record<string, string[]>>({});
@@ -75,28 +81,44 @@ export default function Information({
         ));
     }
     const handleOnechangeVariant = (key: string, value: string) => {
-        // luôn chuyển UI theo lựa chọn
+        // update selected option trên UI
         const newSelected = {
             ...selectedOptions,
             [key]: value
         };
-        setSelectedOptions(newSelected);
 
-        // tìm variant thật
-        const match = variant.find(v =>
+        // thử tìm variant ứng với lựa chọn mới
+        let match = variant.find(v =>
             Object.entries(newSelected).every(([k, val]) => v.valuevariant[k] === val)
         );
 
-        // nếu có variant thật → đổi giá
-        if (match) {
-            setCurrentValuevariant({ ...match });
-            // ...match để lấy ra các atribute. {...match} tạo ra object mới nên render lại giao diện
-            // nếu set thẳng match thì khi click trùng nó không render lại
-            // set lại value thật để gửi về backend và render lại giá tương ứng
+        // Nếu KHÔNG có variant thật → tìm 1 variant hợp lệ gần nhất
+        if (!match) {
+            // Lấy các variant có cùng key được chọn
+            const candidates = variant.filter(v => v.valuevariant[key] === value);
+
+            if (candidates.length > 0) {
+                // Chọn variant đầu tiên trong nhóm này làm fallback
+                match = candidates[0];
+
+                // cập nhật lại selectedOptions cho đúng với variant thật
+                const correctedSelected = { ...match.valuevariant };
+                setSelectedOptions(correctedSelected);
+
+                // set giá trị thật
+                setCurrentValuevariant({ ...match });
+
+                return; // kết thúc vì đã sửa lại selection
+            }
         }
 
-        // nếu không có variant → KHÔNG đổi giá nhưng vẫn update dropdown
+        // Nếu tìm được variant hợp lệ
+        if (match) {
+            setSelectedOptions(newSelected);
+            setCurrentValuevariant({ ...match });
+        }
     };
+
 
     // tìm discount còn có hạn sử dụng 
     const getValidDiscount = (variant: VariantDTO) => {
@@ -116,6 +138,10 @@ export default function Information({
         return active ?? null;
     };
     const discount = getValidDiscount(currentValuevariant);
+    const handleWishlistClick = async () => {
+        await onToggleWishlist?.();
+        router.push("/wish-list");
+    };
     return (
         <div className="w-full">
             {/* review and name product */}
@@ -255,7 +281,13 @@ export default function Information({
                 {/* nút add card */}
                 <button
                     className="w-[100px] flex gap-2 border-[2px] cursor-pointer border-[#1877F2] rounded-2xl p-2"
-                    onClick={() => onAddToCart?.(currentValuevariant.id, quantity)}
+                    onClick={() => {
+                        if (!auth?.token) {
+                            router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+                            return;
+                        }
+                        onAddToCart?.(currentValuevariant.id, quantity);
+                    }}
                 >
                     <PiShoppingCartSimpleLight className="text-[#1877F2]" size={28} />
                     <p className="text-[20px] font-medium text-[#1877F2]">ADD</p>
@@ -272,7 +304,7 @@ export default function Information({
                 <div className="flex gap-4 items-center">
                     <button
                         className="flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                        onClick={onToggleWishlist}
+                        onClick={handleWishlistClick}
                         disabled={wishlistLoading}
                     >
                         <FaRegHeart className={isInWishlist ? "text-red-500" : "text-[#475156]"} size={28} />
