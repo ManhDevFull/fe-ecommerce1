@@ -15,10 +15,10 @@ import axios from "axios";
 import { restApiBase } from "@/utils/env";
 import TimeLeft from "@/components/ui/TimeLeft";
 import CardIndex from "@/components/ui/CardIndex";
-import router from "next/router";
 
 export default function DealsDay({ products }: { products: ProductUi[] }) {
     const [newProduct, setNewProduct] = useState<ProductUi[]>([]);
+    const route = useRouter();
     useEffect(() => {
         setNewProduct(products);
     }, [products]);
@@ -63,7 +63,10 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
         // hiện tại dữ liệu fake đã hết hạn nên trả về null
         return null;
     }
-
+// hàm đưa qua trang chi tiết sản phẩm
+    const handleDetail = (id: number)=>{
+        route.push(`detail-product/${id}`);
+    }
     return (
         <div className="w-ful px-4 sm:px-16 py-4">
             <div className="w-full sm:flex sm:justify-between sm:items-center gap-2">
@@ -91,7 +94,7 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
                                 className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
                             >
                                 {/* <Product img={product.imgUrls[1]} isNew={true} type={true} /> */}
-                                <CardIndex isNew={true} img={product.imgUrls[0]} />
+                                <CardIndex id={product.id} handleDetail={handleDetail} isNew={true} img={product.imgUrls[0]} />
                                 {
                                     deal && <FlashDealBar endTime={deal?.discount?.endtime} />
                                 }
