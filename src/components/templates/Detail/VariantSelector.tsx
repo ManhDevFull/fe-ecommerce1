@@ -67,7 +67,9 @@ export default function VariantSelector({
       ) ?? variants[0];
 
     setAttribute(attributes);
-    setSelectedOptions(initialSelected);
+    setSelectedOptions(
+      fillMissingSelectedOptions(attributes, match.valuevariant)
+    );
     setCurrentVariant(match);
   }, [variants]);
 
@@ -78,20 +80,50 @@ export default function VariantSelector({
   }, [currentVariant, onVariantChange]);
 
   const handleOptionChange = (key: string, value: string) => {
-    const nextSelected = {
+    const nextSelected = fillMissingSelectedOptions(attribute, {
       ...selectedOptions,
       [key]: value,
-    };
-    setSelectedOptions(nextSelected);
+    });
 
-    const match = variants.find((v) =>
+    const exactMatch = variants.find((v) =>
       Object.entries(nextSelected).every(
         ([k, val]) => v.valuevariant[k] === val
       )
     );
-    if (match) {
-      setCurrentVariant({ ...match });
+
+    if (exactMatch) {
+      setSelectedOptions(nextSelected);
+      setCurrentVariant({ ...exactMatch });
+      return;
     }
+
+    const candidates = variants.filter((v) => v.valuevariant[key] === value);
+    if (candidates.length) {
+      const best = candidates.reduce((bestMatch, current) => {
+        const bestScore = Object.entries(nextSelected).reduce(
+          (score, [k, val]) =>
+            score + (bestMatch.valuevariant[k] === val ? 1 : 0),
+          0
+        );
+        const currentScore = Object.entries(nextSelected).reduce(
+          (score, [k, val]) =>
+            score + (current.valuevariant[k] === val ? 1 : 0),
+          0
+        );
+        return currentScore > bestScore ? current : bestMatch;
+      }, candidates[0]);
+
+      setSelectedOptions(
+        fillMissingSelectedOptions(attribute, best.valuevariant)
+      );
+      setCurrentVariant({ ...best });
+      return;
+    }
+
+    setSelectedOptions(
+      fillMissingSelectedOptions(attribute, variants[0].valuevariant)
+    );
+    setCurrentVariant({ ...variants[0] });
   };
 
   if (!variants.length) return null;
