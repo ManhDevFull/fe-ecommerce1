@@ -5,7 +5,7 @@ import { Brands } from "@/components/templates/brands/brands";
 import DealsDay from "@/components/templates/dealsDay/dealsDay";
 import EBrand from "@/components/templates/electronicBrands/eBrand";
 import { Features } from "@/components/templates/features/features";
-import Frequently from "@/components/templates/frequently/frequenty";
+import Frequently from "@/components/templates/frequently/frequentlyIndex";
 import ShopByCategory from "@/components/templates/shopByCategory/ShopByCategory";
 import { Slider } from "@/components/templates/slider/slider";
 import HamsterWheel from "@/components/ui/HamsterWheel";
@@ -31,7 +31,7 @@ export default function Home({ children, params }: RootLayoutProps) {
         // gọi song song
         const [discountRes, frequentlyRes] = await Promise.all([
           axios.get(`${restApiBase}product/discount`),
-          axios.get(`${restApiBase}product/frequently`)
+          axios.get(`${restApiBase}product/frequently-index`)
         ]);
 
         console.log("sản phẩm có discount:", discountRes.data);

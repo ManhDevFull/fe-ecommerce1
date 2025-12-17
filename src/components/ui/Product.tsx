@@ -55,7 +55,7 @@ export default function Product({ product, selectedFilter, type }: productProps)
                         <div className="py-2 w-full">
                             <BtnGetDeal discount={discount?.discount ?? 0} />
                         </div>
-                        <BtnBuyNow price={variant.price ?? 0} />
+                        <BtnBuyNow id={product.id}  price={variant.price ?? 0} />
                     </div>
                 </>
             ) : (

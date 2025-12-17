@@ -10,7 +10,7 @@ import { FaRupeeSign, FaStar } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import { IoEyeOutline } from "react-icons/io5";
 
-export default function Frequently({ product }: { product: FrequentlyDTO }) {
+export default function FrequentlyIndex({ product }: { product: FrequentlyDTO }) {
     // const products = [
     //     {
     //         "name": "Xbox Series S - 512GB SSD Console with Wireless Controller - EU Version",

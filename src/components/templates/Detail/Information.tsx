@@ -9,6 +9,9 @@ import { FaFacebook, FaPinterestP, FaRegHeart, FaTwitter } from "react-icons/fa"
 import { PiCopy, PiHandbagSimple, PiShoppingCartSimpleLight } from "react-icons/pi";
 import { TfiReload } from "react-icons/tfi";
 import VariantSelector from "@/components/templates/Detail/VariantSelector";
+import { useRouter, usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
+import { authSelector } from "@/redux/reducers/authReducer";
 
 type InformationProps = {
     product: ProductUi;
@@ -25,6 +28,9 @@ export default function Information({
     wishlistLoading = false,
     onAddToCart
 }: InformationProps) {
+    const auth = useSelector(authSelector);
+    const router = useRouter();
+    const pathname = usePathname();
     const [quantity, setQuantity] = useState<number>(1);
     const variant = product.variant;
     const [currentValuevariant, setCurrentValuevariant] = useState<VariantDTO>(
@@ -54,6 +60,10 @@ export default function Information({
         return active ?? null;
     };
     const discount = getValidDiscount(currentValuevariant);
+    const handleWishlistClick = async () => {
+        await onToggleWishlist?.();
+        router.push("/wish-list");
+    };
     return (
         <div className="w-full">
             {/* review and name product */}
@@ -173,7 +183,13 @@ export default function Information({
                 {/* nút add card */}
                 <button
                     className="w-[100px] flex gap-2 border-[2px] cursor-pointer border-[#1877F2] rounded-2xl p-2"
-                    onClick={() => onAddToCart?.(currentValuevariant.id, quantity)}
+                    onClick={() => {
+                        if (!auth?.token) {
+                            router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+                            return;
+                        }
+                        onAddToCart?.(currentValuevariant.id, quantity);
+                    }}
                 >
                     <PiShoppingCartSimpleLight className="text-[#1877F2]" size={28} />
                     <p className="text-[20px] font-medium text-[#1877F2]">ADD</p>
@@ -190,7 +206,7 @@ export default function Information({
                 <div className="flex gap-4 items-center">
                     <button
                         className="flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                        onClick={onToggleWishlist}
+                        onClick={handleWishlistClick}
                         disabled={wishlistLoading}
                     >
                         <FaRegHeart className={isInWishlist ? "text-red-500" : "text-[#475156]"} size={28} />
