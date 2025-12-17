@@ -1,3 +1,4 @@
+import { number } from "framer-motion";
 import { Account } from "./models/Account";
 import { Address } from "./models/Addrress";
 import { OrderDetail } from "./models/OrderDetail";
@@ -216,3 +217,18 @@ export type IReviewSummary = {
   updated: number;
   averageRating: number;
 };
+export type trackOrder = {
+  idOrder: number;
+  idAccount: number;
+  totalPrice: number;
+  status: string;
+  sendorder: string;
+}
+export type timeLine = {
+  idOrder: number;
+  orderdate: string;
+  receivedate: string;
+  status: string;
+  totalPrice: number;
+  totalQuantity: number;
+}
