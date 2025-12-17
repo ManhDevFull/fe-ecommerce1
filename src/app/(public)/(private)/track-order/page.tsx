@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { trackOrder } from "@/types/type";
 import handleAPI from "@/axios/handleAPI";
+import { formatCurrency } from "@/utils/currency";
 export default function TrackOrder() {
   const router = useRouter()
   // const products = [
@@ -118,6 +119,7 @@ export default function TrackOrder() {
   //   Qty: number;
   // };
   // const [product, setProduct] = useState<TrackProduct | null>(null);
+  const index = 0;
   useEffect(() => {
     const fetchTrackorder = async () => {
       try {
@@ -148,36 +150,40 @@ export default function TrackOrder() {
           </div>
           <div className="block bg-gray-100 w-full rounded-[8px] mt-4 px-4 pb-2 overflow-x-auto">
             <div className="flex w-full border-b-1 border-[#888888] text-[#5b5b5b]">
-              <p className="w-[52%] pl-2 text-left py-2">Product Name</p>
+              {/* <p className="w-[52%] pl-2 text-left py-2">Product Name</p>
               <p className="w-[16%] text-center py-2">Price</p>
               <p className="w-[16%] text-center py-2">Qty</p>
-              <p className="w-[16%] text-center py-2">Subtotal</p>
+              <p className="w-[16%] text-center py-2">Subtotal</p> */}
+              <p className="w-[4%] text-center py-2">#</p>
+              <p className="w-[24%] text-center py-2">Shipping code</p>
+              <p className="w-[24%] text-center py-2">Total price</p>
+              <p className="w-[24%] text-center py-2">Status</p>
+              <p className="w-[24%] text-center py-2">SendDate</p>
             </div>
 
-            {trackOrder && trackOrder.map((product, index) => (
-              <div
-                key={index}
-                className="flex mt-2 p-2 rounded-lg cursor-pointer hover:bg-[#dddddd]"
-                onClick={() =>
-                  router.push(`/track-order/${product.idOrder}`)
-                }
-              >
-                <div className="w-[52%] text-center">
-                  <div className="flex gap-2">
-                    <img className="w-18" src={product.imgUrls?.[0]} alt="" />
-                    <div>
-                      <h5 className="font-medium">{product.nameProduct}</h5>
-                      <p className="text-sm uppercase text-[#8c8c8c]">
-                        {product.description}
-                      </p>
-                    </div>
+            {trackOrder && trackOrder.map((product, index) => {
+              index++;
+              return <>
+                <div
+                  key={index}
+                  className="flex mt-2 p-2 rounded-lg cursor-pointer hover:bg-[#dddddd]"
+                  onClick={() =>
+                    router.push(`/track-order/${product.idOrder}`)
+                  }
+                >
+                  <div className="w-[4%] flex items-center px-2 text-[#2222]">
+                    {index}
                   </div>
+                  <div className="w-[24%] flex items-center px-4 justify-center">
+                      #{product.idOrder}
+                  </div>
+                  <div className="w-[24%] flex items-center px-4 justify-center">{formatCurrency(product.totalPrice)}</div>
+                  <div className="w-[24%] flex items-center px-4 justify-center">{product.status}</div>
+                  <div className="w-[24%] flex items-center px-4 justify-center">{new Date(product.sendorder).toLocaleDateString("vi-VN")}</div>
                 </div>
-                <div className="w-[16%] flex items-center px-4 justify-center">${product.price}</div>
-                <div className="w-[16%] flex items-center px-4 justify-center">{product.quantity}</div>
-                <div className="w-[16%] flex items-center px-4 justify-center">${product.subtotal}</div>
-              </div>
-            ))}
+              </>
+            }
+            )}
           </div>
         </div>
       </main>

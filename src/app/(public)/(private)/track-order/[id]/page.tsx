@@ -1,12 +1,16 @@
 "use client";
+import handleAPI from "@/axios/handleAPI";
 import BackNavigation from "@/components/ui/BackNavigation";
 import NavigationPath from "@/components/ui/NavigationPath";
+import { timeLine } from "@/types/type";
+import { useEffect, useState } from "react";
 import { BsFillBoxSeamFill } from "react-icons/bs";
 import { CiCircleCheck } from "react-icons/ci";
 import { FaHandshake, FaTruck } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa6";
 import { FiMap } from "react-icons/fi";
 import { HiOutlineMapPin } from "react-icons/hi2";
+import { useParams, useRouter } from "next/navigation";
 import {
   PiChecks,
   PiNotebook,
@@ -14,24 +18,54 @@ import {
   PiUser,
 } from "react-icons/pi";
 
-  type Props = {
-    params: { id: string };
+// SHIPPED
+// PENDING
+// DELIVERED
+// CANCELLED
+export default function OrderProcess() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const idOrder = params.id;
+    console.log("order id:", idOrder);
+  // const product = {
+
+  //   id: 1,
+  //   name: "Jacket",
+  //   description: "Coat",
+  //   price: 200,
+  //   img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1755614948/4eda7f01-e154-4df5-a6bd-ca78c8d1db9c.png",
+  //   Qty: 3,
+  //   status: "Packaging",
+  // };
+  const [product, setProduct] = useState<timeLine | null>(null);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data: any = await handleAPI(`/Order/time-line/${idOrder}`, undefined, 'get');
+        // const data: any = await handleAPI(`/Order/time-line/1`, undefined, 'get');
+        console.log("time line: ", data);
+        setProduct(data);
+      } catch (error: any) {
+        if (error.response) console.log("lỗi từ server");
+        if (error.request) console.log("không nhận được phản hồi từ server");
+      }
+    }
+    fetchProduct();
+  }, []);
+  //  hàm kiểm tra trạng thái của order
+  const statusToStepIndex = (status?: string) => {
+    switch (status) {
+      case "PENDING":
+        return 1; // đang Packaging
+      case "SHIPPED":
+        return 2; // On The Road
+      case "DELIVERED":
+        return 3; // Delivered
+      default:
+        return 0; // Order Placed
+    }
   };
-  // SHIPPED
-  // PENDING
-  // DELIVERED
-  // CANCELLED
-  export default function OrderProcess({ params }: Props) {
-  console.log(params)
-  const product = {
-    id: 1,
-    name: "Jacket",
-    description: "Coat",
-    price: 200,
-    img: "https://res.cloudinary.com/do0im8hgv/image/upload/v1755614948/4eda7f01-e154-4df5-a6bd-ca78c8d1db9c.png",
-    Qty: 3,
-    status: "Packaging",
-  };
+
   const steps = [
     { name: "Order Placed", icon: <PiNotebook size={30} color="#1877F2" /> },
     {
@@ -97,7 +131,7 @@ import {
       time: "23 Jan, 2021 at 2:00 PM",
     },
   ];
-  const currentIndex = steps.findIndex((s) => s.name === product.status);
+  const currentIndex = statusToStepIndex(product?.status);
   const styleStep = {
     isCompleted: "bg-[#1877F2] border-[#1877F2]",
     isCurrent: "bg-[#1877F2] border-white",
@@ -139,11 +173,19 @@ import {
                 </div>
                 <div className="flex w-[89%] justify-between pb-18">
                   <div
-                    className={`bg-[#1877F2] h-2 absolute top-2 z-9
-                        ${product.status === steps[1].name && 'w-[29%]'} 
-                        ${product.status === steps[2].name && 'w-[58%]'} 
-                        ${product.status === steps[3].name && 'w-[87%]'} `}
+                    className="bg-[#1877F2] h-2 absolute top-2 z-9 transition-all"
+                    style={{
+                      width:
+                        currentIndex === 0
+                          ? "0%"
+                          : currentIndex === 1
+                            ? "29%"
+                            : currentIndex === 2
+                              ? "58%"
+                              : "87%",
+                    }}
                   />
+
                   {steps.map((step, index) => {
                     const isStyle =
                       index < currentIndex

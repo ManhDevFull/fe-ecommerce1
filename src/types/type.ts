@@ -220,11 +220,15 @@ export type IReviewSummary = {
 export type trackOrder = {
   idOrder: number;
   idAccount: number;
-  idProduct: number;
-  nameProduct: string;
-  description: string;
-  imgUrls: string[];
-  price: number;
-  quantity: number;
-  subtotal: number;
+  totalPrice: number;
+  status: string;
+  sendorder: string;
+}
+export type timeLine = {
+  idOrder: number;
+  orderdate: string;
+  receivedate: string;
+  status: string;
+  totalPrice: number;
+  totalQuantity: number;
 }
