@@ -62,7 +62,6 @@ export default function Information({
     const discount = getValidDiscount(currentValuevariant);
     const handleWishlistClick = async () => {
         await onToggleWishlist?.();
-        router.push("/wish-list");
     };
     return (
         <div className="w-full">
