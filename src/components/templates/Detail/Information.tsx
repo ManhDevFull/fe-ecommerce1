@@ -1,16 +1,14 @@
 import BtnGetDeal from "@/components/ui/BtnGetDeal";
-import Dropdown from "@/components/ui/Dropdown";
 import FlashDealBar from "@/components/ui/FlashDealBar";
-import Product from "@/components/ui/Product";
 import Quantity from "@/components/ui/Quantity";
 import { Review } from "@/components/ui/Review";
 import { ProductUi, VariantDTO } from "@/types/type";
 import { formatCurrency } from "@/utils/currency";
 import { useEffect, useState } from "react";
 import { FaFacebook, FaPinterestP, FaRegHeart, FaTwitter } from "react-icons/fa";
-import { IoLogoFacebook } from "react-icons/io";
 import { PiCopy, PiHandbagSimple, PiShoppingCartSimpleLight } from "react-icons/pi";
 import { TfiReload } from "react-icons/tfi";
+import VariantSelector from "@/components/templates/Detail/VariantSelector";
 
 type InformationProps = {
     product: ProductUi;
@@ -28,77 +26,17 @@ export default function Information({
     onAddToCart
 }: InformationProps) {
     const [quantity, setQuantity] = useState<number>(1);
-    console.log(quantity);
-    const [attribute, setAtribute] = useState<Record<string, string[]>>({});
-    // lấy ra variant
     const variant = product.variant;
-    const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(
-        variant[0].valuevariant
+    const [currentValuevariant, setCurrentValuevariant] = useState<VariantDTO>(
+        variant[0]
     );
-    const [currentValuevariant, setCurrentValuevariant] = useState<VariantDTO>(variant[0]); // cho variant mặc định ban đầu
-    // hàm kiểm tra cho selectionOption. nếu selectionOption không có đẩy đủ các key và value như atribute
-    //=> khi render sẽ bị undefine vd: atribite có ssd, ram, storage nhưng selectionOption chỉ có ssd
-    // => active [ram] sẽ không có key là ram ở selectOption
-    const fillMissingSelectedOptions =
-        (attribute: Record<string, string[]>, selectedOptions: Record<string, string>) => {
-            const filled: Record<string, string> = { ...selectedOptions } // lấy ra các thuộc tính từ selectedOptions
-            Object.entries(attribute).forEach(([key, value]) => {
-                if (!filled[key])
-                    filled[key] = value[0]; // với key không có thì tạo key mới với value mặc định là 0 
-            })
-            return filled; // lúc này đã đầy đủ các key, value như attribute
-        }
+
     useEffect(() => {
-        const attributeMap: Record<string, Set<string>> = {} // tạo 1 object rỗng để lưu biến thể
-        variant.forEach(v => {
-            Object.entries(v.valuevariant).forEach(([key, value]) => {
-                if (!attributeMap[key])
-                    attributeMap[key] = new Set(); // dùng set để loại bỏ các valude trùng lặp
-                attributeMap[key].add(value as string);
-            })
-        })
-        // chuyể từ set về mảng
-        //fromEnties: chuyển mảng [[key], [value]] => {key: [value]}
-        const attributes = Object.fromEntries(
-            Object.entries(attributeMap).map(([key, value]) => [key, [...value]])
-        );
-        setAtribute(attributes);
-        setSelectedOptions(prev => fillMissingSelectedOptions(attributes, prev));
-    }, []);
-    console.log('atrribut: ', attribute);
-    // hàm tìm variant trong varaints product thông qua color, storage...
-    const findVariant = (value: VariantDTO) => {
-        return variant.find(v => (
-            Object.entries(value.valuevariant).every(([key, val]) => (
-                v.valuevariant[key] === val
-            ))
-        ));
-    }
-    const handleOnechangeVariant = (key: string, value: string) => {
-        // luôn chuyển UI theo lựa chọn
-        const newSelected = {
-            ...selectedOptions,
-            [key]: value
-        };
-        setSelectedOptions(newSelected);
-
-        // tìm variant thật
-        const match = variant.find(v =>
-            Object.entries(newSelected).every(([k, val]) => v.valuevariant[k] === val)
-        );
-
-        // nếu có variant thật → đổi giá
-        if (match) {
-            setCurrentValuevariant({ ...match });
-            // ...match để lấy ra các atribute. {...match} tạo ra object mới nên render lại giao diện
-            // nếu set thẳng match thì khi click trùng nó không render lại
-            // set lại value thật để gửi về backend và render lại giá tương ứng
+        if (variant.length > 0) {
+            setCurrentValuevariant(variant[0]);
         }
+    }, [variant]);
 
-        // nếu không có variant → KHÔNG đổi giá nhưng vẫn update dropdown
-    };
-
-    // tìm discount còn có hạn sử dụng 
     const getValidDiscount = (variant: VariantDTO) => {
         const now = new Date();
 
@@ -187,30 +125,10 @@ export default function Information({
             </div>
             {/* varaint */}
             <div className="border-t-[2px] border-b-[2px] border-[#E4E7E9] py-4 mt-4">
-                <div
-                    className="grid gap-6"
-                    style={{
-                        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" // tự động chia cột
-                    }}
-                >
-                    {Object.entries(attribute).map(([key, value]) => (
-                        <div key={key}>
-                            <p className="font-semibold mb-1 text-[#191C1F]">{key.charAt(0).toUpperCase() + key.slice(1)}</p>
-
-                            <Dropdown active={selectedOptions[key]}>
-                                {value.map(v => (
-                                    <div
-                                        key={v}
-                                        className="cursor-pointer pl-2"
-                                        onClick={() => handleOnechangeVariant(key, v)}
-                                    >
-                                        <p className="text-[#475156]">{v.charAt(0).toUpperCase() + v.slice(1)}</p>
-                                    </div>
-                                ))}
-                            </Dropdown>
-                        </div>
-                    ))}
-                </div>
+                <VariantSelector
+                    variants={variant}
+                    onVariantChange={(next) => setCurrentValuevariant(next)}
+                />
             </div>
             {/* Deal member Filled */}
             <div className="flex gap-30 items-center mt-2 bg-green-200 p-4">
@@ -309,3 +227,5 @@ export default function Information({
 //     [color]: ['red', 'blue']],
 //     storage: ['2gb', '5gb']
 // }
+
+
