@@ -1,59 +1,62 @@
 import { useState } from "react";
-import { VscAdd, VscChromeMinimize } from "react-icons/vsc";
 import { motion, AnimatePresence } from "framer-motion";
-import { RiArrowDropDownLine, RiArrowDropUpLine } from "react-icons/ri";
-// type categoryProps = {
-//     _id: number;
-//     name_category: string;
-// }
-type AccordionProps = {
-    active: string;
-    children: React.ReactNode;
-    // category: categoryProps;
-}
-export default function Dropdown({ active, children }: AccordionProps) {
-    const [isOpen, setIsOpen] = useState(true);
-    return (
-        <div className="pr-2 sm:pr-10 w-full">
-            <div
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full p-2 rounded-[2px] flex items-center justify-between py-2 border-[1px] border-[#0000001F] cursor-pointer"
-            >
-                <p className="text-[10px] sm:text-[16px] font-bold text-[#191C1F]">
-                    {active.charAt(0).toUpperCase() + active.slice(1)}
-                </p>
-                <div>
-                    {/* varaint khi chọn hoặc là mặc định */}
-                    <span className="relative w-[10px] h-[10px] sm:w-[20px] sm:h-[20px] flex items-center flex-nowrap justify-center">
-                        <span
-                            className={`absolute transition-all duration-300 transform ${isOpen ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
-                                }`}
-                        >
-                            <RiArrowDropDownLine className="text-[#ADB7BC]" size={40} />
-                        </span>
+import { RiArrowDropDownLine } from "react-icons/ri";
 
-                        <span
-                            className={`absolute transition-all duration-300 transform ${isOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
-                                }`}
-                        >
-                            <RiArrowDropUpLine className="text-[#ADB7BC]" size={40} />
-                        </span>
-                    </span>
-                </div>
+type DropdownProps = {
+    value: string;
+    children: (close: () => void) => React.ReactNode;
+};
+
+export default function Dropdown({ value, children }: DropdownProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="relative w-full">
+            {/* Trigger */}
+            <div
+                onClick={() => setIsOpen(prev => !prev)}
+                className="
+                    flex items-center justify-between
+                    px-3 py-2
+                    border border-[#E4E7E9]
+                    rounded-lg
+                    cursor-pointer
+                    bg-white
+                    hover:border-[#1877F2]
+                    transition
+                "
+            >
+                <span className="text-sm font-medium text-[#191C1F]">
+                    {value.charAt(0).toUpperCase() + value.slice(1)}
+                </span>
+
+                <RiArrowDropDownLine
+                    size={26}
+                    className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                />
             </div>
+
+            {/* Menu */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="w-full"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.2 }}
+                        className="
+                            absolute z-20 mt-2 w-full
+                            bg-white
+                            border border-[#E4E7E9]
+                            rounded-lg
+                            shadow-md
+                            overflow-hidden
+                        "
                     >
-                        {children}
+                        {children(() => setIsOpen(false))}
                     </motion.div>
                 )}
             </AnimatePresence>
         </div>
-    )
+    );
 }

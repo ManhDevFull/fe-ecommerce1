@@ -9,7 +9,7 @@ import { CiHeart } from "react-icons/ci";
 import { FaRupeeSign, FaStar } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import { IoEyeOutline } from "react-icons/io5";
-
+import { useRouter } from "next/navigation";
 export default function FrequentlyIndex({ product }: { product: FrequentlyDTO }) {
     // const products = [
     //     {
@@ -130,6 +130,7 @@ export default function FrequentlyIndex({ product }: { product: FrequentlyDTO })
     //         "category": "Speaker"
     //     }
     // ]
+    const route = useRouter();
     const [products, setProducts] = useState<FrequentlyDTO | null>(null);
     useEffect(() => {
         setProducts(product);
@@ -153,7 +154,9 @@ export default function FrequentlyIndex({ product }: { product: FrequentlyDTO })
     const getFirstDiscount = (product: ProductUi): VariantDTO => {
         return product.variant.find(v => getValidDiscount(v)) ?? product.variant[0];
     };
-
+    const handleDetail = (id: number) => {
+        route.push(`detail-product/${id}`);
+    }
     console.log("mảng sau khi merge", mergedProduct);
     return (
         <div className="py-8 px-4 sm:px-16">
@@ -231,7 +234,7 @@ export default function FrequentlyIndex({ product }: { product: FrequentlyDTO })
                                             variant && discount != 0 ? (
                                                 <div className="flex gap-3">
                                                     <span className="text-[#ADB7BC] line-through text-[20px]">{formatCurrency(variant.price, { decimals: 2 })}</span>
-                                                    <span className="text-[#2DA5F3] font-bold text-[20px]">{formatCurrency((variant.price - variant.price *(discount/100)), { decimals: 2 })}</span>
+                                                    <span className="text-[#2DA5F3] font-bold text-[20px]">{formatCurrency((variant.price - variant.price * (discount / 100)), { decimals: 2 })}</span>
                                                 </div>
                                             ) : (
                                                 <span><span className="text-[#2DA5F3] text-[20px]">{formatCurrency(variant.price, { decimals: 2 })}</span></span>

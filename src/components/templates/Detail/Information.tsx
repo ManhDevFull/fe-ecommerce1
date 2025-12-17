@@ -14,6 +14,7 @@ import { TfiReload } from "react-icons/tfi";
 import { useRouter, usePathname } from "next/navigation";
 import { useSelector } from "react-redux";
 import { authSelector } from "@/redux/reducers/authReducer";
+import { DropdownItem } from "@/components/ui/DropdownItem";
 
 type InformationProps = {
     product: ProductUi;
@@ -221,21 +222,28 @@ export default function Information({
                 >
                     {Object.entries(attribute).map(([key, value]) => (
                         <div key={key}>
-                            <p className="font-semibold mb-1 text-[#191C1F]">{key.charAt(0).toUpperCase() + key.slice(1)}</p>
+                            <p className="font-semibold mb-1 text-[#191C1F]">
+                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                            </p>
 
-                            <Dropdown active={selectedOptions[key]}>
-                                {value.map(v => (
-                                    <div
-                                        key={v}
-                                        className="cursor-pointer pl-2"
-                                        onClick={() => handleOnechangeVariant(key, v)}
-                                    >
-                                        <p className="text-[#475156]">{v.charAt(0).toUpperCase() + v.slice(1)}</p>
-                                    </div>
-                                ))}
+                            <Dropdown value={selectedOptions[key]}>
+                                {(close) =>
+                                    value.map(v => (
+                                        <DropdownItem
+                                            key={v}
+                                            label={v.charAt(0).toUpperCase() + v.slice(1)}
+                                            active={selectedOptions[key] === v}
+                                            onClick={() => {
+                                                handleOnechangeVariant(key, v);
+                                                close(); 
+                                            }}
+                                        />
+                                    ))
+                                }
                             </Dropdown>
                         </div>
                     ))}
+
                 </div>
             </div>
             {/* Deal member Filled */}
