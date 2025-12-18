@@ -110,7 +110,7 @@ export default function ShippingPayments() {
     const loadMeta = async () => {
       try {
         if (!paymentMethods.length) {
-          const payments = await handleAPI("/shipping/payment-providers");
+          const payments = await handleAPI("/shipping/payment/providers");
           if (payments && Array.isArray(payments) && payments.length) {
             dispatch(
               setPaymentMethods(
