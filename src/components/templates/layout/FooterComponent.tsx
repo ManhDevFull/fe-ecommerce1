@@ -47,7 +47,7 @@ export default function FooterComponent() {
     {
       key: "Wishlist",
       name: "Wishlist",
-      href: "/wish-list",
+      href: "/wishlist",
     },
     {
       key: "compare",

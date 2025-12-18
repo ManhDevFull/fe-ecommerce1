@@ -1,6 +1,5 @@
 import { BtnViewAll } from "@/components/ui/BtnViewAll";
-import { FrequentlyDTO, ProductUi, VariantDTO } from "@/types/type";
-import { formatCurrency } from "@/utils/currency";
+import { FrequentlyDTO, ProductUi } from "@/types/type";
 import { restApiBase } from "@/utils/env";
 import axios from "axios";
 import { P } from "node_modules/framer-motion/dist/types.d-DsEeKk6G";
@@ -10,7 +9,7 @@ import { FaRupeeSign, FaStar } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import { IoEyeOutline } from "react-icons/io5";
 
-export default function Frequently({ product }: { product: FrequentlyDTO }) {
+export default function Frequently({product} : {product : FrequentlyDTO} ) {
     // const products = [
     //     {
     //         "name": "Xbox Series S - 512GB SSD Console with Wireless Controller - EU Version",
@@ -139,21 +138,6 @@ export default function Frequently({ product }: { product: FrequentlyDTO }) {
         { ...product?.main, isMain: true },
         ...(product?.accompanying?.map(p => ({ ...p, isMain: false })) ?? [])
     ];
-    // hàm tìm giảm giá còn có hạn
-    const getValidDiscount = (v: VariantDTO) => {
-        const now = new Date();
-        const active = v.discounts.find(d => {
-            const start = new Date(d.starttime);
-            const end = new Date(d.endtime);
-            return start <= now && now <= end;
-        })
-        return active ?? null;
-    }
-    // lấy ra discoutn còn hạn đầu tiên, nếu không có trả về null
-    const getFirstDiscount = (product: ProductUi): VariantDTO => {
-        return product.variant.find(v => getValidDiscount(v)) ?? product.variant[0];
-    };
-
     console.log("mảng sau khi merge", mergedProduct);
     return (
         <div className="py-8 px-4 sm:px-16">
@@ -163,102 +147,82 @@ export default function Frequently({ product }: { product: FrequentlyDTO }) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid lg:grid-cols-6 divide-x divide-y divide-[#E4E7E9] pt-16">
                 {
-                    mergedProduct.map((product, index) => {
-                        const variant = getFirstDiscount(product); // đang để mặc định là có discout
-                        const discount = variant?.discounts?.[0]?.discount
-                            ?? product.variant[0].discounts?.[0]?.discount
-                            ?? 0;
-                        return (
-                            <div
-                                key={index}
-                                className={`${product.isMain ? "row-span-2 col-span-2 " : "col-span-1 row-span-1"} p-4 group border-1 border-gray-200`}
-                            >
-                                {/* Discount */}
-                                <div className="flex flex-col gap-2">
-                                    {variant && (
-                                        <div className="">
-                                            {
-                                                variant.discounts[0] ? (
-                                                    <p className="text-black text-center font-bold p-2 bg-[#EFD33D] text-[12px] w-[100px] rounded">
-                                                        {`${variant.discounts[0].discount}% OFF`}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-black text-center font-bold p-2 bg-[#EFD33D] text-[12px] w-[100px] rounded">
-                                                        {`${discount}% OFF`}
-                                                    </p>
-                                                )
-                                            }
-                                        </div>
-                                    )}
-                                    {/* Status */}
-                                    <div>
-                                        <p className={`text-white text-[12px] text-center bg-[#EE5858] w-[50px] p-2 rounded`}>HOT</p>
-                                    </div>
-                                    <div>
-                                        <p className={`text-white text-[12px] text-center   'bg-[#EE5858] w-[50px]' : 'bg-[#929FA5] w-[100px]'}  p-2 rounded`}>HOT</p>
-                                    </div>
+                    mergedProduct.map((product, index) => (
+                        <div
+                            key={index}
+                            className={`${product.isMain ? "row-span-2 col-span-2 " : "col-span-1 row-span-1"} p-4 group border-1 border-gray-200`}
+                        >
+                            {/* Discount */}
+                            <div className="flex flex-col gap-2">
+                                {/* {product.discount_percent && (
+                                <div className="">
+                                    <p className="text-black text-center font-bold p-2 bg-[#EFD33D] text-[12px] w-[100px] rounded">
+                                        {`${product.discount_percent}% OFF`}
+                                    </p>
                                 </div>
-                                {/* Image */}
-                                <div className="relative py-2">
-                                    <div className="flex justify-around items-center absolute h-full w-full bg-gray-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-800 z-0">
-                                        <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black">
-                                            <CiHeart size={20} className="text-white" />
-                                        </div>
-                                        <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black"></div>
-                                        <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black"></div>
-                                    </div>
-                                    <div className="flex items-center justify-center p-2">
-                                        <img className={`w-[280px] ${index == 0 ? 'h-[300px]' : 'h-[200px] md:h-[150px] lg:h-[160px] xl:h-[200px] z-10'}`} src={product.imgUrls?.[0] ?? ''} alt={product.name} />
-                                    </div>
-                                </div>
-
-                                {/* Rating */}
+                            )} */}
+                                {/* Status */}
+                                {/* {product.status && (
                                 <div>
-                                    {product.isMain && (
-                                        <div className="flex pt-4">
-                                            <div className="flex justify-around items-center gap-2">
-                                                {Array.from({ length: product.rating }).map((_, i) => (
-                                                    <FaStar key={i} className="text-[#EBC80C]" size={20} />
-                                                ))}
-                                                <p className="text-[20px] text-gray-400">{`(${product.rating})`}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="py-4"><p className="font-medium text-[20px] line-clamp-2 truncate">{product.name}</p></div>
-                                    {/* description */}
-                                    <div className="flex items-center gap-2">
-                                        {
-                                            variant && discount != 0 ? (
-                                                <div className="flex gap-3">
-                                                    <span className="text-[#ADB7BC] line-through text-[20px]">{formatCurrency(variant.price, { decimals: 2 })}</span>
-                                                    <span className="text-[#2DA5F3] font-bold text-[20px]">{formatCurrency((variant.price - variant.price *(discount/100)), { decimals: 2 })}</span>
-                                                </div>
-                                            ) : (
-                                                <span><span className="text-[#2DA5F3] text-[20px]">{formatCurrency(variant.price, { decimals: 2 })}</span></span>
-                                            )
-                                        }
-                                    </div>
-                                    {index == 0 && (<div>
-                                        <p className="text-[15px] text-gray-500">
-                                            {product.description}
-                                        </p>
-                                    </div>)}
+                                    <p className={`text-white text-[12px] text-center ${product.status === 'HOT' ? 'bg-[#EE5858] w-[50px]' : 'bg-[#929FA5] w-[100px]'}  p-2 rounded`}>{product.status}</p>
                                 </div>
-                                {product.isMain && (
-                                    <div className="flex justify-around items-center pt-3">
-                                        <div><CiHeart size={40} /></div>
-                                        <div className="flex items-center justify-evenly gap-2 rounded-[5px] bg-blue-500 px-2 py-2 sm:px-4 md:px-2 xl:px-4">
-                                            <FiShoppingCart size={26} className="text-white" />
-                                            <p className="text-white text-[14px] text-center">ADD TO CARD</p>
-                                        </div>
-                                        <div>
-                                            <IoEyeOutline size={40} />
+                            )} */}
+                                <div>
+                                    <p className={`text-white text-[12px] text-center   'bg-[#EE5858] w-[50px]' : 'bg-[#929FA5] w-[100px]'}  p-2 rounded`}>HOT</p>
+                                </div>
+                            </div>
+                            {/* Image */}
+                            <div className="relative py-2">
+                                <div className="flex justify-around items-center absolute h-full w-full bg-gray-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-800 z-0">
+                                    <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black">
+                                        <CiHeart size={20} className="text-white" />
+                                    </div>
+                                    <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black"></div>
+                                    <div className="md:w-[30px] md:h-[30px] lg:w-[35px] lg:h-[35px] xl:w-[40px] xl:h-[40px] flex justify-center items-center w-[50px] h-[50px] rounded-full z-10 bg-black"></div>
+                                </div>
+                                <img className={`w-[400px] ${index == 0 ? 'h-[300px]' : 'h-[200px] md:h-[150px] lg:h-[160px] xl:h-[200px] z-10'}`} src={product.imgUrls?.[0] ?? ''} alt={product.name} />
+                            </div>
+
+                            {/* Rating */}
+                            <div>
+                                {product.rating && (
+                                    <div className="flex pt-4">
+                                        <div className="flex justify-around items-center gap-2">
+                                            {Array.from({ length: product.rating }).map((_, i) => (
+                                                <FaStar key={i} className="text-[#EBC80C]" size={20} />
+                                            ))}
+                                            <p className="text-[20px] text-gray-400">{`(${product.rating})`}</p>
                                         </div>
                                     </div>
                                 )}
+                                <div className="py-4"><p className="font-medium text-[16px] line-clamp-2">{product.name}</p></div>
+                                {/* <div className="flex items-center gap-2">
+                                <span className={`font-bold flex items-center ${product.price_discounted ? 'line-through decoration-gray-500' : ''}`}>
+                                    <FaRupeeSign size={14} className={`${product.price_discounted ? 'text-gray-500' : 'text-blue-500'}`} />
+                                    <span className={`text-[14px] ${product.price_discounted ? 'text-gray-500 text-center' : 'text-blue-500'}`}>{product.price_original} </span>
+                                </span>
+                                {product.price_discounted && <p className="flex items-center font-bold"><FaRupeeSign size={14} className="text-blue-500" /> <span className="text-[14px] text-blue-500">{product.price_discounted} </span></p>}
+                            </div> */}
+                                {index == 0 && (<div>
+                                    <p className="text-[15px] text-gray-500">
+                                        {product.description}
+                                    </p>
+                                </div>)}
                             </div>
-                        )
-                    })}
+                            {product.isMain && (
+                                <div className="flex justify-around items-center pt-3">
+                                    <div><CiHeart size={40} /></div>
+                                    <div className="flex items-center justify-evenly gap-2 rounded-[5px] bg-blue-500 px-2 py-2 sm:px-4 md:px-2 xl:px-4">
+                                        <FiShoppingCart size={26} className="text-white" />
+                                        <p className="text-white text-[14px] text-center">ADD TO CARD</p>
+                                    </div>
+                                    <div>
+                                        <IoEyeOutline size={40} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
             </div>
         </div>
     )

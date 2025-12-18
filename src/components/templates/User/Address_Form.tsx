@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import handleAPI from "@/axios/handleAPI";
 import axios from "axios";
 
+// --- Interfaces ---
 interface Province { code: number; name: string; }
 interface District { code: number; name: string; province_code: number; }
 interface Ward { code: number; name: string; district_code: number; }
@@ -44,6 +45,7 @@ export default function AddressForm() {
   const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | string>("");
   const [selectedWardCode, setSelectedWardCode] = useState<number | string>("");
 
+  // --- Load địa chỉ ---
   const fetchAddresses = async () => {
     try {
       const res: any = await handleAPI("Address/my-addresses", undefined, "get");
@@ -68,6 +70,7 @@ export default function AddressForm() {
     fetchAddresses();
   }, []);
 
+  // --- Load Provinces ---
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
@@ -81,6 +84,7 @@ export default function AddressForm() {
     if (open) fetchProvinces();
   }, [open]);
 
+  // --- Load Districts ---
   useEffect(() => {
     if (!selectedProvinceCode) return setDistricts([]);
     const fetchDistricts = async () => {
@@ -90,13 +94,12 @@ export default function AddressForm() {
         setWards([]);
         setSelectedDistrictCode("");
         setSelectedWardCode("");
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchDistricts();
   }, [selectedProvinceCode]);
 
+  // --- Load Wards ---
   useEffect(() => {
     if (!selectedDistrictCode) return setWards([]);
     const fetchWards = async () => {
@@ -104,13 +107,12 @@ export default function AddressForm() {
         const res = await axios.get(`https://provinces.open-api.vn/api/d/${selectedDistrictCode}?depth=2`);
         setWards(res.data.wards);
         setSelectedWardCode("");
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchWards();
   }, [selectedDistrictCode]);
 
+  // --- Edit address ---
   const handleEdit = (item: Address) => {
     setEditingId(item.id);
     setFormData({
@@ -124,6 +126,7 @@ export default function AddressForm() {
     setOpen(true);
   };
 
+  // --- Delete address ---
   const handleDelete = async (id: number) => {
     if (!confirm("Xóa địa chỉ này?")) return;
     try {
@@ -131,11 +134,11 @@ export default function AddressForm() {
       toast.success("Xóa thành công");
       fetchAddresses();
     } catch (err: any) {
-      console.error("Delete address error:", err?.response?.data || err);
       toast.error(err.response?.data?.message || "Lỗi khi xóa");
     }
   };
 
+  // --- Save address ---
   const handleSaveAddress = async () => {
     if (!formData.title || !formData.nameRecipient || !formData.tel || !formData.detail || !selectedWardCode) {
       toast.error("Vui lòng điền đầy đủ thông tin và chọn Phường/Xã");
@@ -168,6 +171,7 @@ export default function AddressForm() {
       setSelectedDistrictCode("");
       setSelectedWardCode("");
     } catch (err: any) {
+      console.log(err);
       console.error("Lỗi lưu địa chỉ:", err.response?.data || err);
       toast.error(err.response?.data?.message || "Lỗi khi lưu địa chỉ");
     } finally {
@@ -189,7 +193,7 @@ export default function AddressForm() {
       <div className="flex items-center mb-6">
         <h2 className="text-xl font-semibold text-[25px]">Address Book</h2>
         <button onClick={openAddModal} className="ml-auto text-black hover:text-blue-600">
-          <IoAddCircleOutline className="w-8 h-8" />
+          <IoAddCircleOutline className="w-8 h-8"/>
         </button>
       </div>
 
@@ -199,12 +203,8 @@ export default function AddressForm() {
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold text-lg">{item.title}</h3>
               <div className="flex gap-2">
-                <button onClick={() => handleEdit(item)} className="text-gray-500 hover:text-blue-600">
-                  <CiEdit />
-                </button>
-                <button onClick={() => handleDelete(item.id)} className="text-gray-500 hover:text-red-600">
-                  <MdDeleteOutline />
-                </button>
+                <button onClick={() => handleEdit(item)} className="text-gray-500 hover:text-blue-600"><CiEdit/></button>
+                <button onClick={() => handleDelete(item.id)} className="text-gray-500 hover:text-red-600"><MdDeleteOutline/></button>
               </div>
             </div>
             <div className="text-sm text-gray-700 space-y-1">
@@ -215,9 +215,7 @@ export default function AddressForm() {
             </div>
           </div>
         ))}
-        {addresses.length === 0 && (
-          <div className="col-span-full text-center py-8 text-gray-500">Chưa có địa chỉ nào.</div>
-        )}
+        {addresses.length === 0 && <div className="col-span-full text-center py-8 text-gray-500">Chưa có địa chỉ nào.</div>}
       </div>
 
       {open && (
@@ -229,11 +227,7 @@ export default function AddressForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label>Address Label</label>
-                    <select
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full border rounded-md p-2"
-                    >
+                    <select value={formData.title} onChange={e => setFormData({...formData, title:e.target.value})} className="w-full border rounded-md p-2">
                       <option value="Home">Home</option>
                       <option value="Office">Office</option>
                       <option value="Other">Other</option>
@@ -241,108 +235,53 @@ export default function AddressForm() {
                   </div>
                   <div>
                     <label>Recipient Name</label>
-                    <input
-                      type="text"
-                      value={formData.nameRecipient}
-                      onChange={(e) => setFormData({ ...formData, nameRecipient: e.target.value })}
-                      className="w-full border rounded-md p-2"
-                    />
+                    <input type="text" value={formData.nameRecipient} onChange={e => setFormData({...formData, nameRecipient:e.target.value})} className="w-full border rounded-md p-2"/>
                   </div>
                 </div>
                 <div>
                   <label>Phone</label>
-                  <input
-                    type="text"
-                    value={formData.tel}
-                    onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
-                    className="w-full border rounded-md p-2"
-                  />
+                  <input type="text" value={formData.tel} onChange={e => setFormData({...formData, tel:e.target.value})} className="w-full border rounded-md p-2"/>
                 </div>
 
+                {/* Dropdown Tỉnh/Huyện/Xã */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-md border">
                   <div>
                     <label>Province</label>
-                    <select
-                      value={selectedProvinceCode}
-                      onChange={(e) => setSelectedProvinceCode(e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm"
-                    >
+                    <select value={selectedProvinceCode} onChange={e=>setSelectedProvinceCode(e.target.value)} className="w-full border rounded-md p-2 text-sm">
                       <option value="">Select Province</option>
-                      {provinces.map((p) => (
-                        <option key={p.code} value={p.code}>
-                          {p.name}
-                        </option>
-                      ))}
+                      {provinces.map(p=><option key={p.code} value={p.code}>{p.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label>District</label>
-                    <select
-                      value={selectedDistrictCode}
-                      onChange={(e) => setSelectedDistrictCode(e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm"
-                      disabled={!selectedProvinceCode}
-                    >
+                    <select value={selectedDistrictCode} onChange={e=>setSelectedDistrictCode(e.target.value)} className="w-full border rounded-md p-2 text-sm" disabled={!selectedProvinceCode}>
                       <option value="">Select District</option>
-                      {districts.map((d) => (
-                        <option key={d.code} value={d.code}>
-                          {d.name}
-                        </option>
-                      ))}
+                      {districts.map(d=><option key={d.code} value={d.code}>{d.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label>Ward</label>
-                    <select
-                      value={selectedWardCode}
-                      onChange={(e) => setSelectedWardCode(e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm"
-                      disabled={!selectedDistrictCode}
-                    >
+                    <select value={selectedWardCode} onChange={e=>setSelectedWardCode(e.target.value)} className="w-full border rounded-md p-2 text-sm" disabled={!selectedDistrictCode}>
                       <option value="">Select Ward</option>
-                      {wards.map((w) => (
-                        <option key={w.code} value={w.code}>
-                          {w.name}
-                        </option>
-                      ))}
+                      {wards.map(w=><option key={w.code} value={w.code}>{w.name}</option>)}
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label>Street / Detail</label>
-                  <input
-                    type="text"
-                    value={formData.detail}
-                    onChange={(e) => setFormData({ ...formData, detail: e.target.value })}
-                    className="w-full border rounded-md p-2"
-                  />
+                  <input type="text" value={formData.detail} onChange={e=>setFormData({...formData, detail:e.target.value})} className="w-full border rounded-md p-2"/>
                 </div>
 
                 <div>
                   <label>Note (Optional)</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={2}
-                    className="w-full border rounded-md p-2"
-                  />
+                  <textarea value={formData.description} onChange={e=>setFormData({...formData, description:e.target.value})} rows={2} className="w-full border rounded-md p-2"/>
                 </div>
               </form>
 
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                  disabled={isLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveAddress}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  disabled={isLoading}
-                >
+                <button onClick={()=>setOpen(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300" disabled={isLoading}>Cancel</button>
+                <button onClick={handleSaveAddress} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50" disabled={isLoading}>
                   {isLoading ? "Saving..." : "Save Address"}
                 </button>
               </div>
