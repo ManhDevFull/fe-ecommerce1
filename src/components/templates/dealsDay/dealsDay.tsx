@@ -15,38 +15,10 @@ import axios from "axios";
 import { restApiBase } from "@/utils/env";
 import TimeLeft from "@/components/ui/TimeLeft";
 import CardIndex from "@/components/ui/CardIndex";
-import router from "next/router";
 
 export default function DealsDay({ products }: { products: ProductUi[] }) {
-    // const products = [
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("10/09/2025 23:59:59", "dd/MM/yyyy HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 800
-    //     },
-    //     {
-    //         name: 'bcd',
-    //         endTime: parse("12-09-2025 21:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 300
-    //     },
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("13-09-2025 2 3:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 400
-    //     },
-    //     {
-    //         name: 'abc',
-    //         endTime: parse("14-09-2025 23:59:59", "yyyy-MM-dd HH:mm:ss", new Date()),
-    //         img: 'https://res.cloudinary.com/do0im8hgv/image/upload/v1756557032/0f6678f8-f18d-4b7c-a79a-1c18e2828f05.png',
-    //         price: 400
-    //     }
-
-    // ]
-
     const [newProduct, setNewProduct] = useState<ProductUi[]>([]);
+    const route = useRouter();
     useEffect(() => {
         setNewProduct(products);
     }, [products]);
@@ -91,7 +63,10 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
         // hiện tại dữ liệu fake đã hết hạn nên trả về null
         return null;
     }
-    const router = useRouter();
+// hàm đưa qua trang chi tiết sản phẩm
+    const handleDetail = (id: number)=>{
+        route.push(`detail-product/${id}`);
+    }
     return (
         <div className="w-ful px-4 sm:px-16 py-4">
             <div className="w-full sm:flex sm:justify-between sm:items-center gap-2">
@@ -117,15 +92,14 @@ export default function DealsDay({ products }: { products: ProductUi[] }) {
                         return (
                             <div key={index}
                                 className={`cursor-pointer w-[160px] sm:w-[250px] md:w-[300px]`}
-                                onClick={() => router.push('')}
                             >
                                 {/* <Product img={product.imgUrls[1]} isNew={true} type={true} /> */}
-                                <CardIndex isNew={true} img={product.imgUrls[0]} />
+                                <CardIndex id={product.id} handleDetail={handleDetail} isNew={true} img={product.imgUrls[0]} />
                                 {
                                     deal && <FlashDealBar endTime={deal?.discount?.endtime} />
                                 }
                                 <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold">{product.name}</p>
-                                <BtnBuyNow price={deal?.price ?? product.variant[0].price} />
+                                <BtnBuyNow id={product.id} price={deal?.price ?? product.variant[0].price} />
                             </div>
                         )
                     }

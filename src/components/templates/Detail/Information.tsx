@@ -5,13 +5,35 @@ import Product from "@/components/ui/Product";
 import Quantity from "@/components/ui/Quantity";
 import { Review } from "@/components/ui/Review";
 import { ProductUi, VariantDTO } from "@/types/type";
+import { formatCurrency } from "@/utils/currency";
 import { useEffect, useState } from "react";
 import { FaFacebook, FaPinterestP, FaRegHeart, FaTwitter } from "react-icons/fa";
 import { IoLogoFacebook } from "react-icons/io";
 import { PiCopy, PiHandbagSimple, PiShoppingCartSimpleLight } from "react-icons/pi";
 import { TfiReload } from "react-icons/tfi";
+import { useRouter, usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
+import { authSelector } from "@/redux/reducers/authReducer";
+import { DropdownItem } from "@/components/ui/DropdownItem";
 
-export default function Information({ product }: { product: ProductUi }) {
+type InformationProps = {
+    product: ProductUi;
+    isInWishlist?: boolean;
+    onToggleWishlist?: () => void;
+    wishlistLoading?: boolean;
+    onAddToCart?: (variantId: number, quantity: number) => void;
+};
+
+export default function Information({
+    product,
+    isInWishlist = false,
+    onToggleWishlist,
+    wishlistLoading = false,
+    onAddToCart
+}: InformationProps) {
+    const auth = useSelector(authSelector);
+    const router = useRouter();
+    const pathname = usePathname();
     const [quantity, setQuantity] = useState<number>(1);
     console.log(quantity);
     const [attribute, setAtribute] = useState<Record<string, string[]>>({});
@@ -60,28 +82,44 @@ export default function Information({ product }: { product: ProductUi }) {
         ));
     }
     const handleOnechangeVariant = (key: string, value: string) => {
-        // luôn chuyển UI theo lựa chọn
+        // update selected option trên UI
         const newSelected = {
             ...selectedOptions,
             [key]: value
         };
-        setSelectedOptions(newSelected);
 
-        // tìm variant thật
-        const match = variant.find(v =>
+        // thử tìm variant ứng với lựa chọn mới
+        let match = variant.find(v =>
             Object.entries(newSelected).every(([k, val]) => v.valuevariant[k] === val)
         );
 
-        // nếu có variant thật → đổi giá
-        if (match) {
-            setCurrentValuevariant({ ...match });
-            // ...match để lấy ra các atribute. {...match} tạo ra object mới nên render lại giao diện
-            // nếu set thẳng match thì khi click trùng nó không render lại
-            // set lại value thật để gửi về backend và render lại giá tương ứng
+        // Nếu KHÔNG có variant thật → tìm 1 variant hợp lệ gần nhất
+        if (!match) {
+            // Lấy các variant có cùng key được chọn
+            const candidates = variant.filter(v => v.valuevariant[key] === value);
+
+            if (candidates.length > 0) {
+                // Chọn variant đầu tiên trong nhóm này làm fallback
+                match = candidates[0];
+
+                // cập nhật lại selectedOptions cho đúng với variant thật
+                const correctedSelected = { ...match.valuevariant };
+                setSelectedOptions(correctedSelected);
+
+                // set giá trị thật
+                setCurrentValuevariant({ ...match });
+
+                return; // kết thúc vì đã sửa lại selection
+            }
         }
 
-        // nếu không có variant → KHÔNG đổi giá nhưng vẫn update dropdown
+        // Nếu tìm được variant hợp lệ
+        if (match) {
+            setSelectedOptions(newSelected);
+            setCurrentValuevariant({ ...match });
+        }
     };
+
 
     // tìm discount còn có hạn sử dụng 
     const getValidDiscount = (variant: VariantDTO) => {
@@ -101,6 +139,10 @@ export default function Information({ product }: { product: ProductUi }) {
         return active ?? null;
     };
     const discount = getValidDiscount(currentValuevariant);
+    const handleWishlistClick = async () => {
+        await onToggleWishlist?.();
+        // router.push("/wish-list");
+    };
     return (
         <div className="w-full">
             {/* review and name product */}
@@ -145,10 +187,12 @@ export default function Information({ product }: { product: ProductUi }) {
                             <p className="text-[30px] text-[#2EB100]">
                                 {currentValuevariant.price -
                                     currentValuevariant.price * (discount?.discount / 100)} VND
+                                {formatCurrency((currentValuevariant.price -
+                                    currentValuevariant.price * (discount?.discount / 100)), { decimals: 2 })}
                             </p>
 
                             <p className="line-through decoration-gray-500">
-                                {currentValuevariant.price} VND
+                                {formatCurrency(currentValuevariant.price, { decimals: 2 })}
                             </p>
 
                             <p className="text-[20px] text-[#191C1F] text-center p-2">
@@ -158,7 +202,7 @@ export default function Information({ product }: { product: ProductUi }) {
                     ) : (
                         <div>
                             <p className="text-[30px] text-[#2EB100] font-bold">
-                                {currentValuevariant.price} VND
+                                {formatCurrency(currentValuevariant.price, { decimals: 2 })}
                             </p>
                         </div>
                     )}
@@ -178,33 +222,40 @@ export default function Information({ product }: { product: ProductUi }) {
                 >
                     {Object.entries(attribute).map(([key, value]) => (
                         <div key={key}>
-                            <p className="font-semibold mb-1 text-[#191C1F]">{key.charAt(0).toUpperCase() + key.slice(1)}</p>
+                            <p className="font-semibold mb-1 text-[#191C1F]">
+                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                            </p>
 
-                            <Dropdown active={selectedOptions[key]}>
-                                {value.map(v => (
-                                    <div
-                                        key={v}
-                                        className="cursor-pointer pl-2"
-                                        onClick={() => handleOnechangeVariant(key, v)}
-                                    >
-                                        <p className="text-[#475156]">{v.charAt(0).toUpperCase() + v.slice(1)}</p>
-                                    </div>
-                                ))}
+                            <Dropdown value={selectedOptions[key]}>
+                                {(close) =>
+                                    value.map(v => (
+                                        <DropdownItem
+                                            key={v}
+                                            label={v.charAt(0).toUpperCase() + v.slice(1)}
+                                            active={selectedOptions[key] === v}
+                                            onClick={() => {
+                                                handleOnechangeVariant(key, v);
+                                                close(); 
+                                            }}
+                                        />
+                                    ))
+                                }
                             </Dropdown>
                         </div>
                     ))}
+
                 </div>
             </div>
             {/* Deal member Filled */}
             <div className="flex gap-30 items-center mt-2 bg-green-200 p-4">
                 <div className="">
-                    <div className="flex justify-between gap-2 items-center py-2"> 
+                    <div className="flex justify-between gap-2 items-center py-2">
                         <p className="text-[#000000] flex flex-nowrap">Deal Members Filled</p>
                         <p className="font-bold">700/1000</p>
                     </div>
                     <div className="flex justify-between items-center py-2">
                         <p>Current Deal Price</p>
-                        <p className="font-bold">Rs {currentValuevariant.price}</p>
+                        <p className="font-bold">{formatCurrency(currentValuevariant.price, { decimals: 2 })}</p>
                     </div>
                 </div>
                 <div className="">
@@ -236,7 +287,16 @@ export default function Information({ product }: { product: ProductUi }) {
                     discount && <BtnGetDeal discount={discount.discount} />
                 }
                 {/* nút add card */}
-                <button className="w-[100px] flex gap-2 border-[2px] cursor-pointer border-[#1877F2] rounded-2xl p-2">
+                <button
+                    className="w-[100px] flex gap-2 border-[2px] cursor-pointer border-[#1877F2] rounded-2xl p-2"
+                    onClick={() => {
+                        if (!auth?.token) {
+                            router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+                            return;
+                        }
+                        onAddToCart?.(currentValuevariant.id, quantity);
+                    }}
+                >
                     <PiShoppingCartSimpleLight className="text-[#1877F2]" size={28} />
                     <p className="text-[20px] font-medium text-[#1877F2]">ADD</p>
                 </button>
@@ -250,12 +310,16 @@ export default function Information({ product }: { product: ProductUi }) {
             <div className="flex justify-between">
                 {/* wish list and compare  */}
                 <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2 cursor-pointer">
-                        <FaRegHeart className="text-[#475156]" size={28} />
+                    <button
+                        className="flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        onClick={handleWishlistClick}
+                        disabled={wishlistLoading}
+                    >
+                        <FaRegHeart className={isInWishlist ? "text-red-500" : "text-[#475156]"} size={28} />
                         <p className="text-center text-[#475156]">
-                            Add to wishlist
+                            {isInWishlist ? "In wishlist" : "Add to wishlist"}
                         </p>
-                    </div>
+                    </button>
                     <div className="flex gap-2 items-center cursor-pointer">
                         <TfiReload size={28} />
                         <p className="text-center text-[#475156]">
